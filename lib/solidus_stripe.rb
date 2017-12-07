@@ -1,5 +1,5 @@
 require "active_merchant"
 require "solidus_core"
 require "solidus_support"
-require "spree_gateway/engine"
-require "solidus_gateway/version"
+require "solidus_stripe/engine"
+require "solidus_stripe/version"

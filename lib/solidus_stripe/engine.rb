@@ -1,8 +1,8 @@
-module SpreeGateway
+module SolidusStripe
   class Engine < Rails::Engine
-    engine_name 'solidus_gateway'
+    engine_name 'solidus_stripe'
 
-    initializer "spree.gateway.payment_methods", :after => "spree.register.payment_methods" do |app|
+    initializer "spree.stripe.payment_method", after: "spree.register.payment_methods" do |app|
       app.config.spree.payment_methods << Spree::Gateway::StripeGateway
     end
 

@@ -1,15 +1,15 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'solidus_gateway/version'
+require 'solidus_stripe/version'
 
 # encoding: UTF-8
 
 Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
-  s.name        = "solidus_gateway"
-  s.version     = SolidusGateway::VERSION
-  s.summary     = "Additional Payment Gateways for Solidus"
+  s.name        = "solidus_stripe"
+  s.version     = SolidusStripe::VERSION
+  s.summary     = "Stripe Payment Method for Solidus"
   s.description = s.summary
   s.required_ruby_version = ">= 2.1"
 
