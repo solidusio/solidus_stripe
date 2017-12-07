@@ -19,8 +19,16 @@ module Spree
       end
     end
 
-    def provider_class
+    def gateway_class
       ActiveMerchant::Billing::StripeGateway
+    end
+
+    if SolidusSupport.solidus_gem_version < Gem::Version.new('2.3.x')
+      alias_method :provider_class, :gateway_class
+    end
+
+    def gateway
+      @gateway ||= gateway_class.new(options)
     end
 
     def payment_profiles_supported?
@@ -28,27 +36,27 @@ module Spree
     end
 
     def purchase(money, creditcard, gateway_options)
-      provider.purchase(*options_for_purchase_or_auth(money, creditcard, gateway_options))
+      gateway.purchase(*options_for_purchase_or_auth(money, creditcard, gateway_options))
     end
 
     def authorize(money, creditcard, gateway_options)
-      provider.authorize(*options_for_purchase_or_auth(money, creditcard, gateway_options))
+      gateway.authorize(*options_for_purchase_or_auth(money, creditcard, gateway_options))
     end
 
     def capture(money, response_code, gateway_options)
-      provider.capture(money, response_code, gateway_options)
+      gateway.capture(money, response_code, gateway_options)
     end
 
     def credit(money, creditcard, response_code, gateway_options)
-      provider.refund(money, response_code, {})
+      gateway.refund(money, response_code, {})
     end
 
     def void(response_code, creditcard, gateway_options)
-      provider.void(response_code, {})
+      gateway.void(response_code, {})
     end
 
     def cancel(response_code)
-      provider.void(response_code, {})
+      gateway.void(response_code, {})
     end
 
     def create_profile(payment)
@@ -65,7 +73,7 @@ module Spree
         creditcard = source
       end
 
-      response = provider.store(creditcard, options)
+      response = gateway.store(creditcard, options)
       if response.success?
         payment.source.update_attributes!({
           cc_type: payment.source.cc_type, # side-effect of update_source!
