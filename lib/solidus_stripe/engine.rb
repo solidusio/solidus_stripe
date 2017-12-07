@@ -3,7 +3,7 @@ module SolidusStripe
     engine_name 'solidus_stripe'
 
     initializer "spree.stripe.payment_method", after: "spree.register.payment_methods" do |app|
-      app.config.spree.payment_methods << Spree::Gateway::StripeGateway
+      app.config.spree.payment_methods << Spree::PaymentMethod::Stripe
     end
 
     if SolidusSupport.backend_available?

@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Spree::Gateway::StripeGateway do
+describe Spree::PaymentMethod::Stripe do
   let(:secret_key) { 'key' }
   let(:email) { 'customer@example.com' }
   let(:source) { Spree::CreditCard.new }
