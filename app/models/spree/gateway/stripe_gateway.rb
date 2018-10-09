@@ -1,5 +1,5 @@
 module Spree
-  class Gateway::StripeGateway < Gateway
+  class Gateway::StripeGateway < SolidusSupport.payment_method_parent_class(credit_card: true)
     preference :secret_key, :string
     preference :publishable_key, :string
 
