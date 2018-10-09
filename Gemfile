@@ -13,6 +13,8 @@ group :test do
   else
     gem 'factory_bot', '> 4.10.0'
   end
+
+  gem 'chromedriver-helper' if ENV['CI']
 end
 
 gem 'pg'

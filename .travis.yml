@@ -2,8 +2,10 @@ sudo: required
 dist: trusty
 cache: bundler
 language: ruby
+addons:
+  chrome: stable
 rvm:
-  - 2.3.1
+  - 2.5.1
 before_install:
   - mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'travis'@'%';"
 env:
