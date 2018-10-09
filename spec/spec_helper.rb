@@ -9,6 +9,8 @@ require 'solidus_support/extension/feature_helper'
 
 Dir[File.join(File.dirname(__FILE__), "support/**/*.rb")].each { |f| require f }
 
+Capybara.server = :webrick
+
 RSpec.configure do |config|
   config.infer_spec_type_from_file_location!
 
