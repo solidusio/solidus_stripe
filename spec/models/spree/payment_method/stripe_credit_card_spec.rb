@@ -152,13 +152,13 @@ describe Spree::PaymentMethod::StripeCreditCard do
   end
 
   context 'capture with payment class' do
-    let(:gateway) do
-      gateway = described_class.new(:active => true)
-      gateway.set_preference :secret_key, secret_key
-      allow(gateway).to receive(:options_for_purchase_or_auth).and_return(['money','cc','opts'])
-      allow(gateway).to receive(:provider).and_return provider
-      allow(gateway).to receive_messages :source_required => true
-      gateway
+    let(:payment_method) do
+      payment_method = described_class.new(:active => true)
+      payment_method.set_preference :secret_key, secret_key
+      allow(payment_method).to receive(:options_for_purchase_or_auth).and_return(['money','cc','opts'])
+      allow(payment_method).to receive(:provider).and_return provider
+      allow(payment_method).to receive_messages :source_required => true
+      payment_method
     end
 
     let!(:store) { FactoryBot.create(:store) }
@@ -176,7 +176,7 @@ describe Spree::PaymentMethod::StripeCreditCard do
       payment = Spree::Payment.new
       payment.source = card
       payment.order = order
-      payment.payment_method = gateway
+      payment.payment_method = payment_method
       payment.amount = 98.55
       payment.state = 'pending'
       payment.response_code = '12345'
