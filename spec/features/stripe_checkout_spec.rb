@@ -3,13 +3,12 @@ require 'spec_helper'
 RSpec.describe "Stripe checkout", type: :feature do
   before do
     FactoryBot.create(:store)
-    # Set up a zone
     zone = FactoryBot.create(:zone)
     country = FactoryBot.create(:country)
     zone.members << Spree::ZoneMember.create!(zoneable: country)
     FactoryBot.create(:free_shipping_method)
 
-    Spree::Gateway::StripeGateway.create!(
+    Spree::PaymentMethod::StripeCreditCard.create!(
       name: "Stripe",
       preferred_secret_key: "sk_test_VCZnDv3GLU15TRvn8i2EsaAN",
       preferred_publishable_key: "pk_test_Cuf0PNtiAkkMpTVC2gwYDMIg",
