@@ -22,23 +22,23 @@ module Spree
         true
       end
 
-      def purchase(money, creditcard, gateway_options)
-        gateway.purchase(*options_for_purchase_or_auth(money, creditcard, gateway_options))
+      def purchase(money, creditcard, transaction_options)
+        gateway.purchase(*options_for_purchase_or_auth(money, creditcard, transaction_options))
       end
 
-      def authorize(money, creditcard, gateway_options)
-        gateway.authorize(*options_for_purchase_or_auth(money, creditcard, gateway_options))
+      def authorize(money, creditcard, transaction_options)
+        gateway.authorize(*options_for_purchase_or_auth(money, creditcard, transaction_options))
       end
 
-      def capture(money, response_code, gateway_options)
-        gateway.capture(money, response_code, gateway_options)
+      def capture(money, response_code, transaction_options)
+        gateway.capture(money, response_code, transaction_options)
       end
 
-      def credit(money, creditcard, response_code, gateway_options)
+      def credit(money, _creditcard, response_code, _transaction_options)
         gateway.refund(money, response_code, {})
       end
 
-      def void(response_code, creditcard, gateway_options)
+      def void(response_code, _creditcard, _transaction_options)
         gateway.void(response_code, {})
       end
 
@@ -81,10 +81,10 @@ module Spree
         options.merge(:login => preferred_secret_key)
       end
 
-      def options_for_purchase_or_auth(money, creditcard, gateway_options)
+      def options_for_purchase_or_auth(money, creditcard, transaction_options)
         options = {}
-        options[:description] = "Spree Order ID: #{gateway_options[:order_id]}"
-        options[:currency] = gateway_options[:currency]
+        options[:description] = "Spree Order ID: #{transaction_options[:order_id]}"
+        options[:currency] = transaction_options[:currency]
 
         if customer = creditcard.gateway_customer_profile_id
           options[:customer] = customer
