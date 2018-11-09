@@ -2,8 +2,8 @@ module SolidusStripe
   class Engine < Rails::Engine
     engine_name 'solidus_stripe'
 
-    initializer "spree.stripe.payment_method", after: "spree.register.payment_methods" do |app|
-      app.config.spree.payment_methods << Spree::Gateway::StripeGateway
+    initializer "spree.payment_method.add_stripe_credit_card", after: "spree.register.payment_methods" do |app|
+      app.config.spree.payment_methods << Spree::PaymentMethod::StripeCreditCard
     end
 
     if SolidusSupport.backend_available?
