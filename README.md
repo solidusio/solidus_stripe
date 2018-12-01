@@ -31,8 +31,8 @@ to change the provider, and you should see a number of options under the provide
 Migrating from solidus_gateway
 ------------------------------
 
-If you were previously using `solidus_gateway` gem you could need some manual
-steps to have this new gem working.
+If you were previously using `solidus_gateway` gem you might need some manual
+steps to get this new gem working.
 
 It's important to know that both gems can live together and there
 is no need to remove `solidus_gateway` when installing this gem.
@@ -40,10 +40,10 @@ is no need to remove `solidus_gateway` when installing this gem.
 Migration steps are:
 
 - Install `solidus_stripe` as described above.
-- Run migrations: [this one one](https://github.com/solidusio-contrib/solidus_stripe/blob/ad591678243b805935b2ad03a4006024f890dd33/db/migrate/20181010123508_update_stripe_payment_method_type_to_credit_card.rb)
-  is reponsible to update all existing payment methods to use the new Stripe
-  payment method type and stop referincing to the `spree_gateway` one. Also, it
-  updates the preferences for stripe to point to the new method if they were set
+- Run migrations: [this one](https://github.com/solidusio-contrib/solidus_stripe/blob/ad591678243b805935b2ad03a4006024f890dd33/db/migrate/20181010123508_update_stripe_payment_method_type_to_credit_card.rb)
+  is reponsible for updating all existing payment methods to use the new Stripe
+  payment method type and stop referencing the `spree_gateway` one. Also, it
+  updates the preferences for Stripe to point to the new method if they were set
   via legacy database configuration storage.
 - Change static model preferences to use `Spree::Gateway::StripeGateway`
   payment method: this is needed only if you use static model preferences. You
