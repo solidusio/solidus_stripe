@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module SolidusStripe
   class Engine < Rails::Engine
     engine_name 'solidus_stripe'
@@ -16,6 +18,6 @@ module SolidusStripe
 
     if SolidusSupport.api_available?
       paths["app/views"] << "lib/views/api"
-    end    
+    end
   end
 end
