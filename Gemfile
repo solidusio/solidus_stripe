@@ -10,11 +10,7 @@ group :test do
     gem "rails-controller-testing"
   end
 
-  if branch < "v2.5"
-    gem 'factory_bot', '4.10.0'
-  else
-    gem 'factory_bot', '> 4.10.0'
-  end
+  gem 'factory_bot', (branch < 'v2.5' ? '4.10.0' : '> 4.10.0')
 
   gem 'chromedriver-helper' if ENV['CI']
 end

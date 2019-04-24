@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
   s.version     = SolidusStripe::VERSION
   s.summary     = "Stripe Payment Method for Solidus"
   s.description = s.summary
-  s.required_ruby_version = ">= 2.1"
+  s.required_ruby_version = ">= 2.2"
 
   s.author       = "Solidus Team"
   s.email        = "contact@solidus.io"
