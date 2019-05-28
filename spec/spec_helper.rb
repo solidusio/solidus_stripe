@@ -8,7 +8,8 @@ require File.expand_path("../dummy/config/environment.rb",  __FILE__)
 require 'solidus_support/extension/feature_helper'
 
 require 'selenium-webdriver'
-Capybara.javascript_driver = :selenium_chrome_headless
+
+Capybara.javascript_driver = :selenium_chrome
 
 Dir[File.join(File.dirname(__FILE__), "support/**/*.rb")].each { |f| require f }
 
