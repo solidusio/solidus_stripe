@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class UpdateStripePaymentMethodTypeToCreditCard < SolidusSupport::Migration[5.1]
   def up
     Spree::PaymentMethod.where(type: 'Spree::Gateway::StripeGateway').update_all(type: 'Spree::PaymentMethod::StripeCreditCard')

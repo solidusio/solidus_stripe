@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "active_merchant"
 require "solidus_core"
 require "solidus_support"

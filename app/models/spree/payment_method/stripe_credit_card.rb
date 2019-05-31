@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Spree
   class PaymentMethod
     class StripeCreditCard < Spree::PaymentMethod::CreditCard
@@ -48,6 +50,7 @@ module Spree
 
       def create_profile(payment)
         return unless payment.source.gateway_customer_profile_id.nil?
+
         options = {
           email: payment.order.email,
           login: preferred_secret_key,
@@ -78,7 +81,7 @@ module Spree
       # In this gateway, what we call 'secret_key' is the 'login'
       def options
         options = super
-        options.merge(:login => preferred_secret_key)
+        options.merge(login: preferred_secret_key)
       end
 
       def options_for_purchase_or_auth(money, creditcard, transaction_options)
@@ -95,21 +98,21 @@ module Spree
           # https://github.com/Shopify/active_merchant/issues/770
           creditcard = token_or_card_id
         end
-        return money, creditcard, options
+        [money, creditcard, options]
       end
 
       def address_for(payment)
         {}.tap do |options|
           if address = payment.order.bill_address
-            options.merge!(address: {
+            options[:address] = {
               address1: address.address1,
               address2: address.address2,
               city: address.city,
               zip: address.zipcode
-            })
+            }
 
             if country = address.country
-              options[:address].merge!(country: country.name)
+              options[:address][:country] = country.name
             end
 
             if state = address.state

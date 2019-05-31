@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe Spree::PaymentMethod::StripeCreditCard do
@@ -10,9 +12,7 @@ describe Spree::PaymentMethod::StripeCreditCard do
       source: source,
       order: double('Spree::Order',
         email: email,
-        bill_address: bill_address
-      )
-    )
+        bill_address: bill_address))
   }
 
   let(:gateway) do
@@ -25,7 +25,7 @@ describe Spree::PaymentMethod::StripeCreditCard do
 
   before do
     subject.preferences = { secret_key: secret_key }
-    allow(subject).to receive(:options_for_purchase_or_auth).and_return(['money','cc','opts'])
+    allow(subject).to receive(:options_for_purchase_or_auth).and_return(['money', 'cc', 'opts'])
     allow(subject).to receive(:gateway).and_return gateway
   end
 
@@ -42,8 +42,7 @@ describe Spree::PaymentMethod::StripeCreditCard do
           city: 'Suzarac',
           zipcode: '95671',
           state: double('Spree::State', name: 'Oregon'),
-          country: double('Spree::Country', name: 'United States')
-        )
+          country: double('Spree::Country', name: 'United States'))
       }
 
       it 'stores the bill address with the gateway' do
@@ -122,7 +121,7 @@ describe Spree::PaymentMethod::StripeCreditCard do
     end
 
     it 'send the payment to the gateway' do
-      expect(gateway).to receive(:purchase).with('money','cc','opts')
+      expect(gateway).to receive(:purchase).with('money', 'cc', 'opts')
     end
   end
 
@@ -132,32 +131,31 @@ describe Spree::PaymentMethod::StripeCreditCard do
     end
 
     it 'send the authorization to the gateway' do
-      expect(gateway).to receive(:authorize).with('money','cc','opts')
+      expect(gateway).to receive(:authorize).with('money', 'cc', 'opts')
     end
   end
 
   context 'capturing' do
-
     after do
       subject.capture(1234, 'response_code', {})
     end
 
     it 'convert the amount to cents' do
-      expect(gateway).to receive(:capture).with(1234,anything,anything)
+      expect(gateway).to receive(:capture).with(1234, anything, anything)
     end
 
     it 'use the response code as the authorization' do
-      expect(gateway).to receive(:capture).with(anything,'response_code',anything)
+      expect(gateway).to receive(:capture).with(anything, 'response_code', anything)
     end
   end
 
   context 'capture with payment class' do
     let(:payment_method) do
-      payment_method = described_class.new(:active => true)
+      payment_method = described_class.new(active: true)
       payment_method.set_preference :secret_key, secret_key
-      allow(payment_method).to receive(:options_for_purchase_or_auth).and_return(['money','cc','opts'])
+      allow(payment_method).to receive(:options_for_purchase_or_auth).and_return(['money', 'cc', 'opts'])
       allow(payment_method).to receive(:gateway).and_return gateway
-      allow(payment_method).to receive_messages :source_required => true
+      allow(payment_method).to receive_messages source_required: true
       payment_method
     end
 
@@ -184,10 +182,10 @@ describe Spree::PaymentMethod::StripeCreditCard do
     end
 
     let!(:success_response) do
-      double('success_response', :success? => true,
-                               :authorization => '123',
-                               :avs_result => { 'code' => 'avs-code' },
-                               :cvv_result => { 'code' => 'cvv-code', 'message' => "CVV Result"})
+      double('success_response', success?: true,
+                               authorization: '123',
+                               avs_result: { 'code' => 'avs-code' },
+                               cvv_result: { 'code' => 'cvv-code', 'message' => "CVV Result" })
     end
 
     after do
@@ -195,7 +193,7 @@ describe Spree::PaymentMethod::StripeCreditCard do
     end
 
     it 'gets correct amount' do
-      expect(gateway).to receive(:capture).with(9855,'12345',anything).and_return(success_response)
+      expect(gateway).to receive(:capture).with(9855, '12345', anything).and_return(success_response)
     end
   end
 end
