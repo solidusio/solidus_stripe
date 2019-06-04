@@ -4,7 +4,10 @@ module SolidusStripe
       class_option :auto_run_migrations, type: :boolean, default: false
 
       def add_stylesheets
-        inject_into_file "vendor/assets/stylesheets/spree/frontend/all.css", " *= require spree/frontend/solidus_stripe\n", before: '*/', verbose: true
+        filename = 'vendor/assets/stylesheets/spree/frontend/all.css'
+        if File.file? filename
+          inject_into_file filename, " *= require spree/frontend/solidus_stripe\n", before: '*/', verbose: true
+        end
       end
 
       def add_migrations
