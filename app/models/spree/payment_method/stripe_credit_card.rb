@@ -5,6 +5,7 @@ module Spree
     class StripeCreditCard < Spree::PaymentMethod::CreditCard
       preference :secret_key, :string
       preference :publishable_key, :string
+      preference :v3_elements, :boolean
 
       CARD_TYPE_MAPPING = {
         'American Express' => 'american_express',
@@ -14,6 +15,10 @@ module Spree
 
       def partial_name
         'stripe'
+      end
+
+      def v3_elements?
+        !!preferences[:v3_elements]
       end
 
       def gateway_class

@@ -14,6 +14,7 @@ RSpec.describe "Stripe checkout", type: :feature do
       name: "Stripe",
       preferred_secret_key: "sk_test_VCZnDv3GLU15TRvn8i2EsaAN",
       preferred_publishable_key: "pk_test_Cuf0PNtiAkkMpTVC2gwYDMIg",
+      preferred_v3_elements: preferred_v3_elements
     )
 
     FactoryBot.create(:product, name: "DL-44")
@@ -43,55 +44,129 @@ RSpec.describe "Stripe checkout", type: :feature do
     # Delivery
     expect(page).to have_current_path("/checkout/delivery")
     expect(page).to have_content("UPS Ground")
-    click_on "Save and Continue"
-
-    expect(page).to have_current_path("/checkout/payment")
   end
 
   # This will fetch a token from Stripe.com and then pass that to the webserver.
   # The server then processes the payment using that token.
-  it "can process a valid payment", js: true do
-    fill_in "Card Number", with: "4242 4242 4242 4242"
-    fill_in "Card Code", with: "123"
-    fill_in "Expiration", with: "01 / #{Time.now.year + 1}"
-    click_button "Save and Continue"
-    expect(page).to have_current_path("/checkout/confirm")
-    click_button "Place Order"
-    expect(page).to have_content("Your order has been processed successfully")
+
+  context 'when using Stripe V2 API library' do
+    let(:preferred_v3_elements) { false }
+
+    before do
+      click_on "Save and Continue"
+      expect(page).to have_current_path("/checkout/payment")
+    end
+
+    it "can process a valid payment", js: true do
+      fill_in "Card Number", with: "4242 4242 4242 4242"
+      fill_in "Card Code", with: "123"
+      fill_in "Expiration", with: "01 / #{Time.now.year + 1}"
+      click_button "Save and Continue"
+      expect(page).to have_current_path("/checkout/confirm")
+      click_button "Place Order"
+      expect(page).to have_content("Your order has been processed successfully")
+    end
+
+    it "shows an error with a missing credit card number", js: true do
+      fill_in "Expiration", with: "01 / #{Time.now.year + 1}"
+      click_button "Save and Continue"
+      expect(page).to have_content("Could not find payment information")
+    end
+
+    it "shows an error with a missing expiration date", js: true do
+      fill_in "Card Number", with: "4242 4242 4242 4242"
+      click_button "Save and Continue"
+      expect(page).to have_content("Your card's expiration year is invalid.")
+    end
+
+    it "shows an error with an invalid credit card number", js: true do
+      fill_in "Card Number", with: "1111 1111 1111 1111"
+      fill_in "Expiration", with: "01 / #{Time.now.year + 1}"
+      click_button "Save and Continue"
+      expect(page).to have_content("Your card number is incorrect.")
+    end
+
+    it "shows an error with invalid security fields", js: true do
+      fill_in "Card Number", with: "4242 4242 4242 4242"
+      fill_in "Expiration", with: "01 / #{Time.now.year + 1}"
+      fill_in "Card Code", with: "12"
+      click_button "Save and Continue"
+      expect(page).to have_content("Your card's security code is invalid.")
+    end
+
+    it "shows an error with invalid expiry fields", js: true do
+      fill_in "Card Number", with: "4242 4242 4242 4242"
+      fill_in "Expiration", with: "00 / #{Time.now.year + 1}"
+      fill_in "Card Code", with: "123"
+      click_button "Save and Continue"
+      expect(page).to have_content("Your card's expiration month is invalid.")
+    end
   end
 
-  it "shows an error with a missing credit card number", js: true do
-    fill_in "Expiration", with: "01 / #{Time.now.year + 1}"
-    click_button "Save and Continue"
-    expect(page).to have_content("Could not find payment information")
-  end
+  context 'when using Stripe V3 API libarary with Elements' do
+    let(:preferred_v3_elements) { true }
 
-  it "shows an error with a missing expiration date", js: true do
-    fill_in "Card Number", with: "4242 4242 4242 4242"
-    click_button "Save and Continue"
-    expect(page).to have_content("Your card's expiration year is invalid.")
-  end
+    before do
+      click_on "Save and Continue"
+      expect(page).to have_current_path("/checkout/payment")
+    end
 
-  it "shows an error with an invalid credit card number", js: true do
-    fill_in "Card Number", with: "1111 1111 1111 1111"
-    fill_in "Expiration", with: "01 / #{Time.now.year + 1}"
-    click_button "Save and Continue"
-    expect(page).to have_content("Your card number is incorrect.")
-  end
+    it "can process a valid payment", js: true do
+      within_frame find('#card_number iframe') do
+        '4242 4242 4242 4242'.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
+      end
+      within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
+      within_frame(find '#card_expiry iframe') { fill_in 'exp-date', with: "0132" }
+      click_button "Save and Continue"
+      expect(page).to have_current_path("/checkout/confirm")
+      click_button "Place Order"
+      expect(page).to have_content("Your order has been processed successfully")
+    end
 
-  it "shows an error with invalid security fields", js: true do
-    fill_in "Card Number", with: "4242 4242 4242 4242"
-    fill_in "Expiration", with: "01 / #{Time.now.year + 1}"
-    fill_in "Card Code", with: "12"
-    click_button "Save and Continue"
-    expect(page).to have_content("Your card's security code is invalid.")
-  end
+    it "shows an error with a missing credit card number", js: true do
+      within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
+      within_frame(find '#card_expiry iframe') { fill_in 'exp-date', with: "0132" }
+      click_button "Save and Continue"
+      expect(page).to have_content("Your card number is incomplete.")
+    end
 
-  it "shows an error with invalid expiry fields", js: true do
-    fill_in "Card Number", with: "4242 4242 4242 4242"
-    fill_in "Expiration", with: "00 / #{Time.now.year + 1}"
-    fill_in "Card Code", with: "123"
-    click_button "Save and Continue"
-    expect(page).to have_content("Your card's expiration month is invalid.")
+    it "shows an error with a missing expiration date", js: true do
+      within_frame find('#card_number iframe') do
+        '4242 4242 4242 4242'.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
+      end
+      within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
+      click_button "Save and Continue"
+      expect(page).to have_content("Your card's expiration date is incomplete.")
+    end
+
+    it "shows an error with an invalid credit card number", js: true do
+      within_frame find('#card_number iframe') do
+        '1111 1111 1111 1111'.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
+      end
+      within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
+      within_frame(find '#card_expiry iframe') { fill_in 'exp-date', with: "0132" }
+      click_button "Save and Continue"
+      expect(page).to have_content("Your card number is invalid.")
+    end
+
+    it "shows an error with invalid security fields", js: true do
+      within_frame find('#card_number iframe') do
+        '4242 4242 4242 4242'.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
+      end
+      within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '12' }
+      within_frame(find '#card_expiry iframe') { fill_in 'exp-date', with: "0132" }
+      click_button "Save and Continue"
+      expect(page).to have_content("Your card's security code is incomplete.")
+    end
+
+    it "shows an error with invalid expiry fields", js: true do
+      within_frame find('#card_number iframe') do
+        '4242 4242 4242 4242'.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
+      end
+      within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
+      within_frame(find '#card_expiry iframe') { fill_in 'exp-date', with: "013" }
+      click_button "Save and Continue"
+      expect(page).to have_content("Your card's expiration date is incomplete.")
+    end
   end
 end

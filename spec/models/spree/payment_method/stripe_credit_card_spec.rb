@@ -29,6 +29,12 @@ describe Spree::PaymentMethod::StripeCreditCard do
     allow(subject).to receive(:gateway).and_return gateway
   end
 
+  it 'can enable Stripe.js V3 Elements via preference setting' do
+    expect do
+      subject.preferred_v3_elements = true
+    end.to change { subject.v3_elements? }.from(false).to true
+  end
+
   describe '#create_profile' do
     before do
       allow(payment.source).to receive(:update_attributes!)

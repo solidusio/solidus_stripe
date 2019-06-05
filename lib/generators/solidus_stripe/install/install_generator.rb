@@ -7,6 +7,13 @@ module SolidusStripe
       class_option :auto_run_migrations, type: :boolean, default: false
       class_option :auto_run_seeds, type: :boolean, default: false
 
+      def add_stylesheets
+        filename = 'vendor/assets/stylesheets/spree/frontend/all.css'
+        if File.file? filename
+          inject_into_file filename, " *= require spree/frontend/solidus_stripe\n", before: '*/', verbose: true
+        end
+      end
+
       def add_migrations
         run 'bundle exec rake railties:install:migrations FROM=solidus_stripe'
       end
