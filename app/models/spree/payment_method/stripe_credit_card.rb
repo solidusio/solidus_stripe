@@ -18,7 +18,7 @@ module Spree
       end
 
       def v3_elements?
-        !!preferences[:v3_elements]
+        !!preferred_v3_elements
       end
 
       def gateway_class
