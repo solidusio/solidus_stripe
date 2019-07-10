@@ -13,7 +13,7 @@ Installation
 In your Gemfile:
 
 ```ruby
-gem "solidus_stripe"
+gem "solidus_stripe", github: "solidusio-contrib/solidus_stripe"
 ```
 
 Then run from the command line:
