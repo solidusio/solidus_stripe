@@ -1,7 +1,7 @@
 Solidus Stripe
 ===============
 
-[![Build Status](https://travis-ci.org/solidusio-contrib/solidus_stripe.svg?branch=master)](https://travis-ci.org/solidusio-contrib/solidus_stripe)
+[![CircleCI](https://circleci.com/gh/solidusio-contrib/solidus_stripe.svg?style=svg)](https://circleci.com/gh/solidusio-contrib/solidus_stripe)
 
 Stripe Payment Method for Solidus. It works as a wrapper for the ActiveMerchant Stripe gateway.
 
@@ -20,61 +20,59 @@ Then run from the command line:
 
 ```shell
 bundle install
-rails g solidus_stripe:install
+bundle exec rails g solidus_stripe:install
+bundle exec rails db:migrate
 ```
 
-Finally, make sure to **restart your app**. Navigate to *Settings >
-Payments > Payment Methods* in the admin panel.  You should see a number of payment
-methods and the assigned provider for each.  Click on the payment method you wish
-to change the provider, and you should see a number of options under the provider dropdown.
+Usage
+-----
+
+Navigate to *Settings > Payments > Payment Methods* in the admin panel.
+You can now create a new payment method that uses Stripe by selecting
+`Stripe credit card` under Type in the New Payment Method form and saving.
+The Stripe payment method's extra fields will be now shown in the form.
+
+**Configure via database configuration**
+
+If you want to store your Stripe credentials in the database just
+fill the new fields in the form, selecting `custom` (default) in the
+Preference Source field.
+
+**Configure via static configuration**
+
+If you want to store your credentials into your codebase or use ENV
+variables you can create the following static configuration:
+
+```ruby
+# config/initializers/spree.rb
+
+Spree.config do |config|
+  # ...
+
+  config.static_model_preferences.add(
+    Spree::PaymentMethod::StripeCreditCard,
+    'stripe_env_credentials',
+    secret_key: ENV['STRIPE_SECRET_KEY'],
+    publishable_key: ENV['STRIPE_PUBLISHABLE_KEY'],
+    v3_elements: false,
+    server: Rails.env.production? ? 'production' : 'test',
+    test_mode: !Rails.env.production?
+  )
+end
+```
+
+Once your server has been restarted, you can select in the Preference
+Source field a new entry called `stripe_env_credentials`. After saving,
+your  application will start using the static configuration to process
+Stripe payments.
+
 
 Migrating from solidus_gateway
 ------------------------------
 
-If you were previously using `solidus_gateway` gem you might need some manual
-steps to get this new gem working.
-
-It's important to know that both gems can live together and there
-is no need to remove `solidus_gateway` when installing this gem.
-
-Migration steps are:
-
-- Install `solidus_stripe` as described above.
-- Run migrations: [this one](https://github.com/solidusio-contrib/solidus_stripe/blob/ad591678243b805935b2ad03a4006024f890dd33/db/migrate/20181010123508_update_stripe_payment_method_type_to_credit_card.rb)
-  is reponsible for updating all existing payment methods to use the new Stripe
-  payment method type and stop referencing the `spree_gateway` one. Also, it
-  updates the preferences for Stripe to point to the new method if they were set
-  via legacy database configuration storage.
-- Change static model preferences to use `Spree::Gateway::StripeGateway`
-  payment method: this is needed only if you use static model preferences. You
-  should have this code somewhere in your app (usually) into an initializer:
-
-  ```ruby
-  Spree::Config.configure do |config|
-    config.static_model_preferences.add(
-      Spree::Gateway::StripeGateway,
-      'stripe_credentials',
-      secret_key: secret_key,
-      publishable_key: publishable_key
-    )
-  end
-  ```
-
-  This needs to be changed to:
-
-  ```ruby
-  Spree::Config.configure do |config|
-    config.static_model_preferences.add(
-      Spree::PaymentMethod::StripeCreditCard,
-      'stripe_credentials',
-      secret_key: secret_key,
-      publishable_key: publishable_key
-    )
-  end
-  ```
-
-  Once changes are deployed, check the admin payment method page to be sure
-  it's using the right static configuration.
+If you were previously using `solidus_gateway` gem you might want to
+check out our [Wiki page](https://github.com/solidusio-contrib/solidus_stripe/wiki/Migrating-from-solidus_gateway)
+that describes how to handle this migration.
 
 Testing
 -------

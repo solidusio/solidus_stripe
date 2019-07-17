@@ -11,8 +11,6 @@ group :test do
   end
 
   gem 'factory_bot', (branch < 'v2.5' ? '4.10.0' : '> 4.10.0')
-
-  gem 'chromedriver-helper' if ENV['CI']
 end
 
 gem 'pg'
