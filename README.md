@@ -1,7 +1,7 @@
 Solidus Stripe
 ===============
 
-[![Build Status](https://travis-ci.org/solidusio-contrib/solidus_stripe.svg?branch=master)](https://travis-ci.org/solidusio-contrib/solidus_stripe)
+[![CircleCI](https://circleci.com/gh/solidusio-contrib/solidus_stripe.svg?style=svg)](https://circleci.com/gh/solidusio-contrib/solidus_stripe)
 
 Stripe Payment Method for Solidus. It works as a wrapper for the ActiveMerchant Stripe gateway.
 
