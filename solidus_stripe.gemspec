@@ -25,7 +25,7 @@ Gem::Specification.new do |s|
   s.requirements << "none"
 
   s.add_dependency "solidus_core", [">= 2.3", "< 3"]
-  s.add_dependency "solidus_support", ">= 0.1.3"
+  s.add_dependency "solidus_support", ">= 0.3.1"
 
   # ActiveMerchant v1.58 through v1.59 introduced a breaking change
   # to the stripe gateway.
@@ -37,9 +37,8 @@ Gem::Specification.new do |s|
   s.add_development_dependency "capybara-screenshot"
   s.add_development_dependency "database_cleaner", "~> 1.5"
   s.add_development_dependency "factory_bot", "~> 4.4"
-  s.add_development_dependency "poltergeist", "~> 1.9"
   s.add_development_dependency "rspec-rails", "~> 3.2"
-  s.add_development_dependency "selenium-webdriver"
+  s.add_development_dependency 'selenium-webdriver', '~> 3.142'
   s.add_development_dependency "simplecov"
   s.add_development_dependency "sqlite3"
 end
