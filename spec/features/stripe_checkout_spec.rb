@@ -3,10 +3,11 @@
 require 'spec_helper'
 
 RSpec.describe "Stripe checkout", type: :feature do
+  let(:zone) { FactoryBot.create(:zone) }
+  let(:country) { FactoryBot.create(:country) }
+
   before do
     FactoryBot.create(:store)
-    zone = FactoryBot.create(:zone)
-    country = FactoryBot.create(:country)
     zone.members << Spree::ZoneMember.create!(zoneable: country)
     FactoryBot.create(:free_shipping_method)
 
@@ -71,6 +72,54 @@ RSpec.describe "Stripe checkout", type: :feature do
       fill_in "Card Code", with: "123"
       fill_in "Expiration", with: "01 / #{Time.now.year + 1}"
       click_button "Save and Continue"
+      expect(page).to have_current_path("/checkout/confirm")
+      click_button "Place Order"
+      expect(page).to have_content("Your order has been processed successfully")
+    end
+
+    it "can re-use saved cards", js: true do
+      fill_in "Card Number", with: "4242 4242 4242 4242"
+      fill_in "Card Code", with: "123"
+      fill_in "Expiration", with: "01 / #{Time.now.year + 1}"
+      click_button "Save and Continue"
+
+      expect(page).to have_current_path("/checkout/confirm")
+      click_button "Place Order"
+      expect(page).to have_content("Your order has been processed successfully")
+
+      visit spree.root_path
+      click_link "DL-44"
+      click_button "Add To Cart"
+
+      expect(page).to have_current_path("/cart")
+      click_button "Checkout"
+
+      # Address
+      expect(page).to have_current_path("/checkout/address")
+
+      within("#billing") do
+        fill_in "First Name", with: "Han"
+        fill_in "Last Name", with: "Solo"
+        fill_in "Street Address", with: "YT-1300"
+        fill_in "City", with: "Mos Eisley"
+        select "United States of America", from: "Country"
+        select country.states.first.name, from: "order_bill_address_attributes_state_id"
+        fill_in "Zip", with: "12010"
+        fill_in "Phone", with: "(555) 555-5555"
+      end
+      click_on "Save and Continue"
+
+      # Delivery
+      expect(page).to have_current_path("/checkout/delivery")
+      expect(page).to have_content("UPS Ground")
+      click_on "Save and Continue"
+
+      # Payment
+      expect(page).to have_current_path("/checkout/payment")
+      choose "Use an existing card on file"
+      click_button "Save and Continue"
+
+      # Confirm
       expect(page).to have_current_path("/checkout/confirm")
       click_button "Place Order"
       expect(page).to have_content("Your order has been processed successfully")
