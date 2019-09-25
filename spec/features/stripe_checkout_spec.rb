@@ -26,9 +26,18 @@ RSpec.describe "Stripe checkout", type: :feature do
     expect(page).to have_current_path("/cart")
     click_button "Checkout"
 
+    expect(page).to have_current_path("/checkout/registration")
+    click_link "Create a new account"
+    within("#new_spree_user") do
+      fill_in "Email", with: "mary@example.com"
+      fill_in "Password", with: "superStrongPassword"
+      fill_in "Password Confirmation", with: "superStrongPassword"
+    end
+    click_button "Create"
+
     # Address
     expect(page).to have_current_path("/checkout/address")
-    fill_in "Customer E-Mail", with: "han@example.com"
+
     within("#billing") do
       fill_in "First Name", with: "Han"
       fill_in "Last Name", with: "Solo"
