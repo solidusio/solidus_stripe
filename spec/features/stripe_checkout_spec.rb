@@ -181,6 +181,55 @@ RSpec.describe "Stripe checkout", type: :feature do
       expect(page).to have_content("Your order has been processed successfully")
     end
 
+    it "can re-use saved cards", js: true do
+      within_frame find('#card_number iframe') do
+        '4242 4242 4242 4242'.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
+      end
+      within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
+      within_frame(find '#card_expiry iframe') { fill_in 'exp-date', with: "0132" }
+      click_button "Save and Continue"
+      expect(page).to have_current_path("/checkout/confirm")
+      click_button "Place Order"
+      expect(page).to have_content("Your order has been processed successfully")
+
+      visit spree.root_path
+      click_link "DL-44"
+      click_button "Add To Cart"
+
+      expect(page).to have_current_path("/cart")
+      click_button "Checkout"
+
+      # Address
+      expect(page).to have_current_path("/checkout/address")
+
+      within("#billing") do
+        fill_in "First Name", with: "Han"
+        fill_in "Last Name", with: "Solo"
+        fill_in "Street Address", with: "YT-1300"
+        fill_in "City", with: "Mos Eisley"
+        select "United States of America", from: "Country"
+        select country.states.first.name, from: "order_bill_address_attributes_state_id"
+        fill_in "Zip", with: "12010"
+        fill_in "Phone", with: "(555) 555-5555"
+      end
+      click_on "Save and Continue"
+
+      # Delivery
+      expect(page).to have_current_path("/checkout/delivery")
+      expect(page).to have_content("UPS Ground")
+      click_on "Save and Continue"
+
+      # Payment
+      expect(page).to have_current_path("/checkout/payment")
+      choose "Use an existing card on file"
+      click_button "Save and Continue"
+
+      # Confirm
+      expect(page).to have_current_path("/checkout/confirm")
+      click_button "Place Order"
+      expect(page).to have_content("Your order has been processed successfully")
+    end
+
     it "shows an error with a missing credit card number", js: true do
       within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
       within_frame(find '#card_expiry iframe') { fill_in 'exp-date', with: "0132" }

@@ -85,19 +85,21 @@
     });
 
     form.bind('submit', function(event) {
-      event.preventDefault();
+      if (Spree.stripePaymentMethod.is(':visible')) {
+        event.preventDefault();
 
-      stripe.createToken(cardNumber).then(function(result) {
-        if (result.error) {
-          errorElement.text(result.error.message).show();
-          setTimeout(function() {
-            $.rails.enableElement(submitButton[0]);
-            submitButton.removeAttr('disabled').removeClass('disabled');
-          }, 100);
-        } else {
-          stripeTokenHandler(result.token);
-        }
-      });
+        stripe.createToken(cardNumber).then(function(result) {
+          if (result.error) {
+            errorElement.text(result.error.message).show();
+            setTimeout(function() {
+              $.rails.enableElement(submitButton[0]);
+              submitButton.removeAttr('disabled').removeClass('disabled');
+            }, 100);
+          } else {
+            stripeTokenHandler(result.token);
+          }
+        });
+      }
     });
 
     function stripeTokenHandler(token) {
