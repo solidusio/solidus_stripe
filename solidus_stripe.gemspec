@@ -37,6 +37,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency "capybara-screenshot"
   s.add_development_dependency "database_cleaner", "~> 1.5"
   s.add_development_dependency "factory_bot", "~> 4.4"
+  s.add_development_dependency "gem-release", "~> 2.0"
   s.add_development_dependency "rspec-rails", "~> 3.2"
   s.add_development_dependency 'selenium-webdriver', '~> 3.142'
   s.add_development_dependency "simplecov"
