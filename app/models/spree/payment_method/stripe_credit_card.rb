@@ -6,6 +6,7 @@ module Spree
       preference :secret_key, :string
       preference :publishable_key, :string
       preference :v3_elements, :boolean
+      preference :v3_intents, :boolean
 
       CARD_TYPE_MAPPING = {
         'American Express' => 'american_express',
@@ -21,8 +22,16 @@ module Spree
         !!preferred_v3_elements
       end
 
+      def v3_intents?
+        !!preferred_v3_intents
+      end
+
       def gateway_class
-        ActiveMerchant::Billing::StripeGateway
+        if v3_intents?
+          ActiveMerchant::Billing::StripePaymentIntentsGateway
+        else
+          ActiveMerchant::Billing::StripeGateway
+        end
       end
 
       def payment_profiles_supported?
@@ -54,7 +63,7 @@ module Spree
       end
 
       def create_profile(payment)
-        return unless payment.source.gateway_customer_profile_id.nil?
+        return if payment.source.gateway_customer_profile_id
 
         options = {
           email: payment.order.email,
@@ -62,22 +71,32 @@ module Spree
         }.merge! address_for(payment)
 
         source = update_source!(payment.source)
-        if source.number.blank? && source.gateway_payment_profile_id.present?
-          creditcard = source.gateway_payment_profile_id
-        else
-          creditcard = source
-        end
 
-        response = gateway.store(creditcard, options)
-        if response.success?
+        if v3_intents?
+          customer = Stripe::Customer.create(payment_method: source.gateway_payment_profile_id)
+
           payment.source.update_attributes!({
             cc_type: payment.source.cc_type, # side-effect of update_source!
-            gateway_customer_profile_id: response.params['id'],
-            gateway_payment_profile_id: response.params['default_source'] || response.params['default_card']
+            gateway_customer_profile_id: customer.id,
+            gateway_payment_profile_id: source.gateway_payment_profile_id
           })
-
         else
-          payment.send(:gateway_error, response.message)
+          if source.number.blank? && source.gateway_payment_profile_id.present?
+            creditcard = source.gateway_payment_profile_id
+          else
+            creditcard = source
+          end
+          response = gateway.store(creditcard, options)
+          if response.success?
+            payment.source.update_attributes!({
+              cc_type: payment.source.cc_type, # side-effect of update_source!
+              gateway_customer_profile_id: response.params['id'],
+              gateway_payment_profile_id: response.params['default_source'] || response.params['default_card']
+            })
+
+          else
+            payment.send(:gateway_error, response.message)
+          end
         end
       end
 

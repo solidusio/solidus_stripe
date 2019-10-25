@@ -1,0 +1,146 @@
+<% param_prefix = "payment_source[#{payment_method.id}]" %>
+
+<div class="field field-required">
+  <%= label_tag "name_on_card_#{payment_method.id}", t('spree.name_on_card') %>
+  <%= text_field_tag "#{param_prefix}[name]", "#{@order.billing_firstname} #{@order.billing_lastname}", { id: "name_on_card_#{payment_method.id}", autocomplete: "cc-name" } %>
+</div>
+
+<!-- placeholder for Elements -->
+<div id="card-element"></div>
+
+<%= image_tag 'credit_cards/credit_card.gif', id: 'credit-card-image' %>
+
+<div id="card-errors" class='errorExplanation' role="alert" style="display: none"></div>
+
+<% if @order.bill_address %>
+  <%= fields_for "#{param_prefix}[address_attributes]", @order.bill_address do |f| %>
+    <%= render partial: 'spree/address/form_hidden', locals: { form: f } %>
+  <% end %>
+<% end %>
+
+<%= hidden_field_tag "#{param_prefix}[cc_type]", '', id: "cc_type", class: 'ccType' %>
+
+<script src="https://js.stripe.com/v3/"></script>
+
+<script>
+  Spree.stripePaymentMethod = $('#payment_method_' + <%= payment_method.id %>);
+
+  var stripe = Stripe("<%= payment_method.preferred_publishable_key %>");
+
+  var elements = stripe.elements({locale: 'en'});
+
+  var cardElement = elements.create('card');
+  cardElement.mount('#card-element');
+
+  $(function() {
+    var form = Spree.stripePaymentMethod.parents('form');
+    var submitButton = form.find('input[type="submit"]');
+    var errorElement = form.find('#card-errors');
+    var cardType = form.find('input#cc_type');
+    var authToken = $('meta[name="csrf-token"]').attr('content');
+    var errorElement = $('#card-errors');
+
+    form.bind('submit', function(event) {
+      event.preventDefault();
+
+      errorElement.text('').hide();
+
+      stripe.createPaymentMethod(
+        'card',
+        cardElement
+      ).then(function(result) {
+        if (result.error) {
+          showError(result.error);
+          // Show error in payment form
+        } else {
+          stripeTokenHandler(result.paymentMethod);
+
+          // Send paymentMethod.id to server
+          fetch('/stripe/confirm_payment', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              payment_method_id: result.paymentMethod.id,
+              authenticity_token: authToken
+
+            })
+          }).then(function(result) {
+            // Handle server response (see Step 3)
+            result.json().then(function(json) {
+              handleServerResponse(json);
+            })
+          });
+        }
+      });
+    });
+
+    function handleServerResponse(response) {
+      if (response.error) {
+          showError(response.error);
+      } else if (response.requires_action) {
+        // Use Stripe.js to handle required card action
+        stripe.handleCardAction(
+          response.payment_intent_client_secret
+        ).then(function(result) {
+          if (result.error) {
+            showError(result.error.message);
+          } else {
+            // The card action has been handled
+            // The PaymentIntent can be confirmed again on the server
+            fetch('/stripe/confirm_payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                payment_intent_id: result.paymentIntent.id,
+                authenticity_token: authToken
+              })
+            }).then(function(confirmResult) {
+              return confirmResult.json();
+            }).then(handleServerResponse);
+          }
+        });
+      } else {
+        form.unbind('submit').submit();
+      }
+    }
+
+    function mapCC(ccType) {
+      if (ccType === 'MasterCard') {
+        return 'mastercard';
+      } else if (ccType === 'Visa') {
+        return 'visa';
+      } else if (ccType === 'American Express') {
+        return 'amex';
+      } else if (ccType === 'Discover') {
+        return 'discover';
+      } else if (ccType === 'Diners Club') {
+        return 'dinersclub';
+      } else if (ccType === 'JCB') {
+        return 'jcb';
+      } else {
+        return ccType;
+      }
+    };
+
+    function stripeTokenHandler(token) {
+      var paymentMethodId = Spree.stripePaymentMethod.prop('id').split("_")[2];
+      var baseSelector = `<input type='hidden' class='stripeToken' name='payment_source[${paymentMethodId}]`;
+
+      Spree.stripePaymentMethod.append(`${baseSelector}[gateway_payment_profile_id]' value='${token.id}'/>`);
+      Spree.stripePaymentMethod.append(`${baseSelector}[last_digits]' value='${token.card.last4}'/>`);
+      Spree.stripePaymentMethod.append(`${baseSelector}[month]' value='${token.card.exp_month}'/>`);
+      Spree.stripePaymentMethod.append(`${baseSelector}[year]' value='${token.card.exp_year}'/>`);
+      cardType.val(mapCC(token.card.brand));
+    };
+
+    function showError(error) {
+      errorElement.text(error).show();
+      setTimeout(function() {
+        $.rails.enableElement(submitButton[0]);
+        submitButton.removeAttr('disabled').removeClass('disabled');
+      }, 100);
+    };
+  });
+</script>

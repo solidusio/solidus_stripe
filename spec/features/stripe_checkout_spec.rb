@@ -15,7 +15,8 @@ RSpec.describe "Stripe checkout", type: :feature do
       name: "Stripe",
       preferred_secret_key: "sk_test_VCZnDv3GLU15TRvn8i2EsaAN",
       preferred_publishable_key: "pk_test_Cuf0PNtiAkkMpTVC2gwYDMIg",
-      preferred_v3_elements: preferred_v3_elements
+      preferred_v3_elements: preferred_v3_elements,
+      preferred_v3_intents: preferred_v3_intents
     )
 
     FactoryBot.create(:product, name: "DL-44")
@@ -61,6 +62,7 @@ RSpec.describe "Stripe checkout", type: :feature do
 
   context 'when using Stripe V2 API library' do
     let(:preferred_v3_elements) { false }
+    let(:preferred_v3_intents) { false }
 
     before do
       click_on "Save and Continue"
@@ -163,6 +165,7 @@ RSpec.describe "Stripe checkout", type: :feature do
 
   context 'when using Stripe V3 API libarary with Elements' do
     let(:preferred_v3_elements) { true }
+    let(:preferred_v3_intents) { false }
 
     before do
       click_on "Save and Continue"
@@ -274,6 +277,77 @@ RSpec.describe "Stripe checkout", type: :feature do
       within_frame(find '#card_expiry iframe') { fill_in 'exp-date', with: "013" }
       click_button "Save and Continue"
       expect(page).to have_content("Your card's expiration date is incomplete.")
+    end
+  end
+
+  context "when using Stripe V3 API libarary with Intents", :js do
+    let(:preferred_v3_elements) { false }
+    let(:preferred_v3_intents) { true }
+
+    before do
+      click_on "Save and Continue"
+      expect(page).to have_current_path("/checkout/payment")
+      enter_payment_data(card_number)
+    end
+
+    context "when using a valid 3D Secure card" do
+      let(:card_number) { "4000 0027 6000 3184" }
+
+      it "successfully completes the checkout" do
+        click_button "Save and Continue"
+
+        within_3d_secure_modal do
+          expect(page).to have_content '$19.99 using 3D Secure'
+
+          click_button 'Complete authentication'
+        end
+
+        expect(page).to have_current_path("/checkout/confirm")
+
+        click_button "Place Order"
+        expect(page).to have_content("Your order has been processed successfully")
+      end
+    end
+
+    context "when using a card without enough money" do
+      let(:card_number) { "4000 0000 0000 9995" }
+
+      it "fails the payment" do
+        click_button "Save and Continue"
+
+        expect(page).to have_content "Your card has insufficient funds."
+      end
+    end
+
+    context "when entering the wrong 3D verification code" do
+      let(:card_number) { "4000 0084 0000 1629" }
+
+      it "fails the payment" do
+        click_button "Save and Continue"
+
+        within_3d_secure_modal do
+          click_button 'Complete authentication'
+        end
+
+        expect(page).to have_content "Your card was declined."
+      end
+    end
+  end
+
+  def enter_payment_data(card_number)
+    within_frame find("#card-element iframe") do
+      card_number.split('').each { |n| find_field("cardnumber").native.send_keys(n) }
+      "12 22".split('').each { |n| find_field("exp-date").native.send_keys(n) }
+      "123".split('').each { |n| find_field("cvc").native.send_keys(n) }
+      "12345".split('').each { |n| find_field("postal").native.send_keys(n) }
+    end
+  end
+
+  def within_3d_secure_modal
+    within_frame "__privateStripeFrame8" do
+      within_frame "challengeFrame" do
+        yield
+      end
     end
   end
 end

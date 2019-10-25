@@ -31,7 +31,8 @@ Gem::Specification.new do |s|
   # to the stripe gateway.
   #
   # This was resolved in v1.60, but we still need to skip 1.58 & 1.59.
-  s.add_dependency "activemerchant", "~> 1.48", "!= 1.58.0", "!= 1.59.0"
+  s.add_dependency "activemerchant", ">= 1.100" # includes "Stripe Payment Intents: Fix fallback for Store"
+  s.add_dependency "stripe", ">= 5.10"
 
   s.add_development_dependency "capybara"
   s.add_development_dependency "capybara-screenshot"
