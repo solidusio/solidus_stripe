@@ -163,7 +163,55 @@ RSpec.describe "Stripe checkout", type: :feature do
     end
   end
 
-  context 'when using Stripe V3 API libarary with Elements' do
+  shared_examples "Stripe Elements invalid payments" do
+    it "shows an error with a missing credit card number" do
+      within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
+      within_frame(find '#card_expiry iframe') { fill_in 'exp-date', with: "0132" }
+      click_button "Save and Continue"
+      expect(page).to have_content("Your card number is incomplete.")
+    end
+
+    it "shows an error with a missing expiration date" do
+      within_frame find('#card_number iframe') do
+        '4242 4242 4242 4242'.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
+      end
+      within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
+      click_button "Save and Continue"
+      expect(page).to have_content("Your card's expiration date is incomplete.")
+    end
+
+    it "shows an error with an invalid credit card number" do
+      within_frame find('#card_number iframe') do
+        '1111 1111 1111 1111'.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
+      end
+      within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
+      within_frame(find '#card_expiry iframe') { fill_in 'exp-date', with: "0132" }
+      click_button "Save and Continue"
+      expect(page).to have_content("Your card number is invalid.")
+    end
+
+    it "shows an error with invalid security fields" do
+      within_frame find('#card_number iframe') do
+        '4242 4242 4242 4242'.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
+      end
+      within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '12' }
+      within_frame(find '#card_expiry iframe') { fill_in 'exp-date', with: "0132" }
+      click_button "Save and Continue"
+      expect(page).to have_content("Your card's security code is incomplete.")
+    end
+
+    it "shows an error with invalid expiry fields" do
+      within_frame find('#card_number iframe') do
+        '4242 4242 4242 4242'.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
+      end
+      within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
+      within_frame(find '#card_expiry iframe') { fill_in 'exp-date', with: "013" }
+      click_button "Save and Continue"
+      expect(page).to have_content("Your card's expiration date is incomplete.")
+    end
+  end
+
+  context 'when using Stripe V3 API libarary with Elements', :js do
     let(:preferred_v3_elements) { true }
     let(:preferred_v3_intents) { false }
 
@@ -172,7 +220,7 @@ RSpec.describe "Stripe checkout", type: :feature do
       expect(page).to have_current_path("/checkout/payment")
     end
 
-    it "can process a valid payment", js: true do
+    it "can process a valid payment" do
       within_frame find('#card_number iframe') do
         '4242 4242 4242 4242'.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
       end
@@ -184,7 +232,7 @@ RSpec.describe "Stripe checkout", type: :feature do
       expect(page).to have_content("Your order has been processed successfully")
     end
 
-    it "can re-use saved cards", js: true do
+    it "can re-use saved cards" do
       within_frame find('#card_number iframe') do
         '4242 4242 4242 4242'.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
       end
@@ -233,51 +281,7 @@ RSpec.describe "Stripe checkout", type: :feature do
       expect(page).to have_content("Your order has been processed successfully")
     end
 
-    it "shows an error with a missing credit card number", js: true do
-      within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
-      within_frame(find '#card_expiry iframe') { fill_in 'exp-date', with: "0132" }
-      click_button "Save and Continue"
-      expect(page).to have_content("Your card number is incomplete.")
-    end
-
-    it "shows an error with a missing expiration date", js: true do
-      within_frame find('#card_number iframe') do
-        '4242 4242 4242 4242'.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
-      end
-      within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
-      click_button "Save and Continue"
-      expect(page).to have_content("Your card's expiration date is incomplete.")
-    end
-
-    it "shows an error with an invalid credit card number", js: true do
-      within_frame find('#card_number iframe') do
-        '1111 1111 1111 1111'.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
-      end
-      within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
-      within_frame(find '#card_expiry iframe') { fill_in 'exp-date', with: "0132" }
-      click_button "Save and Continue"
-      expect(page).to have_content("Your card number is invalid.")
-    end
-
-    it "shows an error with invalid security fields", js: true do
-      within_frame find('#card_number iframe') do
-        '4242 4242 4242 4242'.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
-      end
-      within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '12' }
-      within_frame(find '#card_expiry iframe') { fill_in 'exp-date', with: "0132" }
-      click_button "Save and Continue"
-      expect(page).to have_content("Your card's security code is incomplete.")
-    end
-
-    it "shows an error with invalid expiry fields", js: true do
-      within_frame find('#card_number iframe') do
-        '4242 4242 4242 4242'.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
-      end
-      within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
-      within_frame(find '#card_expiry iframe') { fill_in 'exp-date', with: "013" }
-      click_button "Save and Continue"
-      expect(page).to have_content("Your card's expiration date is incomplete.")
-    end
+    it_behaves_like "Stripe Elements invalid payments"
   end
 
   context "when using Stripe V3 API libarary with Intents", :js do
@@ -287,13 +291,18 @@ RSpec.describe "Stripe checkout", type: :feature do
     before do
       click_on "Save and Continue"
       expect(page).to have_current_path("/checkout/payment")
-      enter_payment_data(card_number)
     end
 
     context "when using a valid 3D Secure card" do
       let(:card_number) { "4000 0027 6000 3184" }
 
       it "successfully completes the checkout" do
+        within_frame find('#card_number iframe') do
+          card_number.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
+        end
+        within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
+        within_frame(find '#card_expiry iframe') { fill_in 'exp-date', with: "0125" }
+
         click_button "Save and Continue"
 
         within_3d_secure_modal do
@@ -305,6 +314,7 @@ RSpec.describe "Stripe checkout", type: :feature do
         expect(page).to have_current_path("/checkout/confirm")
 
         click_button "Place Order"
+
         expect(page).to have_content("Your order has been processed successfully")
       end
     end
@@ -313,6 +323,12 @@ RSpec.describe "Stripe checkout", type: :feature do
       let(:card_number) { "4000 0000 0000 9995" }
 
       it "fails the payment" do
+        within_frame find('#card_number iframe') do
+          card_number.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
+        end
+        within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
+        within_frame(find '#card_expiry iframe') { fill_in 'exp-date', with: "0125" }
+
         click_button "Save and Continue"
 
         expect(page).to have_content "Your card has insufficient funds."
@@ -323,6 +339,12 @@ RSpec.describe "Stripe checkout", type: :feature do
       let(:card_number) { "4000 0084 0000 1629" }
 
       it "fails the payment" do
+        within_frame find('#card_number iframe') do
+          card_number.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
+        end
+        within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
+        within_frame(find '#card_expiry iframe') { fill_in 'exp-date', with: "0125" }
+
         click_button "Save and Continue"
 
         within_3d_secure_modal do
@@ -332,19 +354,66 @@ RSpec.describe "Stripe checkout", type: :feature do
         expect(page).to have_content "Your card was declined."
       end
     end
-  end
 
-  def enter_payment_data(card_number)
-    within_frame find("#card-element iframe") do
-      card_number.split('').each { |n| find_field("cardnumber").native.send_keys(n) }
-      "12 22".split('').each { |n| find_field("exp-date").native.send_keys(n) }
-      "123".split('').each { |n| find_field("cvc").native.send_keys(n) }
-      "12345".split('').each { |n| find_field("postal").native.send_keys(n) }
+    it "can re-use saved cards" do
+      within_frame find('#card_number iframe') do
+        "4000 0027 6000 3184".split('').each { |n| find_field('cardnumber').native.send_keys(n) }
+      end
+      within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
+      within_frame(find '#card_expiry iframe') { fill_in 'exp-date', with: "0132" }
+      click_button "Save and Continue"
+
+      within_3d_secure_modal do
+        click_button 'Complete authentication'
+      end
+
+      expect(page).to have_current_path("/checkout/confirm")
+      click_button "Place Order"
+      expect(page).to have_content("Your order has been processed successfully")
+
+      visit spree.root_path
+      click_link "DL-44"
+      click_button "Add To Cart"
+
+      expect(page).to have_current_path("/cart")
+      click_button "Checkout"
+
+      # Address
+      expect(page).to have_current_path("/checkout/address")
+
+      within("#billing") do
+        fill_in "First Name", with: "Han"
+        fill_in "Last Name", with: "Solo"
+        fill_in "Street Address", with: "YT-1300"
+        fill_in "City", with: "Mos Eisley"
+        select "United States of America", from: "Country"
+        select country.states.first.name, from: "order_bill_address_attributes_state_id"
+        fill_in "Zip", with: "12010"
+        fill_in "Phone", with: "(555) 555-5555"
+      end
+      click_on "Save and Continue"
+
+      # Delivery
+      expect(page).to have_current_path("/checkout/delivery")
+      expect(page).to have_content("UPS Ground")
+      click_on "Save and Continue"
+
+      # Payment
+      expect(page).to have_current_path("/checkout/payment")
+      choose "Use an existing card on file"
+      click_button "Save and Continue"
+
+      # Confirm
+      expect(page).to have_current_path("/checkout/confirm")
+      click_button "Place Order"
+      expect(page).to have_content("Your order has been processed successfully")
     end
+
+    it_behaves_like "Stripe Elements invalid payments"
   end
 
   def within_3d_secure_modal
-    within_frame "__privateStripeFrame8" do
+    within_frame "__privateStripeFrame10" do
       within_frame "challengeFrame" do
         yield
       end
