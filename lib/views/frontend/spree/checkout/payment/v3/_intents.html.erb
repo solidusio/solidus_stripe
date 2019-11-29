@@ -1,37 +1,6 @@
-<% param_prefix = "payment_source[#{payment_method.id}]" %>
-
-<div class="field field-required">
-  <%= label_tag "name_on_card_#{payment_method.id}", t('spree.name_on_card') %>
-  <%= text_field_tag "#{param_prefix}[name]", "#{@order.billing_firstname} #{@order.billing_lastname}", { id: "name_on_card_#{payment_method.id}", autocomplete: "cc-name" } %>
-</div>
-
-<!-- placeholder for Elements -->
-<div id="card-element"></div>
-
-<%= image_tag 'credit_cards/credit_card.gif', id: 'credit-card-image' %>
-
-<div id="card-errors" class='errorExplanation' role="alert" style="display: none"></div>
-
-<% if @order.bill_address %>
-  <%= fields_for "#{param_prefix}[address_attributes]", @order.bill_address do |f| %>
-    <%= render partial: 'spree/address/form_hidden', locals: { form: f } %>
-  <% end %>
-<% end %>
-
-<%= hidden_field_tag "#{param_prefix}[cc_type]", '', id: "cc_type", class: 'ccType' %>
-
-<script src="https://js.stripe.com/v3/"></script>
+<%= render 'spree/checkout/payment/v3/form_elements', payment_method: payment_method %>
 
 <script>
-  Spree.stripePaymentMethod = $('#payment_method_' + <%= payment_method.id %>);
-
-  var stripe = Stripe("<%= payment_method.preferred_publishable_key %>");
-
-  var elements = stripe.elements({locale: 'en'});
-
-  var cardElement = elements.create('card');
-  cardElement.mount('#card-element');
-
   $(function() {
     var form = Spree.stripePaymentMethod.parents('form');
     var submitButton = form.find('input[type="submit"]');
@@ -41,54 +10,49 @@
     var errorElement = $('#card-errors');
 
     form.bind('submit', function(event) {
-      event.preventDefault();
+      if (Spree.stripePaymentMethod.is(':visible')) {
+        event.preventDefault();
 
-      errorElement.text('').hide();
+        errorElement.text('').hide();
 
-      stripe.createPaymentMethod(
-        'card',
-        cardElement
-      ).then(function(result) {
-        if (result.error) {
-          showError(result.error);
-          // Show error in payment form
-        } else {
-          stripeTokenHandler(result.paymentMethod);
+        stripe.createPaymentMethod(
+          'card',
+          cardNumber
+        ).then(function(result) {
+          if (result.error) {
+            showError(result.error.message);
+          } else {
+            stripeTokenHandler(result.paymentMethod);
+            fetch('/stripe/confirm_payment', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                payment_method_id: result.paymentMethod.id,
+                authenticity_token: authToken
 
-          // Send paymentMethod.id to server
-          fetch('/stripe/confirm_payment', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              payment_method_id: result.paymentMethod.id,
-              authenticity_token: authToken
-
-            })
-          }).then(function(result) {
-            // Handle server response (see Step 3)
-            result.json().then(function(json) {
-              handleServerResponse(json);
-            })
-          });
-        }
-      });
+              })
+            }).then(function(result) {
+              result.json().then(function(json) {
+                handleServerResponse(json);
+              })
+            });
+          }
+        });
+      }
     });
 
     function handleServerResponse(response) {
       if (response.error) {
           showError(response.error);
       } else if (response.requires_action) {
-        // Use Stripe.js to handle required card action
         stripe.handleCardAction(
           response.payment_intent_client_secret
         ).then(function(result) {
           if (result.error) {
             showError(result.error.message);
           } else {
-            // The card action has been handled
-            // The PaymentIntent can be confirmed again on the server
             fetch('/stripe/confirm_payment', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
