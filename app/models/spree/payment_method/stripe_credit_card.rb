@@ -80,19 +80,30 @@ module Spree
 
         source = update_source!(payment.source)
         if source.number.blank? && source.gateway_payment_profile_id.present?
-          creditcard = source.gateway_payment_profile_id
+          if v3_intents?
+            creditcard = ActiveMerchant::Billing::StripeGateway::StripePaymentToken.new('id' => source.gateway_payment_profile_id)
+          else
+            creditcard = source.gateway_payment_profile_id
+          end
         else
           creditcard = source
         end
 
         response = gateway.store(creditcard, options)
         if response.success?
-          payment.source.update_attributes!({
-            cc_type: payment.source.cc_type, # side-effect of update_source!
-            gateway_customer_profile_id: response.params['id'],
-            gateway_payment_profile_id: response.params['default_source'] || response.params['default_card']
-          })
-
+          if v3_intents?
+            payment.source.update_attributes!(
+              cc_type: payment.source.cc_type,
+              gateway_customer_profile_id: response.params['customer'],
+              gateway_payment_profile_id: response.params['id']
+            )
+          else
+            payment.source.update_attributes!(
+              cc_type: payment.source.cc_type,
+              gateway_customer_profile_id: response.params['id'],
+              gateway_payment_profile_id: response.params['default_source'] || response.params['default_card']
+            )
+          end
         else
           payment.send(:gateway_error, response.message)
         end
