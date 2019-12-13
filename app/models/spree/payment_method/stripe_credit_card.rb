@@ -27,7 +27,11 @@ module Spree
       end
 
       def gateway_class
-        ActiveMerchant::Billing::StripeGateway
+        if v3_intents?
+          ActiveMerchant::Billing::StripePaymentIntentsGateway
+        else
+          ActiveMerchant::Billing::StripeGateway
+        end
       end
 
       def payment_profiles_supported?
