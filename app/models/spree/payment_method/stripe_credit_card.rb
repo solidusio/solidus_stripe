@@ -6,6 +6,7 @@ module Spree
       preference :secret_key, :string
       preference :publishable_key, :string
       preference :v3_elements, :boolean
+      preference :v3_intents, :boolean
 
       CARD_TYPE_MAPPING = {
         'American Express' => 'american_express',
@@ -19,6 +20,10 @@ module Spree
 
       def v3_elements?
         !!preferred_v3_elements
+      end
+
+      def v3_intents?
+        !!preferred_v3_intents
       end
 
       def gateway_class
