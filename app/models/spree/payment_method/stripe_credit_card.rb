@@ -38,6 +38,14 @@ module Spree
         true
       end
 
+      def create_intent(*args)
+        gateway.create_intent(*args)
+      end
+
+      def confirm_intent(*args)
+        gateway.confirm_intent(*args)
+      end
+
       def purchase(money, creditcard, transaction_options)
         gateway.purchase(*options_for_purchase_or_auth(money, creditcard, transaction_options))
       end
