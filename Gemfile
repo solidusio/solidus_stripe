@@ -10,8 +10,6 @@ group :test do
   if branch == 'master' || branch >= "v2.0"
     gem "rails-controller-testing"
   end
-
-  gem 'factory_bot', (branch < 'v2.5' ? '4.10.0' : '> 4.10.0')
 end
 
 gem 'pg'
