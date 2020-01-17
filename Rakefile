@@ -1,23 +1,6 @@
 # frozen_string_literal: true
 
-require 'bundler'
-Bundler::GemHelper.install_tasks
+require 'solidus_dev_support/rake_tasks'
+SolidusDevSupport::RakeTasks.install
 
-require 'rspec/core/rake_task'
-require 'spree/testing_support/common_rake'
-
-RSpec::Core::RakeTask.new
-
-task :default do
-  if Dir["spec/dummy"].empty?
-    Rake::Task[:test_app].invoke
-    Dir.chdir("../../")
-  end
-  Rake::Task[:spec].invoke
-end
-
-desc "Generates a dummy app for testing"
-task :test_app do
-  ENV['LIB_NAME'] = 'solidus_stripe'
-  Rake::Task['common:test_app'].invoke
-end
+task default: %w[extension:test_app extension:specs]
