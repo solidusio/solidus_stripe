@@ -1,8 +1,5 @@
 bump:
+  recurse: false
   file: 'lib/solidus_stripe/version.rb'
   message: Bump Solidus Stripe to %{version}
-  commit: true
-  push: true
-
-tag:
-  push: true
+  tag: true

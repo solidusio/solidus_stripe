@@ -3,9 +3,7 @@
 module SolidusStripe
   module Generators
     class InstallGenerator < Rails::Generators::Base
-      class_option :migrate, type: :boolean, default: true
       class_option :auto_run_migrations, type: :boolean, default: false
-      class_option :auto_run_seeds, type: :boolean, default: false
 
       def add_stylesheets
         filename = 'vendor/assets/stylesheets/spree/frontend/all.css'
@@ -19,10 +17,11 @@ module SolidusStripe
       end
 
       def run_migrations
-        if options.migrate? && running_migrations?
+        run_migrations = options[:auto_run_migrations] || ['', 'y', 'Y'].include?(ask('Would you like to run the migrations now? [Y/n]'))
+        if run_migrations
           run 'bundle exec rake db:migrate'
         else
-          puts "Skiping rake db:migrate, don't forget to run it!"
+          puts 'Skipping rake db:migrate, don\'t forget to run it!' # rubocop:disable Rails/Output
         end
       end
 
@@ -31,15 +30,6 @@ module SolidusStripe
 
         say_status :loading, 'stripe seed data'
         rake('db:seed:solidus_stripe')
-      end
-
-      private
-
-      def running_migrations?
-        options.auto_run_migrations? || begin
-          response = ask 'Would you like to run the migrations now? [Y/n]'
-          ['', 'y'].include? response.downcase
-        end
       end
     end
   end
