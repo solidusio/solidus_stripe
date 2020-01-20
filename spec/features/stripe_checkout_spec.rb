@@ -174,7 +174,9 @@ RSpec.describe "Stripe checkout", type: :feature do
         '4242 4242 4242 4242'.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
       end
       within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
-      within_frame(find '#card_expiry iframe') { fill_in 'exp-date', with: "0132" }
+      within_frame(find '#card_expiry iframe') do
+        '0132'.split('').each { |n| find_field('exp-date').native.send_keys(n) }
+      end
       click_button "Save and Continue"
       expect(page).to have_current_path("/checkout/confirm")
       click_button "Place Order"
@@ -186,7 +188,9 @@ RSpec.describe "Stripe checkout", type: :feature do
         '4242 4242 4242 4242'.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
       end
       within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
-      within_frame(find '#card_expiry iframe') { fill_in 'exp-date', with: "0132" }
+      within_frame(find '#card_expiry iframe') do
+        '0132'.split('').each { |n| find_field('exp-date').native.send_keys(n) }
+      end
       click_button "Save and Continue"
       expect(page).to have_current_path("/checkout/confirm")
       click_button "Place Order"
