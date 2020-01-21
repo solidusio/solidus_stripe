@@ -166,7 +166,9 @@ RSpec.describe "Stripe checkout", type: :feature do
   shared_examples "Stripe Elements invalid payments" do
     it "shows an error with a missing credit card number" do
       within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
-      within_frame(find '#card_expiry iframe') { fill_in 'exp-date', with: "0132" }
+      within_frame(find '#card_expiry iframe') do
+        '0132'.split('').each { |n| find_field('exp-date').native.send_keys(n) }
+      end
       click_button "Save and Continue"
       expect(page).to have_content("Your card number is incomplete.")
     end
@@ -185,7 +187,9 @@ RSpec.describe "Stripe checkout", type: :feature do
         '1111 1111 1111 1111'.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
       end
       within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
-      within_frame(find '#card_expiry iframe') { fill_in 'exp-date', with: "0132" }
+      within_frame(find '#card_expiry iframe') do
+        '0132'.split('').each { |n| find_field('exp-date').native.send_keys(n) }
+      end
       click_button "Save and Continue"
       expect(page).to have_content("Your card number is invalid.")
     end
@@ -195,7 +199,9 @@ RSpec.describe "Stripe checkout", type: :feature do
         '4242 4242 4242 4242'.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
       end
       within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '12' }
-      within_frame(find '#card_expiry iframe') { fill_in 'exp-date', with: "0132" }
+      within_frame(find '#card_expiry iframe') do
+        '0132'.split('').each { |n| find_field('exp-date').native.send_keys(n) }
+      end
       click_button "Save and Continue"
       expect(page).to have_content("Your card's security code is incomplete.")
     end
@@ -305,7 +311,9 @@ RSpec.describe "Stripe checkout", type: :feature do
           card_number.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
         end
         within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
-        within_frame(find '#card_expiry iframe') { fill_in 'exp-date', with: "0125" }
+        within_frame(find '#card_expiry iframe') do
+          '0132'.split('').each { |n| find_field('exp-date').native.send_keys(n) }
+        end
 
         click_button "Save and Continue"
 
@@ -331,7 +339,9 @@ RSpec.describe "Stripe checkout", type: :feature do
           card_number.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
         end
         within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
-        within_frame(find '#card_expiry iframe') { fill_in 'exp-date', with: "0125" }
+        within_frame(find '#card_expiry iframe') do
+          '0132'.split('').each { |n| find_field('exp-date').native.send_keys(n) }
+        end
 
         click_button "Save and Continue"
 
@@ -347,7 +357,9 @@ RSpec.describe "Stripe checkout", type: :feature do
           card_number.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
         end
         within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
-        within_frame(find '#card_expiry iframe') { fill_in 'exp-date', with: "0125" }
+        within_frame(find '#card_expiry iframe') do
+          '0132'.split('').each { |n| find_field('exp-date').native.send_keys(n) }
+        end
 
         click_button "Save and Continue"
 
@@ -364,7 +376,9 @@ RSpec.describe "Stripe checkout", type: :feature do
         "4000 0027 6000 3184".split('').each { |n| find_field('cardnumber').native.send_keys(n) }
       end
       within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
-      within_frame(find '#card_expiry iframe') { fill_in 'exp-date', with: "0132" }
+      within_frame(find '#card_expiry iframe') do
+        '0132'.split('').each { |n| find_field('exp-date').native.send_keys(n) }
+      end
       click_button "Save and Continue"
 
       within_3d_secure_modal do
