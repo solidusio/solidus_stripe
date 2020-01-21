@@ -55,6 +55,7 @@ Spree.config do |config|
     secret_key: ENV['STRIPE_SECRET_KEY'],
     publishable_key: ENV['STRIPE_PUBLISHABLE_KEY'],
     v3_elements: false,
+    v3_intents: false,
     server: Rails.env.production? ? 'production' : 'test',
     test_mode: !Rails.env.production?
   )
@@ -66,6 +67,28 @@ Source field a new entry called `stripe_env_credentials`. After saving,
 your  application will start using the static configuration to process
 Stripe payments.
 
+Using Stripe Payment Intents API
+--------------------------------
+
+If you want to use the new SCA-ready Stripe Payment Intents API you need
+to change the `v3_intents` preference from the code above to true:
+
+```
+Spree.config do |config|
+  # ...
+
+  config.static_model_preferences.add(
+    Spree::PaymentMethod::StripeCreditCard,
+    'stripe_env_credentials',
+    secret_key: ENV['STRIPE_SECRET_KEY'],
+    publishable_key: ENV['STRIPE_PUBLISHABLE_KEY'],
+    v3_elements: false,
+    v3_intents: true,
+    server: Rails.env.production? ? 'production' : 'test',
+    test_mode: !Rails.env.production?
+  )
+end
+```
 
 Migrating from solidus_gateway
 ------------------------------
