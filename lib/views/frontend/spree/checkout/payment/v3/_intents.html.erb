@@ -1,6 +1,39 @@
 <%= render 'spree/checkout/payment/v3/form_elements', payment_method: payment_method %>
 
 <script>
+  <% if payment_method.payment_request? %>
+    function setUpPaymentRequest() {
+      var paymentRequest = stripe.paymentRequest({
+        country: '<%= payment_method.preferred_stripe_country %>',
+        currency: '<%= current_order.currency.downcase %>',
+        total: {
+          label: 'Payment total for order <%= current_order.number %>',
+          amount: <%= (current_order.total * 100).to_i %>,
+        },
+        requestPayerName: true,
+        requestPayerEmail: true,
+      });
+
+      var prButton = elements.create('paymentRequestButton', {
+        paymentRequest: paymentRequest
+      });
+
+      paymentRequest.canMakePayment().then(function(result) {
+        if (result) {
+          prButton.mount('#payment-request-button');
+        } else {
+          document.getElementById('payment-request-button').style.display = 'none';
+        }
+      });
+
+      return paymentRequest;
+    };
+
+    // Using a stripe.paymentRequest is required for Apple Pay, see
+    // https://stripe.com/docs/js/payment_request/can_make_payment
+    var paymentRequest = setUpPaymentRequest();
+  <% end %>
+
   $(function() {
     var paymentMethodId = Spree.stripePaymentMethod.prop('id').split("_")[2];
     var form = Spree.stripePaymentMethod.parents('form');
@@ -9,6 +42,13 @@
     var cardType = form.find('input#cc_type');
     var authToken = $('meta[name="csrf-token"]').attr('content');
     var errorElement = $('#card-errors');
+
+    <% if payment_method.payment_request? %>
+      paymentRequest.on('paymentmethod', function(result) {
+        errorElement.text('').hide();
+        handlePayment(result);
+      });
+    <% end %>
 
     form.bind('submit', function(event) {
       if (Spree.stripePaymentMethod.is(':visible')) {
@@ -20,33 +60,38 @@
           'card',
           cardNumber
         ).then(function(result) {
-          if (result.error) {
-            showError(result.error.message);
-          } else {
-            stripeTokenHandler(result.paymentMethod);
-            fetch('/stripe/confirm_payment', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                spree_payment_method_id: paymentMethodId,
-                stripe_payment_method_id: result.paymentMethod.id,
-                authenticity_token: authToken
-              })
-            }).then(function(result) {
-              result.json().then(function(json) {
-                handleServerResponse(json);
-              })
-            });
-          }
+          handlePayment(result);
         });
       }
     });
 
-    function handleServerResponse(response) {
+    function handlePayment(payment) {
+      if (payment.error) {
+        showError(payment.error.message);
+      } else {
+        stripeTokenHandler(payment.paymentMethod);
+        fetch('/stripe/confirm_payment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            spree_payment_method_id: paymentMethodId,
+            stripe_payment_method_id: payment.paymentMethod.id,
+            authenticity_token: authToken
+          })
+        }).then(function(response) {
+          response.json().then(function(json) {
+            handleServerResponse(json, payment);
+          })
+        });
+      }
+    };
+
+    function handleServerResponse(response, payment) {
       if (response.error) {
           showError(response.error);
+          completePaymentRequest(payment, 'fail');
       } else if (response.requires_action) {
         stripe.handleCardAction(
           response.stripe_payment_intent_client_secret
@@ -68,7 +113,14 @@
           }
         });
       } else {
+        completePaymentRequest(payment, 'success');
         form.unbind('submit').submit();
+      }
+    }
+
+    function completePaymentRequest(payment, state) {
+      if (payment && typeof payment.complete === 'function') {
+          payment.complete(state);
       }
     }
 
