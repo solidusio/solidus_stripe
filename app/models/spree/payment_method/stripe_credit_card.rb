@@ -5,6 +5,7 @@ module Spree
     class StripeCreditCard < Spree::PaymentMethod::CreditCard
       preference :secret_key, :string
       preference :publishable_key, :string
+      preference :stripe_country, :string
       preference :v3_elements, :boolean
       preference :v3_intents, :boolean
 
@@ -20,6 +21,10 @@ module Spree
 
       def v3_elements?
         !!preferred_v3_elements
+      end
+
+      def payment_request?
+        v3_intents? && preferred_stripe_country.present?
       end
 
       def v3_intents?
