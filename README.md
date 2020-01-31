@@ -54,6 +54,7 @@ Spree.config do |config|
     'stripe_env_credentials',
     secret_key: ENV['STRIPE_SECRET_KEY'],
     publishable_key: ENV['STRIPE_PUBLISHABLE_KEY'],
+    stripe_country: 'US',
     v3_elements: false,
     v3_intents: false,
     server: Rails.env.production? ? 'production' : 'test',
@@ -67,11 +68,16 @@ Source field a new entry called `stripe_env_credentials`. After saving,
 your  application will start using the static configuration to process
 Stripe payments.
 
+
 Using Stripe Payment Intents API
 --------------------------------
 
 If you want to use the new SCA-ready Stripe Payment Intents API you need
-to change the `v3_intents` preference from the code above to true:
+to change the `v3_intents` preference from the code above to true and,
+if you want to allow also Apple Pay and Google Pay payments, set the
+`stripe_country` preference, which represents the two-letter country
+code of your Stripe account:
+
 
 ```
 Spree.config do |config|
@@ -82,6 +88,7 @@ Spree.config do |config|
     'stripe_env_credentials',
     secret_key: ENV['STRIPE_SECRET_KEY'],
     publishable_key: ENV['STRIPE_PUBLISHABLE_KEY'],
+    stripe_country: 'US',
     v3_elements: false,
     v3_intents: true,
     server: Rails.env.production? ? 'production' : 'test',
@@ -89,6 +96,16 @@ Spree.config do |config|
   )
 end
 ```
+
+Apple Pay and Google Pay
+-----------------------
+
+The Payment Intents API now supports also Apple Pay and Google Pay via
+the [payment request button API](https://stripe.com/docs/stripe-js/elements/payment-request-button).
+Check the Payment Intents section for setup details. Also, please
+refer to the official Stripe documentation for configuring your
+Stripe account to receive payments via Apple Pay.
+
 
 Migrating from solidus_gateway
 ------------------------------
