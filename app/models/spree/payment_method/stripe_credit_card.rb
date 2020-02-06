@@ -15,6 +15,22 @@ module Spree
         'Visa' => 'visa'
       }
 
+      def stripe_config(order)
+        {
+          id: id,
+          publishable_key: preferred_publishable_key
+        }.tap do |config|
+          config.merge!(
+            payment_request: {
+              country: preferred_stripe_country,
+              currency: order.currency.downcase,
+              label: "Payment for order #{order.number}",
+              amount: (order.total * 100).to_i
+            }
+          ) if payment_request?
+        end
+      end
+
       def partial_name
         'stripe'
       end

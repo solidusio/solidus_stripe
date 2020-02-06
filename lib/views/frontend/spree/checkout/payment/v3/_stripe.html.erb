@@ -2,7 +2,7 @@
 
 <script>
   $(function() {
-    var form = Spree.stripePaymentMethod.parents('form');
+    var form = Spree.stripePaymentMethod.element.parents('form');
     var submitButton = form.find('input[type="submit"]');
     var errorElement = form.find('#card-errors');
     var cardType = form.find('input#cc_type');
@@ -16,7 +16,7 @@
     });
 
     form.bind('submit', function(event) {
-      if (Spree.stripePaymentMethod.is(':visible')) {
+      if (Spree.stripePaymentMethod.element.is(':visible')) {
         event.preventDefault();
 
         stripe.createToken(cardNumber).then(function(result) {
@@ -34,13 +34,13 @@
     });
 
     function stripeTokenHandler(token) {
-      var paymentMethodId = Spree.stripePaymentMethod.prop('id').split("_")[2];
+      var paymentMethodId = Spree.stripePaymentMethod.config.id;
       var baseSelector = `<input type='hidden' class='stripeToken' name='payment_source[${paymentMethodId}]`;
 
-      Spree.stripePaymentMethod.append(`${baseSelector}[gateway_payment_profile_id]' value='${token.id}'/>`);
-      Spree.stripePaymentMethod.append(`${baseSelector}[last_digits]' value='${token.card.last4}'/>`);
-      Spree.stripePaymentMethod.append(`${baseSelector}[month]' value='${token.card.exp_month}'/>`);
-      Spree.stripePaymentMethod.append(`${baseSelector}[year]' value='${token.card.exp_year}'/>`);
+      Spree.stripePaymentMethod.element.append(`${baseSelector}[gateway_payment_profile_id]' value='${token.id}'/>`);
+      Spree.stripePaymentMethod.element.append(`${baseSelector}[last_digits]' value='${token.card.last4}'/>`);
+      Spree.stripePaymentMethod.element.append(`${baseSelector}[month]' value='${token.card.exp_month}'/>`);
+      Spree.stripePaymentMethod.element.append(`${baseSelector}[year]' value='${token.card.exp_year}'/>`);
       cardType.val(mapCC(token.card.type));
       form[0].submit();
     };
