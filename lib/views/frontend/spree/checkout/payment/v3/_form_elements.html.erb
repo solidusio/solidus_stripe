@@ -1,4 +1,4 @@
-<div id="payment-request-button"></div>
+<div id="payment-request-button" data-stripe-config="<%= payment_method.stripe_config(current_order).to_json %>"></div>
 
 <%= image_tag 'credit_cards/credit_card.gif', id: 'credit-card-image' %>
 <% param_prefix = "payment_source[#{payment_method.id}]" %>
@@ -42,9 +42,13 @@
 <script src="https://js.stripe.com/v3/"></script>
 
 <script>
-  Spree.stripePaymentMethod = $('#payment_method_' + <%= payment_method.id %>);
+  Spree.stripePaymentMethod = {
+    config: $('[data-stripe-config').data('stripe-config')
+  }
 
-  var stripe = Stripe("<%= payment_method.preferred_publishable_key %>");
+  Spree.stripePaymentMethod.element = $('#payment_method_' + Spree.stripePaymentMethod.config.id);
+
+  var stripe = Stripe(Spree.stripePaymentMethod.config.publishable_key);
 
   var elements = stripe.elements({locale: 'en'});
 

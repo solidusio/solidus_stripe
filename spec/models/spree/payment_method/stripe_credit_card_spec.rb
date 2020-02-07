@@ -7,12 +7,23 @@ describe Spree::PaymentMethod::StripeCreditCard do
   let(:email) { 'customer@example.com' }
   let(:source) { Spree::CreditCard.new }
 
+  let(:bill_address) { nil }
+
+  let(:order) {
+    double('Spree::Order',
+      email: email,
+      bill_address: bill_address,
+      currency: 'USD',
+      number: 'NUMBER',
+      total: 10.99
+    )
+  }
+
   let(:payment) {
     double('Spree::Payment',
       source: source,
-      order: double('Spree::Order',
-        email: email,
-        bill_address: bill_address))
+      order: order
+    )
   }
 
   let(:gateway) do
@@ -33,6 +44,36 @@ describe Spree::PaymentMethod::StripeCreditCard do
     expect do
       subject.preferred_v3_elements = true
     end.to change { subject.v3_elements? }.from(false).to true
+  end
+
+  describe '#stripe_config' do
+    context 'when payment request feature is disabled' do
+      before { subject.preferences = { publishable_key: 'stripe_key' } }
+
+      it 'includes the basic configuration' do
+        config = subject.stripe_config(order)
+        expect(config.keys).to eq %i[id publishable_key]
+        expect(config[:publishable_key]).to include('stripe_key')
+      end
+    end
+
+    context 'when the payment request feature is enabled' do
+      before do
+        subject.preferences = {
+          publishable_key: 'stripe_key',
+          stripe_country: 'US',
+          v3_intents: true
+        }
+      end
+
+      it 'includes the payment request configuration as well' do
+        config = subject.stripe_config(order)
+        expect(config.keys).to eq %i[id publishable_key payment_request]
+        expect(config[:payment_request][:currency]).to eq 'usd'
+        expect(config[:payment_request][:amount]).to be 1099
+        expect(config[:payment_request][:label]).to include 'NUMBER'
+      end
+    end
   end
 
   describe '#create_profile' do
@@ -71,8 +112,6 @@ describe Spree::PaymentMethod::StripeCreditCard do
     end
 
     context 'with an order that does not have a bill address' do
-      let(:bill_address) { nil }
-
       it 'does not store a bill address with the gateway' do
         expect(subject.gateway).to receive(:store).with(payment.source, {
           email: email,
