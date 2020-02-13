@@ -79,7 +79,7 @@ if you want to allow also Apple Pay and Google Pay payments, set the
 code of your Stripe account:
 
 
-```
+```ruby
 Spree.config do |config|
   # ...
 
@@ -105,6 +105,23 @@ the [payment request button API](https://stripe.com/docs/stripe-js/elements/paym
 Check the Payment Intents section for setup details. Also, please
 refer to the official Stripe documentation for configuring your
 Stripe account to receive payments via Apple Pay.
+
+It's possible to pay with Apple Pay and Google Pay directly from the cart
+page. The functionality is self-contained in the view partial
+`_stripe_payment_request_button.html.erb`. In order to use it, you need
+to load that partial in the `orders#edit` frontend page, and pass it the
+payment method configured for Stripe via the local variable
+`cart_checkout_payment_method`, for example using `deface`:
+
+```ruby
+# app/overrides/spree/orders/edit/add_payment_request_button.html.erb.deface
+
+<!-- insert_after '[data-hook="cart_container"]' -->
+<%= render 'stripe_payment_request_button', cart_checkout_payment_method: Spree::PaymentMethod::StripeCreditCard.first %>
+```
+
+Of course, rules stated in the paragraph above (remember to add the stripe country
+config value, for example) apply also for this payment method.
 
 
 Migrating from solidus_gateway
