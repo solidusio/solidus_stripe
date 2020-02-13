@@ -21,6 +21,7 @@ module SolidusStripe
 
     if SolidusSupport.frontend_available?
       paths["app/views"] << "lib/views/frontend"
+      config.assets.precompile += ['solidus_stripe/stripe-init.js']
     end
 
     if SolidusSupport.api_available?

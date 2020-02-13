@@ -1,0 +1,28 @@
+<script>
+  // Stripe V3 elements specific JS code
+
+  var cardNumber = initElements();
+
+  cardNumber.addEventListener('change', function(event) {
+    if (event.error) {
+      showError(event.error.message);
+    } else {
+      errorElement.hide().text('');
+    }
+  });
+
+  form.bind('submit', function(event) {
+    if (element.is(':visible')) {
+      event.preventDefault();
+
+      stripe.createToken(cardNumber).then(function(result) {
+        if (result.error) {
+          showError(result.error.message);
+        } else {
+          stripeTokenHandler(result.token);
+          form[0].submit();
+        }
+      });
+    }
+  });
+</script>
