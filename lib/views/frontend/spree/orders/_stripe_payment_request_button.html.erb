@@ -1,0 +1,48 @@
+<% if current_order.present? && cart_checkout_payment_method.present? %>
+  <div id="stripe-payment-request" class="stripe-payment-request">
+    <%= form_tag update_checkout_path(:payment), method: :patch do %>
+      <div id="payment_method_<%= cart_checkout_payment_method.id %>">
+        <%= hidden_field_tag "order[payments_attributes][][payment_method_id]", cart_checkout_payment_method.id %>
+
+        <div id="payment-request-button" data-stripe-config="<%= cart_checkout_payment_method.stripe_config(current_order).to_json %>" class="payment-request-button"></div>
+
+        <div id="card-errors" class='errorExplanation' role="alert" style="display: none"></div>
+      </div>
+    <% end %>
+  </div>
+
+  <script src="https://js.stripe.com/v3/"></script>
+  <%= javascript_include_tag "solidus_stripe/stripe-init" %>
+
+  <script>
+    var paymentRequestConfig = Spree.stripePaymentMethod.config.payment_request;
+
+    if (typeof paymentRequestConfig !== 'undefined') {
+      paymentRequestConfig.requestShipping = true;
+      var paymentRequest = setUpPaymentRequest(paymentRequestConfig);
+
+      function handlePayment(result) {
+        fetch('/stripe/update_order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            shipping_address: result.shippingAddress,
+            shipping_option: result.shippingOption,
+            email: result.payerEmail,
+            name: result.payerName,
+            authenticity_token: authToken
+          })
+        }).then(function(response) {
+          response.json().then(function(json) {
+            handleServerResponse(json, result);
+          })
+        });
+      };
+
+      function submitPayment(payment) {
+        stripeTokenHandler(payment.paymentMethod);
+        form.submit();
+      }
+    }
+  </script>
+<% end %>
