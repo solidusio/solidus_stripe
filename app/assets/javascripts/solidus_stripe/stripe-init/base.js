@@ -49,7 +49,7 @@ function initElements() {
   return cardNumber;
 }
 
-function setUpPaymentRequest(config) {
+function setUpPaymentRequest(config, onPrButtonMounted) {
   if (typeof config !== 'undefined') {
     var paymentRequest = stripe.paymentRequest({
       country: config.country,
@@ -70,10 +70,15 @@ function setUpPaymentRequest(config) {
     });
 
     paymentRequest.canMakePayment().then(function(result) {
+      var id = 'payment-request-button';
+
       if (result) {
-        prButton.mount('#payment-request-button');
+        prButton.mount('#' + id);
       } else {
-        document.getElementById('payment-request-button').style.display = 'none';
+        document.getElementById(id).style.display = 'none';
+      }
+      if (typeof onPrButtonMounted === 'function') {
+        onPrButtonMounted(id, result);
       }
     });
 
