@@ -1,8 +1,8 @@
 # Changelog
 
-## [Unreleased](https://github.com/solidusio/solidus_stripe/tree/HEAD)
+## [v2.0.0](https://github.com/solidusio/solidus_stripe/tree/v2.0.0) (2020-03-03)
 
-[Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v1.2.0...HEAD)
+[Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v1.2.0...v2.0.0)
 
 **Implemented enhancements:**
 
