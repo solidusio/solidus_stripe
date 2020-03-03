@@ -16,7 +16,7 @@
   <%= javascript_include_tag "solidus_stripe/stripe-init" %>
 
   <script>
-    var paymentRequestConfig = Spree.stripePaymentMethod.config.payment_request;
+    var paymentRequestConfig = SolidusStripe.paymentMethod.config.payment_request;
     var errorElement = $('#card-errors');
 
     if (typeof paymentRequestConfig !== 'undefined') {
@@ -57,7 +57,7 @@
           order: {
             payments_attributes: [
               {
-                payment_method_id: Spree.stripePaymentMethod.config.id,
+                payment_method_id: SolidusStripe.paymentMethod.config.id,
                 source_attributes: {
                   gateway_payment_profile_id: token.id,
                   last_digits: token.card.last4,

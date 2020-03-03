@@ -1,20 +1,22 @@
-Spree.stripePaymentMethod = {
+window.SolidusStripe = window.SolidusStripe || {};
+
+SolidusStripe.paymentMethod = {
   config: $('[data-stripe-config').data('stripe-config'),
   requestShipping: false
 }
 
 var authToken = $('meta[name="csrf-token"]').attr('content');
 
-var stripe = Stripe(Spree.stripePaymentMethod.config.publishable_key)
+var stripe = Stripe(SolidusStripe.paymentMethod.config.publishable_key)
 var elements = stripe.elements({locale: 'en'});
 
-var element = $('#payment_method_' + Spree.stripePaymentMethod.config.id);
+var element = $('#payment_method_' + SolidusStripe.paymentMethod.config.id);
 var form = element.parents('form');
 var errorElement = form.find('#card-errors');
 var submitButton = form.find('input[type="submit"]');
 
 function stripeTokenHandler(token) {
-  var baseSelector = `<input type='hidden' class='stripeToken' name='payment_source[${Spree.stripePaymentMethod.config.id}]`;
+  var baseSelector = `<input type='hidden' class='stripeToken' name='payment_source[${SolidusStripe.paymentMethod.config.id}]`;
 
   element.append(`${baseSelector}[gateway_payment_profile_id]' value='${token.id}'/>`);
   element.append(`${baseSelector}[last_digits]' value='${token.card.last4}'/>`);
@@ -129,7 +131,7 @@ function handleServerResponse(response, payment) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            spree_payment_method_id: Spree.stripePaymentMethod.config.id,
+            spree_payment_method_id: SolidusStripe.paymentMethod.config.id,
             stripe_payment_intent_id: result.paymentIntent.id,
             authenticity_token: authToken
           })
