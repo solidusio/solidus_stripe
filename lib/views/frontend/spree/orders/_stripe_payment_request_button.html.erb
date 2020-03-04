@@ -1,5 +1,5 @@
 <% if current_order.present? && cart_checkout_payment_method.present? %>
-  <div id="stripe-payment-request" class="stripe-payment-request" style="display:none">
+  <div id="stripe-payment-request" class="stripe-payment-request" data-v3-api="payment-request-button" style="display:none">
     <div id="payment-request-button"
       data-stripe-config="<%= cart_checkout_payment_method.stripe_config(current_order).to_json %>"
       data-order-token="<%= current_order.guest_token %>"
@@ -11,13 +11,4 @@
     <div id="card-errors" class='errorExplanation' role="alert" style="display: none">
     </div>
   </div>
-
-  <script src="https://js.stripe.com/v3/"></script>
-
-  <%= javascript_include_tag 'spree/stripe-v3-payments' %>
-  <script>
-    $(function() {
-      new SolidusStripe.CartPageCheckout().init()
-    });
-  </script>
 <% end %>
