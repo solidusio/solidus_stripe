@@ -19,4 +19,5 @@ RSpec.configure do |config|
   config.infer_spec_type_from_file_location!
   FactoryBot.find_definitions
   config.use_transactional_fixtures = false
+  config.include SolidusAddressNameHelper, type: :feature
 end

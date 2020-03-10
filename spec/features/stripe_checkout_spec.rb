@@ -41,8 +41,7 @@ RSpec.describe "Stripe checkout", type: :feature do
     expect(page).to have_current_path("/checkout/address")
 
     within("#billing") do
-      fill_in "First Name", with: "Han"
-      fill_in "Last Name", with: "Solo"
+      fill_in_name
       fill_in "Street Address", with: "YT-1300"
       fill_in "City", with: "Mos Eisley"
       select "United States of America", from: "Country"
@@ -100,8 +99,7 @@ RSpec.describe "Stripe checkout", type: :feature do
       expect(page).to have_current_path("/checkout/address")
 
       within("#billing") do
-        fill_in "First Name", with: "Han"
-        fill_in "Last Name", with: "Solo"
+        fill_in_name
         fill_in "Street Address", with: "YT-1300"
         fill_in "City", with: "Mos Eisley"
         select "United States of America", from: "Country"
@@ -264,8 +262,7 @@ RSpec.describe "Stripe checkout", type: :feature do
       expect(page).to have_current_path("/checkout/address")
 
       within("#billing") do
-        fill_in "First Name", with: "Han"
-        fill_in "Last Name", with: "Solo"
+        fill_in_name
         fill_in "Street Address", with: "YT-1300"
         fill_in "City", with: "Mos Eisley"
         select "United States of America", from: "Country"
@@ -400,8 +397,7 @@ RSpec.describe "Stripe checkout", type: :feature do
       expect(page).to have_current_path("/checkout/address")
 
       within("#billing") do
-        fill_in "First Name", with: "Han"
-        fill_in "Last Name", with: "Solo"
+        fill_in_name
         fill_in "Street Address", with: "YT-1300"
         fill_in "City", with: "Mos Eisley"
         select "United States of America", from: "Country"
