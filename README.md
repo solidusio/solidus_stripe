@@ -73,10 +73,20 @@ Using Stripe Payment Intents API
 --------------------------------
 
 If you want to use the new SCA-ready Stripe Payment Intents API you need
-to change the `v3_intents` preference from the code above to true and,
-if you want to allow also Apple Pay and Google Pay payments, set the
-`stripe_country` preference, which represents the two-letter country
-code of your Stripe account:
+to change the `v3_intents` preference from the code above to true.
+
+Also, if you want to allow Apple Pay and Google Pay payments using the
+Stripe  payment request button API, you only need to set the `stripe_country`
+preference, which represents the two-letter country code of your Stripe
+account. Conversely, if you need to disable the button you can simply remove
+the `stripe_country` preference.
+
+Please refer to Stripe official
+[documentation](https://stripe.com/docs/stripe-js/elements/payment-request-button)
+for further instructions on how to make this work properly.
+
+The following configuration will use both Payment Intents and the
+payment request button API on the store payment page:
 
 
 ```ruby
@@ -120,8 +130,8 @@ payment method configured for Stripe via the local variable
 <%= render 'stripe_payment_request_button', cart_checkout_payment_method: Spree::PaymentMethod::StripeCreditCard.first %>
 ```
 
-Of course, rules stated in the paragraph above (remember to add the stripe country
-config value, for example) apply also for this payment method.
+Of course, the rules listed in the Payment Intents section (adding the stripe
+country config value, for example) apply also for this feature.
 
 
 Migrating from solidus_gateway
