@@ -133,6 +133,27 @@ payment method configured for Stripe via the local variable
 Of course, the rules listed in the Payment Intents section (adding the stripe
 country config value, for example) apply also for this feature.
 
+Customizing the V3 API javascript
+---------------------------------
+
+Stripe V3 JS code is now managed via Sprockets. If you need to customize the JS,
+you can simply override or/and add new methods to the relevant object prototype.
+Make sure you load your customizations after Stripe initalization code from
+`spree/frontend/solidus_stripe`.
+
+For example, the following code adds a callback method in order to print a debug
+message on the console:
+
+```js
+SolidusStripe.CartPageCheckout.prototype.onPrButtonMounted = function(id, result) {
+  if (result) {
+    $('#' + id).parent().show();
+    console.log('Payment request button is now mounted on element with id #' + id);
+  } else {
+    console.log('Payment request button failed initalization.');
+  }
+}
+```
 
 Migrating from solidus_gateway
 ------------------------------
