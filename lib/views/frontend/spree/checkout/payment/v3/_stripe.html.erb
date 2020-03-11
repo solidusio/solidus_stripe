@@ -1,5 +1,9 @@
 <%= render 'spree/checkout/payment/v3/form_elements', payment_method: payment_method %>
 
-<%= javascript_include_tag "solidus_stripe/stripe-init.js" %>
+<%= javascript_include_tag 'spree/stripe-v3-payments' %>
 
-<%= render "spree/checkout/payment/v3/elements_js" %>
+<script>
+  $(function() {
+    new SolidusStripe.Elements().init();
+  });
+</script>
