@@ -21,7 +21,6 @@ module SolidusStripe
 
     if SolidusSupport.frontend_available?
       paths["app/views"] << "lib/views/frontend"
-      config.assets.precompile += ['spree/stripe-v3-payments.js']
     end
 
     if SolidusSupport.api_available?

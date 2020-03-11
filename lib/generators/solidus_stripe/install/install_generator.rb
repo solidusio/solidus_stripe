@@ -5,6 +5,10 @@ module SolidusStripe
     class InstallGenerator < Rails::Generators::Base
       class_option :auto_run_migrations, type: :boolean, default: false
 
+      def add_javascripts
+        append_file 'vendor/assets/javascripts/spree/frontend/all.js', "//= require spree/frontend/solidus_stripe\n"
+      end
+
       def add_stylesheets
         filename = 'vendor/assets/stylesheets/spree/frontend/all.css'
         if File.file? filename
