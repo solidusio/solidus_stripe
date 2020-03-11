@@ -155,6 +155,59 @@ SolidusStripe.CartPageCheckout.prototype.onPrButtonMounted = function(id, result
 }
 ```
 
+Styling Stripe Elements
+-----------------------
+
+The Elements feature built in this gem come with some standard styles. If you want
+to customize it, you can override the `SolidusStripe.Elements.prototype.baseStyle`
+method and make it return a valid [Stripe Style](https://stripe.com/docs/js/appendix/style)
+object:
+
+```js
+SolidusStripe.Elements.prototype.baseStyle = function () {
+  return {
+    base: {
+      iconColor: '#c4f0ff',
+      color: '#fff',
+      fontWeight: 500,
+      fontFamily: 'Roboto, Open Sans, Segoe UI, sans-serif',
+      fontSize: '16px',
+      fontSmoothing: 'antialiased',
+      ':-webkit-autofill': {
+        color: '#fce883',
+      },
+      '::placeholder': {
+        color: '#87BBFD',
+      },
+    },
+    invalid: {
+      iconColor: '#FFC7EE',
+      color: '#FFC7EE',
+    }
+  }
+};
+```
+
+You can also style your element containers directly by using CSS rules like this:
+
+```css
+  .StripeElement {
+    border: 1px solid transparent;
+  }
+
+  .StripeElement--focus {
+    box-shadow: 0 1px 3px 0 #cfd7df;
+  }
+
+  .StripeElement--invalid {
+    border-color: #fa755a;
+  }
+
+  .StripeElement--webkit-autofill {
+    background-color: #fefde5 !important;
+  }
+```
+
 Migrating from solidus_gateway
 ------------------------------
 

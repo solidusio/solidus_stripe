@@ -19,21 +19,7 @@ SolidusStripe.Elements.prototype.init = function() {
 
 SolidusStripe.Elements.prototype.initElements = function() {
   var buildElements = function(elements) {
-    var style = {
-      base: {
-        color: 'black',
-        fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
-        fontSmoothing: 'antialiased',
-        fontSize: '14px',
-        '::placeholder': {
-          color: 'silver'
-        }
-      },
-      invalid: {
-        color: 'red',
-        iconColor: 'red'
-      }
-    };
+    var style = this.baseStyle();
 
     elements.create('cardExpiry', {style: style}).mount('#card_expiry');
     elements.create('cardCvc', {style: style}).mount('#card_cvc');
@@ -42,7 +28,7 @@ SolidusStripe.Elements.prototype.initElements = function() {
     cardNumber.mount('#card_number');
 
     return cardNumber;
-  };
+  }.bind(this);
 
   this.cardNumber = buildElements(this.elements);
 
@@ -55,6 +41,24 @@ SolidusStripe.Elements.prototype.initElements = function() {
   };
   this.cardNumber.addEventListener('change', cardChange.bind(this));
   this.form.bind('submit', this.onFormSubmit.bind(this));
+};
+
+SolidusStripe.Elements.prototype.baseStyle = function () {
+  return {
+    base: {
+      color: 'black',
+      fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+      fontSmoothing: 'antialiased',
+      fontSize: '14px',
+      '::placeholder': {
+        color: 'silver'
+      }
+    },
+    invalid: {
+      color: 'red',
+      iconColor: 'red'
+    }
+  };
 };
 
 SolidusStripe.Elements.prototype.showError = function(error) {
