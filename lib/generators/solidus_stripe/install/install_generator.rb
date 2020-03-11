@@ -9,13 +9,6 @@ module SolidusStripe
         append_file 'vendor/assets/javascripts/spree/frontend/all.js', "//= require spree/frontend/solidus_stripe\n"
       end
 
-      def add_stylesheets
-        filename = 'vendor/assets/stylesheets/spree/frontend/all.css'
-        if File.file? filename
-          inject_into_file filename, " *= require spree/frontend/solidus_stripe\n", before: '*/', verbose: true
-        end
-      end
-
       def add_migrations
         run 'bundle exec rake railties:install:migrations FROM=solidus_stripe'
       end
