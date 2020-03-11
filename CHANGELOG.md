@@ -1,5 +1,39 @@
 # Changelog
 
+## [Unreleased](https://github.com/solidusio/solidus_stripe/tree/HEAD)
+
+[Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v3.0.0...HEAD)
+
+**Closed issues:**
+
+- Pay with Apple Pay from cart page [\#23](https://github.com/solidusio/solidus_stripe/issues/23)
+
+## [v3.0.0](https://github.com/solidusio/solidus_stripe/tree/v3.0.0) (2020-03-11)
+
+[Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v2.1.0...v3.0.0)
+
+**Implemented enhancements:**
+
+- Rename v3/stripe partial as v3/elements [\#30](https://github.com/solidusio/solidus_stripe/pull/30) ([spaghetticode](https://github.com/spaghetticode))
+
+**Merged pull requests:**
+
+- Allow to customize Stripe Elements styles via JS [\#34](https://github.com/solidusio/solidus_stripe/pull/34) ([spaghetticode](https://github.com/spaghetticode))
+- Stop injecting css in host app while installing [\#33](https://github.com/solidusio/solidus_stripe/pull/33) ([kennyadsl](https://github.com/kennyadsl))
+- Manage Stripe V3 JS code via Sprokets [\#32](https://github.com/solidusio/solidus_stripe/pull/32) ([spaghetticode](https://github.com/spaghetticode))
+
+## [v2.1.0](https://github.com/solidusio/solidus_stripe/tree/v2.1.0) (2020-03-11)
+
+[Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v2.0.0...v2.1.0)
+
+**Closed issues:**
+
+- Preference :stripe\_country is not defined on Spree::PaymentMethod::StripeCreditCard \(RuntimeError\) [\#27](https://github.com/solidusio/solidus_stripe/issues/27)
+
+**Merged pull requests:**
+
+- Refactor Stripe V3 Intents, Elements and cart checkout JS code [\#31](https://github.com/solidusio/solidus_stripe/pull/31) ([spaghetticode](https://github.com/spaghetticode))
+
 ## [v2.0.0](https://github.com/solidusio/solidus_stripe/tree/v2.0.0) (2020-03-03)
 
 [Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v1.2.0...v2.0.0)
