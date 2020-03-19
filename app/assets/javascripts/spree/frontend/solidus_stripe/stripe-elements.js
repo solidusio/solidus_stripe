@@ -87,18 +87,20 @@ SolidusStripe.Elements.prototype.onFormSubmit = function(event) {
 
 SolidusStripe.Elements.prototype.elementsTokenHandler = function(token) {
   var mapCC = function(ccType) {
-    if (ccType === 'MasterCard') {
+    if (ccType === 'MasterCard' || ccType === 'mastercard') {
       return 'mastercard';
-    } else if (ccType === 'Visa') {
+    } else if (ccType === 'Visa' || ccType === 'visa') {
       return 'visa';
-    } else if (ccType === 'American Express') {
+    } else if (ccType === 'American Express' || ccType === 'amex') {
       return 'amex';
-    } else if (ccType === 'Discover') {
+    } else if (ccType === 'Discover' || ccType === 'discover') {
       return 'discover';
-    } else if (ccType === 'Diners Club') {
+    } else if (ccType === 'Diners Club' || ccType === 'diners') {
       return 'dinersclub';
-    } else if (ccType === 'JCB') {
+    } else if (ccType === 'JCB' || ccType === 'jcb') {
       return 'jcb';
+    } else if (ccType === 'Unionpay' || ccType === 'unionpay') {
+      return 'unionpay';
     }
   };
 
