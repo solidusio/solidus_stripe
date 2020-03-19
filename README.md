@@ -155,6 +155,12 @@ SolidusStripe.CartPageCheckout.prototype.onPrButtonMounted = function(id, result
 }
 ```
 
+Custom Stripe Elements options
+-----------------------
+
+Some custom options, like locale and fonts, can be passed when [creating a Stripe Elements instance](https://stripe.com/docs/js/elements_object/create). To customize the default options this gem provides, override the `SolidusStripe.Payment.prototype.elementsBaseOptions` method.
+
+
 Styling Stripe Elements
 -----------------------
 

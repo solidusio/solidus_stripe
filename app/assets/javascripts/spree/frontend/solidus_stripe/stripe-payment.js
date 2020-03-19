@@ -6,5 +6,11 @@ SolidusStripe.Payment = function() {
   this.authToken = $('meta[name="csrf-token"]').attr('content');
 
   this.stripe = Stripe(this.config.publishable_key);
-  this.elements = this.stripe.elements({locale: 'en'});
+  this.elements = this.stripe.elements(this.elementsBaseOptions());
+};
+
+SolidusStripe.Payment.prototype.elementsBaseOptions = function () {
+  return {
+    locale: 'en'
+  };
 };
