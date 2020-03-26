@@ -18,8 +18,6 @@ SolidusStripe.Elements.prototype.init = function() {
 };
 
 SolidusStripe.Elements.prototype.initElements = function() {
-  var style = this.baseStyle();
-
   var cardExpiry = this.elements.create('cardExpiry', this.cardExpiryElementOptions());
   cardExpiry.mount('#card_expiry');
 
