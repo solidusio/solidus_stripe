@@ -18,29 +18,47 @@ SolidusStripe.Elements.prototype.init = function() {
 };
 
 SolidusStripe.Elements.prototype.initElements = function() {
-  var buildElements = function(elements) {
-    var style = this.baseStyle();
+  var style = this.baseStyle();
 
-    elements.create('cardExpiry', {style: style}).mount('#card_expiry');
-    elements.create('cardCvc', {style: style}).mount('#card_cvc');
+  var cardExpiry = this.elements.create('cardExpiry', {style: style});
+  cardExpiry.mount('#card_expiry');
 
-    var cardNumber = elements.create('cardNumber', {style: style});
-    cardNumber.mount('#card_number');
+  var cardCvc = this.elements.create('cardCvc', {style: style});
+  cardCvc.mount('#card_cvc');
 
-    return cardNumber;
-  }.bind(this);
+  this.cardNumber = this.elements.create('cardNumber', {style: style});
+  this.cardNumber.mount('#card_number');
 
-  this.cardNumber = buildElements(this.elements);
-
-  var cardChange = function(event) {
-    if (event.error) {
-      this.showError(event.error.message);
-    } else {
-      this.errorElement.hide().text('');
-    }
-  };
-  this.cardNumber.addEventListener('change', cardChange.bind(this));
   this.form.bind('submit', this.onFormSubmit.bind(this));
+
+  // Listen for errors from each input field.
+  // Adapted from https://github.com/stripe/elements-examples/blob/master/js/index.js
+  var savedErrors = {};
+  [cardExpiry, cardCvc, this.cardNumber].forEach(function(element, idx) {
+    element.on('change', function(event) {
+      if (event.error) {
+        savedErrors[idx] = event.error.message;
+        this.showError(event.error.message);
+      } else {
+        savedErrors[idx] = null;
+
+        // Loop over the saved errors and find the first one, if any.
+        var nextError = Object.keys(savedErrors)
+          .sort()
+          .reduce(function(maybeFoundError, key) {
+            return maybeFoundError || savedErrors[key];
+          }, null);
+
+        if (nextError) {
+          // Now that they've fixed the current error, show another one.
+          this.showError(nextError);
+        } else {
+          // The user fixed the last error; no more errors.
+          this.errorElement.hide().text('');
+        }
+      }
+    }.bind(this));
+  }.bind(this));
 };
 
 SolidusStripe.Elements.prototype.baseStyle = function () {
