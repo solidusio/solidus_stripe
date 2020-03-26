@@ -155,19 +155,13 @@ SolidusStripe.CartPageCheckout.prototype.onPrButtonMounted = function(id, result
 }
 ```
 
-Custom Stripe Elements options
+Customizing Stripe Elements
 -----------------------
 
-Some custom options, like locale and fonts, can be passed when [creating a Stripe Elements instance](https://stripe.com/docs/js/elements_object/create). To customize the default options this gem provides, override the `SolidusStripe.Payment.prototype.elementsBaseOptions` method.
+### Styling input fields
 
-
-Styling Stripe Elements
------------------------
-
-The Elements feature built in this gem come with some standard styles. If you want
-to customize it, you can override the `SolidusStripe.Elements.prototype.baseStyle`
-method and make it return a valid [Stripe Style](https://stripe.com/docs/js/appendix/style)
-object:
+The default style this gem provides for Stripe Elements input fields is defined in `SolidusStripe.Elements.prototype.baseStyle`. You can override this method to return your own custom style (make sure it returns a valid [Stripe Style](https://stripe.com/docs/js/appendix/style)
+object):
 
 ```js
 SolidusStripe.Elements.prototype.baseStyle = function () {
@@ -213,6 +207,46 @@ You can also style your element containers directly by using CSS rules like this
     background-color: #fefde5 !important;
   }
 ```
+
+### Customizing individual input fields
+
+If you want to customize individual input fields, you can override these methods 
+
+* `SolidusStripe.Elements.prototype.cardNumberElementOptions`
+* `SolidusStripe.Elements.prototype.cardExpiryElementOptions`
+* `SolidusStripe.Elements.prototype.cardCvcElementOptions`
+
+and return a valid [options object](https://stripe.com/docs/js/elements_object/create_element?type=cardNumber) for the corresponding field type. For example, this code sets a custom placeholder and enables the credit card icon for the card number field 
+
+```js
+SolidusStripe.Elements.prototype.cardNumberElementOptions = function () {
+  return {
+    style: this.baseStyle(),
+    showIcon: true,
+    placeholder: "I'm a custom placeholder!"
+  }
+}
+```
+
+### Passing options to the Stripe Elements instance
+
+By overriding the `SolidusStripe.Payment.prototype.elementsBaseOptions` method and returning a [valid options object](https://stripe.com/docs/js/elements_object/create), you can pass custom options to the Stripe Elements instance. 
+
+Note that in order to use web fonts with Stripe Elements, you must specify the fonts when creating the Stripe Elements instance. Here's an example specifying a custom web font and locale:
+
+```js
+SolidusStripe.Payment.prototype.elementsBaseOptions = function () {
+  return {
+    locale: 'de',
+    fonts: [
+      {
+        cssSrc: 'https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600'
+      }
+    ]
+  };
+};
+```
+
 
 Migrating from solidus_gateway
 ------------------------------
