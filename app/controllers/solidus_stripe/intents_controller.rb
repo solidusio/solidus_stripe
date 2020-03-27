@@ -8,12 +8,14 @@ module SolidusStripe
       begin
         if params[:stripe_payment_method_id].present?
           intent = stripe.create_intent(
-            (current_order.total * 100).to_i,
+            100,
             params[:stripe_payment_method_id],
+            description: "Card pre-authorization for order #{current_order.number}",
             currency: current_order.currency,
             confirmation_method: 'manual',
+            capture_method: 'manual',
             confirm: true,
-            setup_future_usage: 'on_session',
+            setup_future_usage: 'off_session',
             metadata: { order_id: current_order.id }
           )
         elsif params[:stripe_payment_intent_id].present?
@@ -42,7 +44,7 @@ module SolidusStripe
             requires_action: true,
             stripe_payment_intent_client_secret: response['client_secret']
           }
-      elsif response['status'] == 'succeeded'
+      elsif %w[requires_capture succeeded].include?(response['status'])
         render json: { success: true }
       else
         render json: { error: response['error']['message'] }, status: 500

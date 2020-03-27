@@ -315,7 +315,7 @@ RSpec.describe "Stripe checkout", type: :feature do
         click_button "Save and Continue"
 
         within_3d_secure_modal do
-          expect(page).to have_content '$19.99 using 3D Secure'
+          expect(page).to have_content '$1.00 using 3D Secure'
 
           click_button 'Complete authentication'
         end
