@@ -72,6 +72,15 @@ Stripe payments.
 Using Stripe Payment Intents API
 --------------------------------
 
+⚠️ The current implementation for the Payment Intents API in the gem creates
+double charges. This happens only when the customer adds a new credit card.
+So, in order to make the issue manageable, the first charge (that is not
+recorded in Solidus but visible on Stripe dashboard) is made for the symbolic
+amount of $1.00 and labeled `Card pre-authorization for order ORDER_NUMBER`.
+This charge is not captured and is not meant to be captured. Solidus standard
+flow creates the second charge, to which corresponds a `Spree::Payment` record
+that can be managed as usual in the admin area.
+
 If you want to use the new SCA-ready Stripe Payment Intents API you need
 to change the `v3_intents` preference from the code above to true.
 
