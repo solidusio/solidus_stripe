@@ -301,7 +301,7 @@ RSpec.describe "Stripe checkout", type: :feature do
     end
 
     context "when using a valid 3D Secure card" do
-      let(:card_number) { "4000 0027 6000 3184" }
+      let(:card_number) { "4000 0025 0000 3155" }
 
       it "successfully completes the checkout" do
         within_frame find('#card_number iframe') do
@@ -370,7 +370,7 @@ RSpec.describe "Stripe checkout", type: :feature do
 
     it "can re-use saved cards" do
       within_frame find('#card_number iframe') do
-        "4000 0027 6000 3184".split('').each { |n| find_field('cardnumber').native.send_keys(n) }
+        "4000 0025 0000 3155".split('').each { |n| find_field('cardnumber').native.send_keys(n) }
       end
       within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
       within_frame(find '#card_expiry iframe') do
