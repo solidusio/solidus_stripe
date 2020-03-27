@@ -142,7 +142,7 @@ module Spree
         options = {}
         options[:description] = "Solidus Order ID: #{transaction_options[:order_id]}"
         options[:currency] = transaction_options[:currency]
-
+        options[:off_session] = true if v3_intents?
         if customer = creditcard.gateway_customer_profile_id
           options[:customer] = customer
         end
