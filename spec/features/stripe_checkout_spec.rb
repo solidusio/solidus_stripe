@@ -368,59 +368,78 @@ RSpec.describe "Stripe checkout", type: :feature do
       end
     end
 
-    it "can re-use saved cards" do
-      within_frame find('#card_number iframe') do
-        "4000 0025 0000 3155".split('').each { |n| find_field('cardnumber').native.send_keys(n) }
+    context "when reusing a card" do
+      stub_authorization!
+
+      it "succesfully creates a second payment that can be captured in the backend" do
+        within_frame find('#card_number iframe') do
+          "4000 0025 0000 3155".split('').each { |n| find_field('cardnumber').native.send_keys(n) }
+        end
+        within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
+        within_frame(find '#card_expiry iframe') do
+          '0132'.split('').each { |n| find_field('exp-date').native.send_keys(n) }
+        end
+        click_button "Save and Continue"
+
+        within_3d_secure_modal do
+          click_button 'Complete authentication'
+        end
+
+        expect(page).to have_current_path("/checkout/confirm")
+        click_button "Place Order"
+        expect(page).to have_content("Your order has been processed successfully")
+
+        visit spree.root_path
+        click_link "DL-44"
+        click_button "Add To Cart"
+
+        expect(page).to have_current_path("/cart")
+        click_button "Checkout"
+
+        # Address
+        expect(page).to have_current_path("/checkout/address")
+
+        within("#billing") do
+          fill_in_name
+          fill_in "Street Address", with: "YT-1300"
+          fill_in "City", with: "Mos Eisley"
+          select "United States of America", from: "Country"
+          select country.states.first.name, from: "order_bill_address_attributes_state_id"
+          fill_in "Zip", with: "12010"
+          fill_in "Phone", with: "(555) 555-5555"
+        end
+        click_on "Save and Continue"
+
+        # Delivery
+        expect(page).to have_current_path("/checkout/delivery")
+        expect(page).to have_content("UPS Ground")
+        click_on "Save and Continue"
+
+        # Payment
+        expect(page).to have_current_path("/checkout/payment")
+        choose "Use an existing card on file"
+        click_button "Save and Continue"
+
+        # Confirm
+        expect(page).to have_current_path("/checkout/confirm")
+        click_button "Place Order"
+        expect(page).to have_content("Your order has been processed successfully")
+
+        # Capture in backend
+        Spree::Order.complete.each do |order|
+          visit spree.admin_path
+
+          expect(page).to have_selector("#listing_orders tbody tr", count: 2)
+
+          click_link order.number
+
+          click_link "Payments"
+          find(".fa-capture").click
+
+          expect(page).to have_content "Payment Updated"
+          expect(find("table#payments")).to have_content "Completed"
+        end
       end
-      within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
-      within_frame(find '#card_expiry iframe') do
-        '0132'.split('').each { |n| find_field('exp-date').native.send_keys(n) }
-      end
-      click_button "Save and Continue"
-
-      within_3d_secure_modal do
-        click_button 'Complete authentication'
-      end
-
-      expect(page).to have_current_path("/checkout/confirm")
-      click_button "Place Order"
-      expect(page).to have_content("Your order has been processed successfully")
-
-      visit spree.root_path
-      click_link "DL-44"
-      click_button "Add To Cart"
-
-      expect(page).to have_current_path("/cart")
-      click_button "Checkout"
-
-      # Address
-      expect(page).to have_current_path("/checkout/address")
-
-      within("#billing") do
-        fill_in_name
-        fill_in "Street Address", with: "YT-1300"
-        fill_in "City", with: "Mos Eisley"
-        select "United States of America", from: "Country"
-        select country.states.first.name, from: "order_bill_address_attributes_state_id"
-        fill_in "Zip", with: "12010"
-        fill_in "Phone", with: "(555) 555-5555"
-      end
-      click_on "Save and Continue"
-
-      # Delivery
-      expect(page).to have_current_path("/checkout/delivery")
-      expect(page).to have_content("UPS Ground")
-      click_on "Save and Continue"
-
-      # Payment
-      expect(page).to have_current_path("/checkout/payment")
-      choose "Use an existing card on file"
-      click_button "Save and Continue"
-
-      # Confirm
-      expect(page).to have_current_path("/checkout/confirm")
-      click_button "Place Order"
-      expect(page).to have_content("Your order has been processed successfully")
     end
 
     it_behaves_like "Stripe Elements invalid payments"
