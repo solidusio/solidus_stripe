@@ -15,6 +15,8 @@ module Spree
         'Visa' => 'visa'
       }
 
+      delegate :create_intent, :update_intent, :confirm_intent, to: :gateway
+
       def stripe_config(order)
         {
           id: id,
@@ -57,14 +59,6 @@ module Spree
 
       def payment_profiles_supported?
         true
-      end
-
-      def create_intent(*args)
-        gateway.create_intent(*args)
-      end
-
-      def confirm_intent(*args)
-        gateway.confirm_intent(*args)
       end
 
       def purchase(money, creditcard, transaction_options)
