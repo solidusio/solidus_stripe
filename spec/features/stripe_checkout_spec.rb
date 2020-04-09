@@ -420,6 +420,41 @@ RSpec.describe "Stripe checkout", type: :feature do
     context "when paying with multiple payment methods" do
       stub_authorization!
 
+      context "when paying first with regular card, then with 3D-Secure card" do
+        let(:regular_card) { "4242 4242 4242 4242"}
+
+        it "voids the first stripe payment and successfully pays with 3DS card" do
+          within_frame find('#card_number iframe') do
+            regular_card.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
+          end
+          within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
+          within_frame(find '#card_expiry iframe') do
+            '0132'.split('').each { |n| find_field('exp-date').native.send_keys(n) }
+          end
+          click_button "Save and Continue"
+
+          expect(page).to have_content "Ending in 4242"
+
+          click_link "Payment"
+
+          authenticate_3d_secure_card(card_3d_secure)
+          click_button "Place Order"
+          expect(page).to have_content "Your order has been processed successfully"
+
+          visit spree.admin_path
+          click_link Spree::Order.complete.first.number
+          click_link "Payments"
+
+          payments = all('table#payments tbody tr')
+
+          expect(payments.first).to have_content "Stripe"
+          expect(payments.first).to have_content "Void"
+
+          expect(payments.last).to have_content "Stripe"
+          expect(payments.last).to have_content "Pending"
+        end
+      end
+
       context "when paying first with 3D-Secure card, then with check" do
         before { create :check_payment_method }
 

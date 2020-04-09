@@ -11,12 +11,19 @@ module SolidusStripe
     end
 
     def call
+      invalidate_previous_payment_intents_payments
       payment = create_payment
       description = "Solidus Order ID: #{payment.gateway_order_identifier}"
       stripe.update_intent(nil, response['id'], nil, description: description)
     end
 
     private
+
+    def invalidate_previous_payment_intents_payments
+      if stripe.v3_intents?
+        current_order.payments.pending.where(payment_method: stripe).each(&:void_transaction!)
+      end
+    end
 
     def create_payment
       Spree::OrderUpdateAttributes.new(
