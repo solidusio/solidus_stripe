@@ -417,6 +417,37 @@ RSpec.describe "Stripe checkout", type: :feature do
       end
     end
 
+    context "when paying with multiple payment methods" do
+      stub_authorization!
+
+      context "when paying first with 3D-Secure card, then with check" do
+        before { create :check_payment_method }
+
+        it "voids the stripe payment and successfully pays with check" do
+          authenticate_3d_secure_card(card_3d_secure)
+          expect(page).to have_current_path("/checkout/confirm")
+
+          click_link "Payment"
+          choose "Check"
+          click_button "Save and Continue"
+          expect(find(".payment-info")).to have_content "Check"
+          expect(page).to have_content "Your order has been processed successfully"
+
+          visit spree.admin_path
+          click_link Spree::Order.complete.first.number
+          click_link "Payments"
+          payments = all('table#payments tbody tr')
+
+          stripe_payment = payments.first
+          expect(stripe_payment).to have_content "Stripe"
+          expect(stripe_payment).to have_content "Void"
+
+          check_payment = payments.last
+          expect(check_payment).to have_content "Check"
+        end
+      end
+    end
+
     it_behaves_like "Stripe Elements invalid payments"
   end
 
