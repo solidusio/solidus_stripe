@@ -10,10 +10,12 @@ module SolidusStripe
           intent = stripe.create_intent(
             (current_order.total * 100).to_i,
             params[:stripe_payment_method_id],
+            description: "Solidus Order ID: #{current_order.number} (pending)",
             currency: current_order.currency,
             confirmation_method: 'manual',
+            capture_method: 'manual',
             confirm: true,
-            setup_future_usage: 'on_session',
+            setup_future_usage: 'off_session',
             metadata: { order_id: current_order.id }
           )
         elsif params[:stripe_payment_intent_id].present?
@@ -42,7 +44,7 @@ module SolidusStripe
             requires_action: true,
             stripe_payment_intent_client_secret: response['client_secret']
           }
-      elsif response['status'] == 'succeeded'
+      elsif response['status'] == 'requires_capture'
         render json: { success: true }
       else
         render json: { error: response['error']['message'] }, status: 500
