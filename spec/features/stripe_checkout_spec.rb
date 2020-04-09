@@ -6,6 +6,8 @@ RSpec.describe "Stripe checkout", type: :feature do
   let(:zone) { FactoryBot.create(:zone) }
   let(:country) { FactoryBot.create(:country) }
 
+  let(:card_3d_secure) { "4000 0025 0000 3155" }
+
   before do
     FactoryBot.create(:store)
     zone.members << Spree::ZoneMember.create!(zoneable: country)
@@ -301,24 +303,8 @@ RSpec.describe "Stripe checkout", type: :feature do
     end
 
     context "when using a valid 3D Secure card" do
-      let(:card_number) { "4000 0025 0000 3155" }
-
       it "successfully completes the checkout" do
-        within_frame find('#card_number iframe') do
-          card_number.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
-        end
-        within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
-        within_frame(find '#card_expiry iframe') do
-          '0132'.split('').each { |n| find_field('exp-date').native.send_keys(n) }
-        end
-
-        click_button "Save and Continue"
-
-        within_3d_secure_modal do
-          expect(page).to have_content '$19.99 using 3D Secure'
-
-          click_button 'Complete authentication'
-        end
+        authenticate_3d_secure_card(card_3d_secure)
 
         expect(page).to have_current_path("/checkout/confirm")
 
@@ -372,18 +358,7 @@ RSpec.describe "Stripe checkout", type: :feature do
       stub_authorization!
 
       it "succesfully creates a second payment that can be captured in the backend" do
-        within_frame find('#card_number iframe') do
-          "4000 0025 0000 3155".split('').each { |n| find_field('cardnumber').native.send_keys(n) }
-        end
-        within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
-        within_frame(find '#card_expiry iframe') do
-          '0132'.split('').each { |n| find_field('exp-date').native.send_keys(n) }
-        end
-        click_button "Save and Continue"
-
-        within_3d_secure_modal do
-          click_button 'Complete authentication'
-        end
+        authenticate_3d_secure_card(card_3d_secure)
 
         expect(page).to have_current_path("/checkout/confirm")
         click_button "Place Order"
@@ -450,6 +425,23 @@ RSpec.describe "Stripe checkout", type: :feature do
       within_frame "challengeFrame" do
         yield
       end
+    end
+  end
+
+  def authenticate_3d_secure_card(card_number)
+    within_frame find('#card_number iframe') do
+      card_number.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
+    end
+    within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
+    within_frame(find '#card_expiry iframe') do
+      '0132'.split('').each { |n| find_field('exp-date').native.send_keys(n) }
+    end
+    click_button "Save and Continue"
+
+    within_3d_secure_modal do
+      expect(page).to have_content '$19.99 using 3D Secure'
+
+      click_button 'Complete authentication'
     end
   end
 end
