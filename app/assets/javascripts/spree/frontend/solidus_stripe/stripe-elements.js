@@ -18,15 +18,13 @@ SolidusStripe.Elements.prototype.init = function() {
 };
 
 SolidusStripe.Elements.prototype.initElements = function() {
-  var style = this.baseStyle();
-
-  var cardExpiry = this.elements.create('cardExpiry', {style: style});
+  var cardExpiry = this.elements.create('cardExpiry', this.cardExpiryElementOptions());
   cardExpiry.mount('#card_expiry');
 
-  var cardCvc = this.elements.create('cardCvc', {style: style});
+  var cardCvc = this.elements.create('cardCvc', this.cardCvcElementOptions());
   cardCvc.mount('#card_cvc');
 
-  this.cardNumber = this.elements.create('cardNumber', {style: style});
+  this.cardNumber = this.elements.create('cardNumber', this.cardNumberElementOptions());
   this.cardNumber.mount('#card_number');
 
   this.form.bind('submit', this.onFormSubmit.bind(this));
@@ -78,6 +76,24 @@ SolidusStripe.Elements.prototype.baseStyle = function () {
     }
   };
 };
+
+SolidusStripe.Elements.prototype.cardNumberElementOptions = function () {
+  return {
+    style: this.baseStyle()
+  }
+}
+
+SolidusStripe.Elements.prototype.cardExpiryElementOptions = function () {
+  return {
+    style: this.baseStyle()
+  }
+}
+
+SolidusStripe.Elements.prototype.cardCvcElementOptions = function () {
+  return {
+    style: this.baseStyle()
+  }
+}
 
 SolidusStripe.Elements.prototype.showError = function(error) {
   var message = error.message || error;
