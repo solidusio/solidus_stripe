@@ -21,7 +21,7 @@ SolidusStripe.PaymentIntents.prototype.onPrPayment = function(payment) {
     var that = this;
 
     this.elementsTokenHandler(payment.paymentMethod);
-    fetch('/stripe/confirm_payment', {
+    fetch('/stripe/confirm_intents', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
