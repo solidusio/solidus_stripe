@@ -100,6 +100,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            form_data: this.form.serialize(),
             spree_payment_method_id: this.config.id,
             stripe_payment_intent_id: result.paymentIntent.id,
             authenticity_token: this.authToken

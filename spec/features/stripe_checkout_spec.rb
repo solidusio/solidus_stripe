@@ -6,6 +6,8 @@ RSpec.describe "Stripe checkout", type: :feature do
   let(:zone) { FactoryBot.create(:zone) }
   let(:country) { FactoryBot.create(:country) }
 
+  let(:card_3d_secure) { "4000 0025 0000 3155" }
+
   before do
     FactoryBot.create(:store)
     zone.members << Spree::ZoneMember.create!(zoneable: country)
@@ -301,24 +303,8 @@ RSpec.describe "Stripe checkout", type: :feature do
     end
 
     context "when using a valid 3D Secure card" do
-      let(:card_number) { "4000 0027 6000 3184" }
-
       it "successfully completes the checkout" do
-        within_frame find('#card_number iframe') do
-          card_number.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
-        end
-        within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
-        within_frame(find '#card_expiry iframe') do
-          '0132'.split('').each { |n| find_field('exp-date').native.send_keys(n) }
-        end
-
-        click_button "Save and Continue"
-
-        within_3d_secure_modal do
-          expect(page).to have_content '$19.99 using 3D Secure'
-
-          click_button 'Complete authentication'
-        end
+        authenticate_3d_secure_card(card_3d_secure)
 
         expect(page).to have_current_path("/checkout/confirm")
 
@@ -368,59 +354,133 @@ RSpec.describe "Stripe checkout", type: :feature do
       end
     end
 
-    it "can re-use saved cards" do
-      within_frame find('#card_number iframe') do
-        "4000 0027 6000 3184".split('').each { |n| find_field('cardnumber').native.send_keys(n) }
+    context "when reusing a card" do
+      stub_authorization!
+
+      it "succesfully creates a second payment that can be captured in the backend" do
+        authenticate_3d_secure_card(card_3d_secure)
+
+        expect(page).to have_current_path("/checkout/confirm")
+        click_button "Place Order"
+        expect(page).to have_content("Your order has been processed successfully")
+
+        visit spree.root_path
+        click_link "DL-44"
+        click_button "Add To Cart"
+
+        expect(page).to have_current_path("/cart")
+        click_button "Checkout"
+
+        # Address
+        expect(page).to have_current_path("/checkout/address")
+
+        within("#billing") do
+          fill_in_name
+          fill_in "Street Address", with: "YT-1300"
+          fill_in "City", with: "Mos Eisley"
+          select "United States of America", from: "Country"
+          select country.states.first.name, from: "order_bill_address_attributes_state_id"
+          fill_in "Zip", with: "12010"
+          fill_in "Phone", with: "(555) 555-5555"
+        end
+        click_on "Save and Continue"
+
+        # Delivery
+        expect(page).to have_current_path("/checkout/delivery")
+        expect(page).to have_content("UPS Ground")
+        click_on "Save and Continue"
+
+        # Payment
+        expect(page).to have_current_path("/checkout/payment")
+        choose "Use an existing card on file"
+        click_button "Save and Continue"
+
+        # Confirm
+        expect(page).to have_current_path("/checkout/confirm")
+        click_button "Place Order"
+        expect(page).to have_content("Your order has been processed successfully")
+
+        # Capture in backend
+        Spree::Order.complete.each do |order|
+          visit spree.admin_path
+
+          expect(page).to have_selector("#listing_orders tbody tr", count: 2)
+
+          click_link order.number
+
+          click_link "Payments"
+          find(".fa-capture").click
+
+          expect(page).to have_content "Payment Updated"
+          expect(find("table#payments")).to have_content "Completed"
+        end
       end
-      within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
-      within_frame(find '#card_expiry iframe') do
-        '0132'.split('').each { |n| find_field('exp-date').native.send_keys(n) }
+    end
+
+    context "when paying with multiple payment methods" do
+      stub_authorization!
+
+      context "when paying first with regular card, then with 3D-Secure card" do
+        let(:regular_card) { "4242 4242 4242 4242"}
+
+        it "voids the first stripe payment and successfully pays with 3DS card" do
+          within_frame find('#card_number iframe') do
+            regular_card.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
+          end
+          within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
+          within_frame(find '#card_expiry iframe') do
+            '0132'.split('').each { |n| find_field('exp-date').native.send_keys(n) }
+          end
+          click_button "Save and Continue"
+
+          expect(page).to have_content "Ending in 4242"
+
+          click_link "Payment"
+
+          authenticate_3d_secure_card(card_3d_secure)
+          click_button "Place Order"
+          expect(page).to have_content "Your order has been processed successfully"
+
+          visit spree.admin_path
+          click_link Spree::Order.complete.first.number
+          click_link "Payments"
+
+          payments = all('table#payments tbody tr')
+
+          expect(payments.first).to have_content "Stripe"
+          expect(payments.first).to have_content "Void"
+
+          expect(payments.last).to have_content "Stripe"
+          expect(payments.last).to have_content "Pending"
+        end
       end
-      click_button "Save and Continue"
 
-      within_3d_secure_modal do
-        click_button 'Complete authentication'
+      context "when paying first with 3D-Secure card, then with check" do
+        before { create :check_payment_method }
+
+        it "voids the stripe payment and successfully pays with check" do
+          authenticate_3d_secure_card(card_3d_secure)
+          expect(page).to have_current_path("/checkout/confirm")
+
+          click_link "Payment"
+          choose "Check"
+          click_button "Save and Continue"
+          expect(find(".payment-info")).to have_content "Check"
+          expect(page).to have_content "Your order has been processed successfully"
+
+          visit spree.admin_path
+          click_link Spree::Order.complete.first.number
+          click_link "Payments"
+          payments = all('table#payments tbody tr')
+
+          stripe_payment = payments.first
+          expect(stripe_payment).to have_content "Stripe"
+          expect(stripe_payment).to have_content "Void"
+
+          check_payment = payments.last
+          expect(check_payment).to have_content "Check"
+        end
       end
-
-      expect(page).to have_current_path("/checkout/confirm")
-      click_button "Place Order"
-      expect(page).to have_content("Your order has been processed successfully")
-
-      visit spree.root_path
-      click_link "DL-44"
-      click_button "Add To Cart"
-
-      expect(page).to have_current_path("/cart")
-      click_button "Checkout"
-
-      # Address
-      expect(page).to have_current_path("/checkout/address")
-
-      within("#billing") do
-        fill_in_name
-        fill_in "Street Address", with: "YT-1300"
-        fill_in "City", with: "Mos Eisley"
-        select "United States of America", from: "Country"
-        select country.states.first.name, from: "order_bill_address_attributes_state_id"
-        fill_in "Zip", with: "12010"
-        fill_in "Phone", with: "(555) 555-5555"
-      end
-      click_on "Save and Continue"
-
-      # Delivery
-      expect(page).to have_current_path("/checkout/delivery")
-      expect(page).to have_content("UPS Ground")
-      click_on "Save and Continue"
-
-      # Payment
-      expect(page).to have_current_path("/checkout/payment")
-      choose "Use an existing card on file"
-      click_button "Save and Continue"
-
-      # Confirm
-      expect(page).to have_current_path("/checkout/confirm")
-      click_button "Place Order"
-      expect(page).to have_content("Your order has been processed successfully")
     end
 
     it_behaves_like "Stripe Elements invalid payments"
@@ -431,6 +491,23 @@ RSpec.describe "Stripe checkout", type: :feature do
       within_frame "challengeFrame" do
         yield
       end
+    end
+  end
+
+  def authenticate_3d_secure_card(card_number)
+    within_frame find('#card_number iframe') do
+      card_number.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
+    end
+    within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
+    within_frame(find '#card_expiry iframe') do
+      '0132'.split('').each { |n| find_field('exp-date').native.send_keys(n) }
+    end
+    click_button "Save and Continue"
+
+    within_3d_secure_modal do
+      expect(page).to have_content '$19.99 using 3D Secure'
+
+      click_button 'Complete authentication'
     end
   end
 end
