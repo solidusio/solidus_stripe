@@ -27,6 +27,7 @@ SolidusStripe.PaymentIntents.prototype.onPrPayment = function(payment) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
+        form_data: this.form.serialize(),
         spree_payment_method_id: this.config.id,
         stripe_payment_method_id: payment.paymentMethod.id,
         authenticity_token: this.authToken
