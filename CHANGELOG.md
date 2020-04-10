@@ -7,6 +7,7 @@
 **Fixed bugs:**
 
 - Duplicates charges with Payment Intents [\#44](https://github.com/solidusio/solidus_stripe/issues/44)
+- Send form data also when paying with payment request button [\#47](https://github.com/solidusio/solidus_stripe/pull/47) ([spaghetticode](https://github.com/spaghetticode))
 - Create a single charge when using Stripe Payment Intents [\#45](https://github.com/solidusio/solidus_stripe/pull/45) ([spaghetticode](https://github.com/spaghetticode))
 
 **Closed issues:**
@@ -17,6 +18,7 @@
 
 **Merged pull requests:**
 
+- Replace deprecated route `/stripe/confirm\_payment` [\#46](https://github.com/solidusio/solidus_stripe/pull/46) ([spaghetticode](https://github.com/spaghetticode))
 - Custom Stripe Elements field options [\#42](https://github.com/solidusio/solidus_stripe/pull/42) ([stuffmatic](https://github.com/stuffmatic))
 - Improve the way Stripe Elements validation errors are displayed [\#40](https://github.com/solidusio/solidus_stripe/pull/40) ([stuffmatic](https://github.com/stuffmatic))
 - Fix stripe-to-solidus card type mapping [\#38](https://github.com/solidusio/solidus_stripe/pull/38) ([stuffmatic](https://github.com/stuffmatic))
