@@ -4,9 +4,24 @@
 
 [Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v3.0.0...HEAD)
 
+**Fixed bugs:**
+
+- Duplicates charges with Payment Intents [\#44](https://github.com/solidusio/solidus_stripe/issues/44)
+- Create a single charge when using Stripe Payment Intents [\#45](https://github.com/solidusio/solidus_stripe/pull/45) ([spaghetticode](https://github.com/spaghetticode))
+
 **Closed issues:**
 
+- Stripe Elements submit button stuck in disabled state. [\#39](https://github.com/solidusio/solidus_stripe/issues/39)
+- Visa credit card type is blank [\#36](https://github.com/solidusio/solidus_stripe/issues/36)
 - Pay with Apple Pay from cart page [\#23](https://github.com/solidusio/solidus_stripe/issues/23)
+
+**Merged pull requests:**
+
+- Custom Stripe Elements field options [\#42](https://github.com/solidusio/solidus_stripe/pull/42) ([stuffmatic](https://github.com/stuffmatic))
+- Improve the way Stripe Elements validation errors are displayed [\#40](https://github.com/solidusio/solidus_stripe/pull/40) ([stuffmatic](https://github.com/stuffmatic))
+- Fix stripe-to-solidus card type mapping [\#38](https://github.com/solidusio/solidus_stripe/pull/38) ([stuffmatic](https://github.com/stuffmatic))
+- Add hook to provide custom Stripe Elements options [\#37](https://github.com/solidusio/solidus_stripe/pull/37) ([stuffmatic](https://github.com/stuffmatic))
+- Change order description that we pass to Stripe [\#35](https://github.com/solidusio/solidus_stripe/pull/35) ([kennyadsl](https://github.com/kennyadsl))
 
 ## [v3.0.0](https://github.com/solidusio/solidus_stripe/tree/v3.0.0) (2020-03-11)
 
