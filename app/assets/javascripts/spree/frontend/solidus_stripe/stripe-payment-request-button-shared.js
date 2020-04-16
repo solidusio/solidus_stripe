@@ -114,6 +114,10 @@
     completePaymentRequest: function(payment, state) {
       if (payment && typeof payment.complete === 'function') {
         payment.complete(state);
+        if (state === 'fail') {
+          // restart the button (required in order to force address choice)
+          new SolidusStripe.CartPageCheckout().init();
+        }
       }
     }
   };
