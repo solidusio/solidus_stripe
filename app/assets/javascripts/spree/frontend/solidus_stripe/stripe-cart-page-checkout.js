@@ -16,7 +16,9 @@ SolidusStripe.CartPageCheckout.prototype.init = function() {
 };
 
 SolidusStripe.CartPageCheckout.prototype.showError = function(error) {
-  this.errorElement.text(error).show();
+  var message = error.message || error;
+
+  this.errorElement.text(message).show();
 };
 
 SolidusStripe.CartPageCheckout.prototype.submitPayment = function(payment) {
