@@ -6,13 +6,7 @@ module SolidusStripe
 
     def confirm
       begin
-        @intent = begin
-          if params[:stripe_payment_method_id].present?
-            create_intent
-          elsif params[:stripe_payment_intent_id].present?
-            stripe.confirm_intent(params[:stripe_payment_intent_id], nil)
-          end
-        end
+        @intent = create_payment_intent
       rescue Stripe::CardError => e
         render json: { error: e.message }, status: 500
         return
@@ -49,13 +43,13 @@ module SolidusStripe
       end
     end
 
-    def create_intent
+    def create_payment_intent
       stripe.create_intent(
         (current_order.total * 100).to_i,
         params[:stripe_payment_method_id],
         description: "Solidus Order ID: #{current_order.number} (pending)",
         currency: current_order.currency,
-        confirmation_method: 'manual',
+        confirmation_method: 'automatic',
         capture_method: 'manual',
         confirm: true,
         setup_future_usage: 'off_session',
