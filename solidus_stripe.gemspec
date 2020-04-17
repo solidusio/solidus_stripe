@@ -29,7 +29,7 @@ Gem::Specification.new do |s|
   s.executables = s.files.grep(%r{^exe/}) { |f| File.basename(f) }
 
   s.add_dependency 'solidus_core', ['>= 2.3', '< 3']
-  s.add_dependency 'solidus_support', '~> 0.4.0'
+  s.add_dependency 'solidus_support', '~> 0.5'
   # ActiveMerchant v1.58 through v1.59 introduced a breaking change
   # to the stripe gateway.
   #
