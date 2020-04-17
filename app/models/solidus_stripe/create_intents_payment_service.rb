@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module SolidusStripe
-  class CreateIntentsOrderService
+  class CreateIntentsPaymentService
     attr_reader :intent, :stripe, :controller
 
     delegate :request, :current_order, :params, to: :controller
