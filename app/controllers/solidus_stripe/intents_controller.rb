@@ -36,8 +36,11 @@ module SolidusStripe
           stripe_payment_intent_client_secret: response['client_secret']
         }
       elsif response['status'] == 'requires_capture'
-        SolidusStripe::CreateIntentsPaymentService.new(@intent, stripe, self).call
-        render json: { success: true }
+        render json: {
+          success: true,
+          requires_capture: true,
+          stripe_payment_intent_id: response['id']
+        }
       else
         render json: { error: response['error']['message'] }, status: 500
       end
