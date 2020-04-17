@@ -2,22 +2,26 @@
 
 module SolidusStripe
   class CreateIntentsPaymentService
-    attr_reader :intent, :stripe, :controller
+    attr_reader :intent_id, :stripe, :controller
 
     delegate :request, :current_order, :params, to: :controller
 
-    def initialize(intent, stripe, controller)
-      @intent, @stripe, @controller = intent, stripe, controller
+    def initialize(intent_id, stripe, controller)
+      @intent_id, @stripe, @controller = intent_id, stripe, controller
     end
 
     def call
       invalidate_previous_payment_intents_payments
       payment = create_payment
       description = "Solidus Order ID: #{payment.gateway_order_identifier}"
-      stripe.update_intent(nil, response['id'], nil, description: description)
+      stripe.update_intent(nil, intent_id, nil, description: description)
     end
 
     private
+
+    def intent
+      @intent ||= stripe.show_intent(intent_id, {})
+    end
 
     def invalidate_previous_payment_intents_payments
       if stripe.v3_intents?
@@ -32,7 +36,7 @@ module SolidusStripe
         request_env: request.headers.env
       ).apply
 
-      Spree::Payment.find_by(response_code: response['id']).tap do |payment|
+      Spree::Payment.find_by(response_code: intent_id).tap do |payment|
         payment.update!(state: :pending)
       end
     end
@@ -45,7 +49,7 @@ module SolidusStripe
         payments_attributes: [{
           payment_method_id: stripe.id,
           amount: current_order.total,
-          response_code: response['id'],
+          response_code: intent_id,
           source_attributes: {
             month: card['exp_month'],
             year: card['exp_year'],
