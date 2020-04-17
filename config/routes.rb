@@ -4,6 +4,7 @@ Spree::Core::Engine.routes.draw do
 
   # payment intents routes:
   post '/stripe/confirm_intents', to: '/solidus_stripe/intents#confirm'
+  post '/stripe/create_payment', to: '/solidus_stripe/intents#create_payment'
 
   # payment request routes:
   post '/stripe/shipping_rates', to: '/solidus_stripe/payment_request#shipping_rates'

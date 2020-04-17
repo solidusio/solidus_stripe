@@ -21,6 +21,11 @@ module SolidusStripe
       generate_payment_response
     end
 
+    def create_payment
+      SolidusStripe::CreateIntentsPaymentService.new(params[:stripe_payment_intent_id], stripe, self).call
+      render json: { success: true }
+    end
+
     private
 
     def stripe
