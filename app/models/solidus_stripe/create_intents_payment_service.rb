@@ -12,9 +12,13 @@ module SolidusStripe
 
     def call
       invalidate_previous_payment_intents_payments
-      payment = create_payment
-      description = "Solidus Order ID: #{payment.gateway_order_identifier}"
-      stripe.update_intent(nil, intent_id, nil, description: description)
+      if (payment = create_payment)
+        description = "Solidus Order ID: #{payment.gateway_order_identifier}"
+        stripe.update_intent(nil, intent_id, nil, description: description)
+        true
+      else
+        false
+      end
     end
 
     private
@@ -36,9 +40,8 @@ module SolidusStripe
         request_env: request.headers.env
       ).apply
 
-      Spree::Payment.find_by(response_code: intent_id).tap do |payment|
-        payment.update!(state: :pending)
-      end
+      created_payment = Spree::Payment.find_by(response_code: intent_id)
+      created_payment&.tap { |payment| payment.update!(state: :pending) }
     end
 
     def payment_params
@@ -83,6 +86,11 @@ module SolidusStripe
 
     def address_full_name
       current_order.bill_address&.full_name || form_data[:recipient]
+    end
+
+    def update_stripe_payment_description
+      description = "Solidus Order ID: #{payment.gateway_order_identifier}"
+      stripe.update_intent(nil, intent_id, nil, description: description)
     end
   end
 end
