@@ -111,6 +111,31 @@
       }
     },
 
+    completePayment: function(payment, stripePaymentIntentId) {
+      var onCreateBackendPayment = function (response) {
+        if (response.error) {
+          this.completePaymentRequest(payment, 'fail');
+          this.showError(response.error);
+        } else {
+          this.completePaymentRequest(payment, 'success');
+          this.submitPayment(payment);
+        }
+      }.bind(this);
+
+      fetch('/stripe/create_payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          form_data: this.form ? this.form.serialize() : payment.shippingAddress,
+          spree_payment_method_id: this.config.id,
+          stripe_payment_intent_id: stripePaymentIntentId,
+          authenticity_token: this.authToken
+        })
+      }).then(function(solidusPaymentResponse) {
+        return solidusPaymentResponse.json();
+      }).then(onCreateBackendPayment)
+    },
+
     completePaymentRequest: function(payment, state) {
       if (payment && typeof payment.complete === 'function') {
         payment.complete(state);
