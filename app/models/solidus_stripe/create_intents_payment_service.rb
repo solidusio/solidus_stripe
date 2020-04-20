@@ -42,33 +42,47 @@ module SolidusStripe
     end
 
     def payment_params
-      card = response['charges']['data'][0]['payment_method_details']['card']
-      address_attributes = form_data['payment_source'][stripe.id.to_s]['address_attributes']
-
       {
         payments_attributes: [{
           payment_method_id: stripe.id,
           amount: current_order.total,
           response_code: intent_id,
           source_attributes: {
-            month: card['exp_month'],
-            year: card['exp_year'],
-            cc_type: card['brand'],
-            gateway_payment_profile_id: response['payment_method'],
-            last_digits: card['last4'],
-            name: current_order.bill_address.full_name,
+            month: intent_card['exp_month'],
+            year: intent_card['exp_year'],
+            cc_type: intent_card['brand'],
+            last_digits: intent_card['last4'],
+            gateway_payment_profile_id: intent_customer_profile,
+            name: address_full_name,
             address_attributes: address_attributes
           }
         }]
       }
     end
 
-    def response
-      intent.params
+    def intent_card
+      intent.params['charges']['data'][0]['payment_method_details']['card']
+    end
+
+    def intent_customer_profile
+      intent.params['payment_method']
     end
 
     def form_data
-      Rack::Utils.parse_nested_query(params[:form_data])
+      params[:form_data]
+    end
+
+    def address_attributes
+      if form_data.is_a?(String)
+        data = Rack::Utils.parse_nested_query(form_data)
+        data['payment_source'][stripe.id.to_s]['address_attributes']
+      else
+        SolidusStripe::AddressFromParamsService.new(form_data).call.attributes
+      end
+    end
+
+    def address_full_name
+      current_order.bill_address&.full_name || form_data[:recipient]
     end
   end
 end
