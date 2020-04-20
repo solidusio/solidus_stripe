@@ -83,31 +83,38 @@
         this.showError(response.error);
         this.completePaymentRequest(payment, 'fail');
       } else if (response.requires_action) {
-        this.stripe.handleCardAction(
-          response.stripe_payment_intent_client_secret
-        ).then(this.onIntentsClientSecret.bind(this));
+        var clientSecret = response.stripe_payment_intent_client_secret;
+        var onConfirmCardPayment = this.onConfirmCardPayment.bind(this);
+
+        this.stripe.confirmCardPayment(
+          clientSecret,
+          {payment_method: payment.paymentMethod.id},
+          {handleActions: false}
+        ).then(function(confirmResult) {
+          onConfirmCardPayment(confirmResult, payment, clientSecret)
+        });
       } else {
-        this.completePaymentRequest(payment, 'success');
-        this.submitPayment(payment);
+        this.completePayment(payment, response.stripe_payment_intent_id)
       }
     },
 
-    onIntentsClientSecret: function(result) {
-      if (result.error) {
-        this.showError(result.error);
+    onConfirmCardPayment: function(confirmResult, payment, clientSecret) {
+      onStripeResponse = function(response, payment) {
+        if (response.error) {
+          this.showError(response.error);
+        } else {
+          this.completePayment(payment, response.paymentIntent.id)
+        }
+      }.bind(this);
+
+      if (confirmResult.error) {
+        this.completePaymentRequest(payment, 'fail');
+        this.showError(confirmResult.error);
       } else {
-        fetch('/stripe/confirm_intents', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            form_data: this.form.serialize(),
-            spree_payment_method_id: this.config.id,
-            stripe_payment_intent_id: result.paymentIntent.id,
-            authenticity_token: this.authToken
-          })
-        }).then(function(confirmResult) {
-          return confirmResult.json();
-        }).then(this.handleServerResponse.bind(this));
+        this.completePaymentRequest(payment, 'success');
+        this.stripe.confirmCardPayment(clientSecret).then(function(response) {
+          onStripeResponse(response, payment);
+        });
       }
     },
 
