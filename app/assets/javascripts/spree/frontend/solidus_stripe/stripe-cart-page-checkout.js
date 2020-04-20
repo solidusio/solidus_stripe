@@ -42,7 +42,7 @@ SolidusStripe.CartPageCheckout.prototype.submitPayment = function(payment) {
 };
 
 SolidusStripe.CartPageCheckout.prototype.onPrPayment = function(payment) {
-  var handleServerResponse = this.handleServerResponse.bind(this);
+  var createIntent = this.createIntent.bind(this);
 
   fetch('/stripe/update_order', {
     method: 'POST',
@@ -56,9 +56,39 @@ SolidusStripe.CartPageCheckout.prototype.onPrPayment = function(payment) {
     })
   }).then(function(response) {
     response.json().then(function(json) {
-      handleServerResponse(json, payment);
+      createIntent(json, payment);
     })
   });
+};
+
+SolidusStripe.CartPageCheckout.prototype.createIntent = function(result, payment) {
+  var handleServerResponse = this.handleServerResponse.bind(this);
+
+  if (result.error) {
+    this.completePaymentRequest(payment, 'fail');
+    this.showError(result.error);
+  } else {
+    if (payment.error) {
+      this.showError(payment.error.message);
+    } else {
+      fetch('/stripe/confirm_intents', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          form_data: payment.shippingAddress,
+          spree_payment_method_id: this.config.id,
+          stripe_payment_method_id: payment.paymentMethod.id,
+          authenticity_token: this.authToken
+        })
+      }).then(function(response) {
+        response.json().then(function(result) {
+          handleServerResponse(result, payment)
+        })
+      });
+    }
+  }
 };
 
 SolidusStripe.CartPageCheckout.prototype.onPrButtonMounted = function(buttonId, success) {
