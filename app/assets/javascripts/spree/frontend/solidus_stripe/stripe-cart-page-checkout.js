@@ -41,22 +41,22 @@ SolidusStripe.CartPageCheckout.prototype.submitPayment = function(payment) {
   });
 };
 
-SolidusStripe.CartPageCheckout.prototype.onPrPayment = function(result) {
+SolidusStripe.CartPageCheckout.prototype.onPrPayment = function(payment) {
   var handleServerResponse = this.handleServerResponse.bind(this);
 
   fetch('/stripe/update_order', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      shipping_address: result.shippingAddress,
-      shipping_option: result.shippingOption,
-      email: result.payerEmail,
-      name: result.payerName,
+      shipping_address: payment.shippingAddress,
+      shipping_option: payment.shippingOption,
+      email: payment.payerEmail,
+      name: payment.payerName,
       authenticity_token: this.authToken
     })
   }).then(function(response) {
     response.json().then(function(json) {
-      handleServerResponse(json, result);
+      handleServerResponse(json, payment);
     })
   });
 };
