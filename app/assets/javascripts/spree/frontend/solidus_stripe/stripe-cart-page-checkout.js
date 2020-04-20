@@ -72,7 +72,7 @@ SolidusStripe.CartPageCheckout.prototype.createIntent = function(result, payment
     if (payment.error) {
       this.showError(payment.error.message);
     } else {
-      fetch('/stripe/confirm_intents', {
+      fetch('/stripe/create_intent', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

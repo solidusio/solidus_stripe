@@ -4,7 +4,7 @@ module SolidusStripe
   class IntentsController < Spree::BaseController
     include Spree::Core::ControllerHelpers::Order
 
-    def confirm
+    def create_intent
       begin
         @intent = create_payment_intent
       rescue Stripe::CardError => e
