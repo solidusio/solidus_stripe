@@ -16,8 +16,17 @@ module SolidusStripe
     end
 
     def create_payment
-      SolidusStripe::CreateIntentsPaymentService.new(params[:stripe_payment_intent_id], stripe, self).call
-      render json: { success: true }
+      create_payment_service = SolidusStripe::CreateIntentsPaymentService.new(
+        params[:stripe_payment_intent_id],
+        stripe,
+        self
+      )
+
+      if create_payment_service.call
+        render json: { success: true }
+      else
+        render json: { error: "Could not create payment" }, status: 500
+      end
     end
 
     private

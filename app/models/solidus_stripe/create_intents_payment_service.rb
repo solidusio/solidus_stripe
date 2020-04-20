@@ -17,6 +17,7 @@ module SolidusStripe
         stripe.update_intent(nil, intent_id, nil, description: description)
         true
       else
+        invalidate_current_payment_intent
         false
       end
     end
@@ -25,6 +26,10 @@ module SolidusStripe
 
     def intent
       @intent ||= stripe.show_intent(intent_id, {})
+    end
+
+    def invalidate_current_payment_intent
+      stripe.cancel(intent_id)
     end
 
     def invalidate_previous_payment_intents_payments
