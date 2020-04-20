@@ -23,6 +23,7 @@ SolidusStripe.CartPageCheckout.prototype.showError = function(error) {
 
 SolidusStripe.CartPageCheckout.prototype.submitPayment = function(payment) {
   var showError = this.showError.bind(this);
+  var prTokenHandler = this.prTokenHandler.bind(this);
 
   $.ajax({
     url: $('[data-submit-url]').data('submit-url'),
@@ -31,7 +32,7 @@ SolidusStripe.CartPageCheckout.prototype.submitPayment = function(payment) {
     },
     type: 'PATCH',
     contentType: 'application/json',
-    data: JSON.stringify(this.prTokenHandler(payment.paymentMethod)),
+    data: JSON.stringify(prTokenHandler(payment.paymentMethod)),
     success: function() {
       window.location = $('[data-complete-url]').data('complete-url');
     },
