@@ -1,23 +1,27 @@
 # Changelog
 
-## [Unreleased](https://github.com/solidusio/solidus_stripe/tree/HEAD)
+## [v4.0.0](https://github.com/solidusio/solidus_stripe/tree/v4.0.0) (2020-04-29)
 
-[Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v3.0.0...HEAD)
+[Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v3.0.0...v4.0.0)
 
 **Fixed bugs:**
 
 - Duplicates charges with Payment Intents [\#44](https://github.com/solidusio/solidus_stripe/issues/44)
+- Fix for 3D-Secure payments on cart page checkout [\#49](https://github.com/solidusio/solidus_stripe/pull/49) ([spaghetticode](https://github.com/spaghetticode))
 - Send form data also when paying with payment request button [\#47](https://github.com/solidusio/solidus_stripe/pull/47) ([spaghetticode](https://github.com/spaghetticode))
 - Create a single charge when using Stripe Payment Intents [\#45](https://github.com/solidusio/solidus_stripe/pull/45) ([spaghetticode](https://github.com/spaghetticode))
 
 **Closed issues:**
 
+- Custom stripe element field options \(e.g for showing a credit card icon\) [\#41](https://github.com/solidusio/solidus_stripe/issues/41)
 - Stripe Elements submit button stuck in disabled state. [\#39](https://github.com/solidusio/solidus_stripe/issues/39)
 - Visa credit card type is blank [\#36](https://github.com/solidusio/solidus_stripe/issues/36)
 - Pay with Apple Pay from cart page [\#23](https://github.com/solidusio/solidus_stripe/issues/23)
+- Clearer documentation on how to implement [\#15](https://github.com/solidusio/solidus_stripe/issues/15)
 
 **Merged pull requests:**
 
+- Relax solidus\_support dependency [\#48](https://github.com/solidusio/solidus_stripe/pull/48) ([kennyadsl](https://github.com/kennyadsl))
 - Replace deprecated route `/stripe/confirm\_payment` [\#46](https://github.com/solidusio/solidus_stripe/pull/46) ([spaghetticode](https://github.com/spaghetticode))
 - Custom Stripe Elements field options [\#42](https://github.com/solidusio/solidus_stripe/pull/42) ([stuffmatic](https://github.com/stuffmatic))
 - Improve the way Stripe Elements validation errors are displayed [\#40](https://github.com/solidusio/solidus_stripe/pull/40) ([stuffmatic](https://github.com/stuffmatic))
