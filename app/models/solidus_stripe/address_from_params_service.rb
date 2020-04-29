@@ -4,7 +4,7 @@ module SolidusStripe
   class AddressFromParamsService
     attr_reader :address_params, :user
 
-    def initialize(address_params, user)
+    def initialize(address_params, user = nil)
       @address_params, @user = address_params, user
     end
 

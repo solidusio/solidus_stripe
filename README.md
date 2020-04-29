@@ -107,6 +107,25 @@ Spree.config do |config|
 end
 ```
 
+When using the Payment Intents API, be aware that the charge flow will be a bit
+different than when using the old V2 API or Elements. It's advisable that all
+Payment Intents charges are captured only by using the Solidus backend, as it is
+the final source of truth in regards of Solidus orders payments.
+
+A Payment Intent is created as soon as the customer enters their credit card
+data. A tentative charge will be created on Stripe, easily recognizable by its
+description: `Solidus Order ID: R987654321 (pending)`. As soon as the credit
+card is confirmed (ie. when the customer passes the 3DSecure authorization, when
+required) then the charge description gets updated to include the Solidus payment
+number: `Solidus Order ID: R987654321-Z4VYUDB3`.
+
+These charges are created `uncaptured` and will need to be captured in Solidus
+backend later, after the customer confirms the order. If the customer never
+completes the checkout, that charge must remain uncaptured. If the customer
+decides to change their payment method after creating a Payment Request, then
+that Payment Request charge will be canceled.
+
+
 Apple Pay and Google Pay
 -----------------------
 
@@ -210,13 +229,13 @@ You can also style your element containers directly by using CSS rules like this
 
 ### Customizing individual input fields
 
-If you want to customize individual input fields, you can override these methods 
+If you want to customize individual input fields, you can override these methods
 
 * `SolidusStripe.Elements.prototype.cardNumberElementOptions`
 * `SolidusStripe.Elements.prototype.cardExpiryElementOptions`
 * `SolidusStripe.Elements.prototype.cardCvcElementOptions`
 
-and return a valid [options object](https://stripe.com/docs/js/elements_object/create_element?type=cardNumber) for the corresponding field type. For example, this code sets a custom placeholder and enables the credit card icon for the card number field 
+and return a valid [options object](https://stripe.com/docs/js/elements_object/create_element?type=cardNumber) for the corresponding field type. For example, this code sets a custom placeholder and enables the credit card icon for the card number field
 
 ```js
 SolidusStripe.Elements.prototype.cardNumberElementOptions = function () {
@@ -230,7 +249,7 @@ SolidusStripe.Elements.prototype.cardNumberElementOptions = function () {
 
 ### Passing options to the Stripe Elements instance
 
-By overriding the `SolidusStripe.Payment.prototype.elementsBaseOptions` method and returning a [valid options object](https://stripe.com/docs/js/elements_object/create), you can pass custom options to the Stripe Elements instance. 
+By overriding the `SolidusStripe.Payment.prototype.elementsBaseOptions` method and returning a [valid options object](https://stripe.com/docs/js/elements_object/create), you can pass custom options to the Stripe Elements instance.
 
 Note that in order to use web fonts with Stripe Elements, you must specify the fonts when creating the Stripe Elements instance. Here's an example specifying a custom web font and locale:
 

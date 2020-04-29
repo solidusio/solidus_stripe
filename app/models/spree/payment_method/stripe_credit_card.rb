@@ -15,7 +15,7 @@ module Spree
         'Visa' => 'visa'
       }
 
-      delegate :create_intent, :update_intent, :confirm_intent, to: :gateway
+      delegate :create_intent, :update_intent, :confirm_intent, :show_intent, to: :gateway
 
       def stripe_config(order)
         {

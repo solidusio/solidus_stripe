@@ -4,21 +4,29 @@ module SolidusStripe
   class IntentsController < Spree::BaseController
     include Spree::Core::ControllerHelpers::Order
 
-    def confirm
+    def create_intent
       begin
-        @intent = begin
-          if params[:stripe_payment_method_id].present?
-            create_intent
-          elsif params[:stripe_payment_intent_id].present?
-            stripe.confirm_intent(params[:stripe_payment_intent_id], nil)
-          end
-        end
+        @intent = create_payment_intent
       rescue Stripe::CardError => e
         render json: { error: e.message }, status: 500
         return
       end
 
       generate_payment_response
+    end
+
+    def create_payment
+      create_payment_service = SolidusStripe::CreateIntentsPaymentService.new(
+        params[:stripe_payment_intent_id],
+        stripe,
+        self
+      )
+
+      if create_payment_service.call
+        render json: { success: true }
+      else
+        render json: { error: "Could not create payment" }, status: 500
+      end
     end
 
     private
@@ -37,20 +45,23 @@ module SolidusStripe
           stripe_payment_intent_client_secret: response['client_secret']
         }
       elsif response['status'] == 'requires_capture'
-        SolidusStripe::CreateIntentsOrderService.new(@intent, stripe, self).call
-        render json: { success: true }
+        render json: {
+          success: true,
+          requires_capture: true,
+          stripe_payment_intent_id: response['id']
+        }
       else
         render json: { error: response['error']['message'] }, status: 500
       end
     end
 
-    def create_intent
+    def create_payment_intent
       stripe.create_intent(
         (current_order.total * 100).to_i,
         params[:stripe_payment_method_id],
         description: "Solidus Order ID: #{current_order.number} (pending)",
         currency: current_order.currency,
-        confirmation_method: 'manual',
+        confirmation_method: 'automatic',
         capture_method: 'manual',
         confirm: true,
         setup_future_usage: 'off_session',
