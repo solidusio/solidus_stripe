@@ -217,7 +217,7 @@ RSpec.describe "Stripe checkout", type: :feature do
     end
   end
 
-  context 'when using Stripe V3 API libarary with Elements', :js do
+  context 'when using Stripe V3 API library with Elements', :js do
     let(:preferred_v3_elements) { true }
     let(:preferred_v3_intents) { false }
 
@@ -293,7 +293,7 @@ RSpec.describe "Stripe checkout", type: :feature do
     it_behaves_like "Stripe Elements invalid payments"
   end
 
-  context "when using Stripe V3 API libarary with Intents", :js do
+  context "when using Stripe V3 API library with Intents", :js do
     let(:preferred_v3_elements) { false }
     let(:preferred_v3_intents) { true }
 
