@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Spree::Core::Engine.routes.draw do
   # route to a deprecated controller, will be removed in the future:
   post '/stripe/confirm_payment', to: 'stripe#confirm_payment'
