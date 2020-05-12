@@ -10,12 +10,12 @@ Gem::Specification.new do |spec|
 
   spec.summary = 'Stripe Payment Method for Solidus'
   spec.description = 'Stripe Payment Method for Solidus'
-  spec.homepage = 'https://solidus.io'
+  spec.homepage = 'https://github.com/solidusio/solidus_stripe#readme'
   spec.license = 'BSD-3'
 
   spec.metadata['homepage_uri'] = spec.homepage
-  spec.metadata['source_code_uri'] = 'https://solidus.io'
-  spec.metadata['changelog_uri'] = 'https://solidus.io'
+  spec.metadata['source_code_uri'] = 'https://github.com/solidusio/solidus_stripe'
+  spec.metadata['changelog_uri'] = 'https://github.com/solidusio/solidus_stripe/blob/master/CHANGELOG.md'
 
   spec.required_ruby_version = Gem::Requirement.new('~> 2.4')
 
