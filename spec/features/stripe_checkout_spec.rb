@@ -400,8 +400,9 @@ RSpec.describe "Stripe checkout", type: :feature do
         click_button "Place Order"
         expect(page).to have_content("Your order has been processed successfully")
 
-        # Capture in backend
         Spree::Order.complete.each do |order|
+          # Capture in backend
+
           visit spree.admin_path
 
           expect(page).to have_selector("#listing_orders tbody tr", count: 2)
@@ -413,6 +414,21 @@ RSpec.describe "Stripe checkout", type: :feature do
 
           expect(page).to have_content "Payment Updated"
           expect(find("table#payments")).to have_content "Completed"
+
+          # Order cancel, after capture
+          click_link "Cart"
+
+          within "#sidebar" do
+            expect(page).to have_content "Completed"
+          end
+
+          find('input[value="Cancel"]').click
+
+          expect(page).to have_content "Order canceled"
+
+          within "#sidebar" do
+            expect(page).to have_content "Canceled"
+          end
         end
       end
     end
