@@ -5,13 +5,7 @@ module SolidusStripe
     include Spree::Core::ControllerHelpers::Order
 
     def create_intent
-      begin
-        @intent = create_payment_intent
-      rescue Stripe::CardError => e
-        render json: { error: e.message }, status: 500
-        return
-      end
-
+      @intent = create_payment_intent
       generate_payment_response
     end
 
