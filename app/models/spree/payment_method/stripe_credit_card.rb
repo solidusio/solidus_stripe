@@ -81,6 +81,21 @@ module Spree
         gateway.void(response_code, {})
       end
 
+      def payment_intents_refund_reason
+        Spree::RefundReason.where(name: Spree::Payment::Cancellation::DEFAULT_REASON).first_or_create
+      end
+
+      def try_void(payment)
+        if v3_intents? && payment.completed?
+          payment.refunds.create!(
+            amount: payment.credit_allowed,
+            reason: payment_intents_refund_reason
+          ).response
+        else
+          payment.void_transaction!
+        end
+      end
+
       def cancel(response_code)
         gateway.void(response_code, {})
       end
