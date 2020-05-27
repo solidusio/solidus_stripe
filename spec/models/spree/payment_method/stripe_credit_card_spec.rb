@@ -22,7 +22,8 @@ describe Spree::PaymentMethod::StripeCreditCard do
   let(:payment) {
     double('Spree::Payment',
       source: source,
-      order: order
+      order: order,
+      amount: order.total
     )
   }
 
@@ -239,6 +240,48 @@ describe Spree::PaymentMethod::StripeCreditCard do
 
     it 'gets correct amount' do
       expect(gateway).to receive(:capture).with(9855, '12345', anything).and_return(success_response)
+    end
+  end
+
+  describe '#try_void' do
+    let(:payment) { create :payment, amount: order.total }
+
+    shared_examples 'voids the payment transaction' do
+      it 'voids the payment transaction' do
+        expect(payment).to receive(:void_transaction!)
+
+        subject.try_void(payment)
+      end
+    end
+
+    context 'when using Payment Intents' do
+      before { subject.preferred_v3_intents = true }
+
+      context 'when the payment is completed' do
+        before do
+          allow(payment).to receive(:completed?) { true }
+        end
+
+        it 'creates a refund' do
+          expect { subject.try_void(payment) }.to change { Spree::Refund.count }.by(1)
+        end
+      end
+
+      context 'when the payment is not completed' do
+        it_behaves_like 'voids the payment transaction'
+      end
+    end
+
+    context 'when not using Payment Intents' do
+      before { subject.preferred_v3_intents = false }
+
+      context 'when the payment is completed' do
+        it_behaves_like 'voids the payment transaction'
+      end
+
+      context 'when the payment is not completed' do
+        it_behaves_like 'voids the payment transaction'
+      end
     end
   end
 end
