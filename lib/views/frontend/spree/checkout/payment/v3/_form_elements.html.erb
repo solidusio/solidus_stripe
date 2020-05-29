@@ -1,6 +1,5 @@
 <div id="payment-request-button" data-stripe-config="<%= payment_method.stripe_config(current_order).to_json %>" data-v3-api="<%= stripe_v3_api %>"></div>
 
-<%= image_tag 'credit_cards/credit_card.gif', id: 'credit-card-image' %>
 <% param_prefix = "payment_source[#{payment_method.id}]" %>
 
 <div class="field field-required">
