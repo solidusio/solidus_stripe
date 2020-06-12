@@ -14,7 +14,8 @@ RSpec.describe SolidusStripe::AddressFromParamsService do
         recipient: 'Clark Kent',
         city: 'Metropolis',
         postalCode: '12345',
-        addressLine: [ '12, Lincoln Rd']
+        addressLine: [ '12, Lincoln Rd'],
+        phone: '555-555-0199'
       }
     end
 
@@ -39,7 +40,8 @@ RSpec.describe SolidusStripe::AddressFromParamsService do
             firstname: 'Clark',
             lastname: 'Kent',
             address1: params[:addressLine].first,
-            address2: nil
+            address2: nil,
+            phone: '555-555-0199'
           )
         end
 
@@ -50,11 +52,23 @@ RSpec.describe SolidusStripe::AddressFromParamsService do
 
       context "when no user's address is compatible with the params" do
         before do
-          user.addresses << create(:address)
+          user.addresses << create(:address, state: state)
         end
 
-        it "returns a non-persisted address model" do
-          expect(subject).to be_new_record
+        it "returns a non-persisted valid address" do
+          aggregate_failures do
+            expect(subject).to be_new_record
+            expect(subject).to be_valid
+            expect(subject.state).to eq state
+          end
+        end
+
+        context "when the region is the state name" do
+          before { params[:region] = state.name }
+
+          it "still can set the address state attribute" do
+            expect(subject.state).to eq state
+          end
         end
       end
     end
