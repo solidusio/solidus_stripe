@@ -505,7 +505,9 @@ RSpec.describe "Stripe checkout", type: :feature do
   def within_3d_secure_modal
     within_frame "__privateStripeFrame11" do
       within_frame "__stripeJSChallengeFrame" do
-        yield
+        within_frame "acsFrame" do
+          yield
+        end
       end
     end
   end
