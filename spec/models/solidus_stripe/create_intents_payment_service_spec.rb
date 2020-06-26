@@ -41,6 +41,9 @@ RSpec.describe SolidusStripe::CreateIntentsPaymentService do
       "id" => intent_id,
       "charges" => {
         "data" => [{
+          "billing_details" => {
+            "name" => "John Doe"
+          },
           "payment_method_details" => {
             "card" => {
               "brand" => "visa",
@@ -68,6 +71,19 @@ RSpec.describe SolidusStripe::CreateIntentsPaymentService do
     it "creates a new pending payment" do
       expect { subject }.to change { order.payments.count }
       expect(order.payments.last.reload).to be_pending
+    end
+
+    it "creates a credit card with the correct information" do
+      expect { subject }.to change { Spree::CreditCard.count }
+      card = Spree::CreditCard.last
+
+      aggregate_failures do
+        expect(card.name).to eq "John Doe"
+        expect(card.cc_type).to eq "visa"
+        expect(card.month).to eq "1"
+        expect(card.year).to eq "2022"
+        expect(card.last_digits).to eq "4242"
+      end
     end
 
     context "when for any reason the payment could not be created" do
