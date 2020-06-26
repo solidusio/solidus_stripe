@@ -43,7 +43,10 @@ module SolidusStripe
     end
 
     def state
-      @state ||= country.states.find_by_abbr(address_params[:region])
+      @state ||= begin
+        region = address_params[:region]
+        country.states.find_by(abbr: region) || country.states.find_by(name: region)
+      end
     end
 
     def default_attributes
