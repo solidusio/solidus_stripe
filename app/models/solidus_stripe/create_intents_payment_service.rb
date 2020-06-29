@@ -61,7 +61,7 @@ module SolidusStripe
             cc_type: intent_card['brand'],
             last_digits: intent_card['last4'],
             gateway_payment_profile_id: intent_customer_profile,
-            name: address_full_name,
+            name: card_holder_name || address_full_name,
             address_attributes: address_attributes
           }
         }]
@@ -69,24 +69,36 @@ module SolidusStripe
     end
 
     def intent_card
-      intent.params['charges']['data'][0]['payment_method_details']['card']
+      intent_data['payment_method_details']['card']
     end
 
     def intent_customer_profile
       intent.params['payment_method']
     end
 
+    def card_holder_name
+      (html_payment_source_data['name'] || intent_data['billing_details']['name']).presence
+    end
+
+    def intent_data
+      intent.params['charges']['data'][0]
+    end
+
     def form_data
       params[:form_data]
     end
 
-    def address_attributes
+    def html_payment_source_data
       if form_data.is_a?(String)
         data = Rack::Utils.parse_nested_query(form_data)
-        data['payment_source'][stripe.id.to_s]['address_attributes']
+        data['payment_source'][stripe.id.to_s]
       else
-        SolidusStripe::AddressFromParamsService.new(form_data).call.attributes
+        {}
       end
+    end
+
+    def address_attributes
+      html_payment_source_data['address_attributes'] || SolidusStripe::AddressFromParamsService.new(form_data).call.attributes
     end
 
     def address_full_name
