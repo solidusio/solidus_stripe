@@ -1,5 +1,32 @@
 # Changelog
 
+## [v4.1.0](https://github.com/solidusio/solidus_stripe/tree/v4.1.0) (2020-07-01)
+
+[Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v4.0.0...v4.1.0)
+
+**Fixed bugs:**
+
+- Card name ignored when adding new card to an order during checkout [\#68](https://github.com/solidusio/solidus_stripe/issues/68)
+- Try to find address state also by name [\#65](https://github.com/solidusio/solidus_stripe/pull/65) ([spaghetticode](https://github.com/spaghetticode))
+- Fix order cancel with Payment Intents captured payment [\#57](https://github.com/solidusio/solidus_stripe/pull/57) ([spaghetticode](https://github.com/spaghetticode))
+- \[ADMIN\] Order cancel doen't work with Payment Intents captured payments [\#56](https://github.com/solidusio/solidus_stripe/issues/56)
+
+**Merged pull requests:**
+
+- Save correct cardholder name in Spree::CreditCard [\#69](https://github.com/solidusio/solidus_stripe/pull/69) ([spaghetticode](https://github.com/spaghetticode))
+- Update Readme [\#63](https://github.com/solidusio/solidus_stripe/pull/63) ([aleph1ow](https://github.com/aleph1ow))
+- Remove credit cards image [\#62](https://github.com/solidusio/solidus_stripe/pull/62) ([aleph1ow](https://github.com/aleph1ow))
+- Remove Stripe::CardError leftover [\#58](https://github.com/solidusio/solidus_stripe/pull/58) ([spaghetticode](https://github.com/spaghetticode))
+- Update gemspec URLs [\#54](https://github.com/solidusio/solidus_stripe/pull/54) ([elia](https://github.com/elia))
+- fix typo [\#51](https://github.com/solidusio/solidus_stripe/pull/51) ([ccarruitero](https://github.com/ccarruitero))
+
+**Closed issues:**
+
+- Could not find generator 'solidus\_stripe:install' [\#60](https://github.com/solidusio/solidus_stripe/issues/60)
+- Payment Intent creation exception handling with class not present in the gem [\#55](https://github.com/solidusio/solidus_stripe/issues/55)
+- Using static credentials  [\#52](https://github.com/solidusio/solidus_stripe/issues/52)
+- Auto capture behavior in v4.0.0 [\#50](https://github.com/solidusio/solidus_stripe/issues/50)
+
 ## [v4.0.0](https://github.com/solidusio/solidus_stripe/tree/v4.0.0) (2020-04-29)
 
 [Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v3.0.0...v4.0.0)
@@ -28,6 +55,14 @@
 - Fix stripe-to-solidus card type mapping [\#38](https://github.com/solidusio/solidus_stripe/pull/38) ([stuffmatic](https://github.com/stuffmatic))
 - Add hook to provide custom Stripe Elements options [\#37](https://github.com/solidusio/solidus_stripe/pull/37) ([stuffmatic](https://github.com/stuffmatic))
 - Change order description that we pass to Stripe [\#35](https://github.com/solidusio/solidus_stripe/pull/35) ([kennyadsl](https://github.com/kennyadsl))
+
+## [v3.2.1](https://github.com/solidusio/solidus_stripe/tree/v3.2.1) (2020-06-29)
+
+[Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v3.2.0...v3.2.1)
+
+**Merged pull requests:**
+
+- Relax solidus\_support version dependency [\#70](https://github.com/solidusio/solidus_stripe/pull/70) ([spaghetticode](https://github.com/spaghetticode))
 
 ## [v3.0.0](https://github.com/solidusio/solidus_stripe/tree/v3.0.0) (2020-03-11)
 
