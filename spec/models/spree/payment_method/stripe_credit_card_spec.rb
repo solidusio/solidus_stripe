@@ -248,7 +248,7 @@ describe Spree::PaymentMethod::StripeCreditCard do
 
     shared_examples 'voids the payment transaction' do
       it 'voids the payment transaction' do
-        expect(payment).to receive(:void_transaction!)
+        expect(gateway).to receive(:void)
 
         subject.try_void(payment)
       end

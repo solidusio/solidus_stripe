@@ -92,7 +92,7 @@ module Spree
             reason: payment_intents_refund_reason
           ).response
         else
-          payment.void_transaction!
+          void(payment.response_code, nil, nil)
         end
       end
 
