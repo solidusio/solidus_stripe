@@ -1,15 +1,30 @@
 # Changelog
 
+## [v4.2.0](https://github.com/solidusio/solidus_stripe/tree/v4.2.0) (2020-07-20)
+
+[Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v4.1.0...v4.2.0)
+
+**Fixed bugs:**
+
+- Fix StripeCreditCard\#try\_void with Elements/V2 API [\#75](https://github.com/solidusio/solidus_stripe/pull/75) ([spaghetticode](https://github.com/spaghetticode))
+
+**Closed issues:**
+
+- A token may not be passed in as a PaymentMethod. Instead, create a PaymentMethod or convert your token to a PaymentMethod by setting the `card\[token\]` parameter to  [\#71](https://github.com/solidusio/solidus_stripe/issues/71)
+
+**Merged pull requests:**
+
+- Fix 3DS modal amount verification [\#72](https://github.com/solidusio/solidus_stripe/pull/72) ([spaghetticode](https://github.com/spaghetticode))
+
 ## [v4.1.0](https://github.com/solidusio/solidus_stripe/tree/v4.1.0) (2020-07-01)
 
-[Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v4.0.0...v4.1.0)
+[Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v3.2.1...v4.1.0)
 
 **Fixed bugs:**
 
 - Card name ignored when adding new card to an order during checkout [\#68](https://github.com/solidusio/solidus_stripe/issues/68)
 - Try to find address state also by name [\#65](https://github.com/solidusio/solidus_stripe/pull/65) ([spaghetticode](https://github.com/spaghetticode))
 - Fix order cancel with Payment Intents captured payment [\#57](https://github.com/solidusio/solidus_stripe/pull/57) ([spaghetticode](https://github.com/spaghetticode))
-- \[ADMIN\] Order cancel doen't work with Payment Intents captured payments [\#56](https://github.com/solidusio/solidus_stripe/issues/56)
 
 **Merged pull requests:**
 
@@ -20,6 +35,14 @@
 - Update gemspec URLs [\#54](https://github.com/solidusio/solidus_stripe/pull/54) ([elia](https://github.com/elia))
 - fix typo [\#51](https://github.com/solidusio/solidus_stripe/pull/51) ([ccarruitero](https://github.com/ccarruitero))
 
+## [v3.2.1](https://github.com/solidusio/solidus_stripe/tree/v3.2.1) (2020-06-29)
+
+[Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v4.0.0...v3.2.1)
+
+**Fixed bugs:**
+
+- \[ADMIN\] Order cancel doen't work with Payment Intents captured payments [\#56](https://github.com/solidusio/solidus_stripe/issues/56)
+
 **Closed issues:**
 
 - Could not find generator 'solidus\_stripe:install' [\#60](https://github.com/solidusio/solidus_stripe/issues/60)
@@ -27,42 +50,61 @@
 - Using static credentials  [\#52](https://github.com/solidusio/solidus_stripe/issues/52)
 - Auto capture behavior in v4.0.0 [\#50](https://github.com/solidusio/solidus_stripe/issues/50)
 
+**Merged pull requests:**
+
+- Relax solidus\_support version dependency [\#70](https://github.com/solidusio/solidus_stripe/pull/70) ([spaghetticode](https://github.com/spaghetticode))
+
 ## [v4.0.0](https://github.com/solidusio/solidus_stripe/tree/v4.0.0) (2020-04-29)
 
-[Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v3.0.0...v4.0.0)
+[Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v3.2.0...v4.0.0)
 
 **Fixed bugs:**
 
-- Duplicates charges with Payment Intents [\#44](https://github.com/solidusio/solidus_stripe/issues/44)
 - Fix for 3D-Secure payments on cart page checkout [\#49](https://github.com/solidusio/solidus_stripe/pull/49) ([spaghetticode](https://github.com/spaghetticode))
-- Send form data also when paying with payment request button [\#47](https://github.com/solidusio/solidus_stripe/pull/47) ([spaghetticode](https://github.com/spaghetticode))
-- Create a single charge when using Stripe Payment Intents [\#45](https://github.com/solidusio/solidus_stripe/pull/45) ([spaghetticode](https://github.com/spaghetticode))
 
 **Closed issues:**
 
 - Custom stripe element field options \(e.g for showing a credit card icon\) [\#41](https://github.com/solidusio/solidus_stripe/issues/41)
-- Stripe Elements submit button stuck in disabled state. [\#39](https://github.com/solidusio/solidus_stripe/issues/39)
-- Visa credit card type is blank [\#36](https://github.com/solidusio/solidus_stripe/issues/36)
-- Pay with Apple Pay from cart page [\#23](https://github.com/solidusio/solidus_stripe/issues/23)
 - Clearer documentation on how to implement [\#15](https://github.com/solidusio/solidus_stripe/issues/15)
 
 **Merged pull requests:**
 
 - Relax solidus\_support dependency [\#48](https://github.com/solidusio/solidus_stripe/pull/48) ([kennyadsl](https://github.com/kennyadsl))
+
+## [v3.2.0](https://github.com/solidusio/solidus_stripe/tree/v3.2.0) (2020-04-10)
+
+[Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v3.1.0...v3.2.0)
+
+**Fixed bugs:**
+
+- Send form data also when paying with payment request button [\#47](https://github.com/solidusio/solidus_stripe/pull/47) ([spaghetticode](https://github.com/spaghetticode))
+
+**Merged pull requests:**
+
 - Replace deprecated route `/stripe/confirm\_payment` [\#46](https://github.com/solidusio/solidus_stripe/pull/46) ([spaghetticode](https://github.com/spaghetticode))
+
+## [v3.1.0](https://github.com/solidusio/solidus_stripe/tree/v3.1.0) (2020-04-10)
+
+[Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v3.0.0...v3.1.0)
+
+**Fixed bugs:**
+
+- Duplicates charges with Payment Intents [\#44](https://github.com/solidusio/solidus_stripe/issues/44)
+- Create a single charge when using Stripe Payment Intents [\#45](https://github.com/solidusio/solidus_stripe/pull/45) ([spaghetticode](https://github.com/spaghetticode))
+
+**Closed issues:**
+
+- Stripe Elements submit button stuck in disabled state. [\#39](https://github.com/solidusio/solidus_stripe/issues/39)
+- Visa credit card type is blank [\#36](https://github.com/solidusio/solidus_stripe/issues/36)
+- Pay with Apple Pay from cart page [\#23](https://github.com/solidusio/solidus_stripe/issues/23)
+
+**Merged pull requests:**
+
 - Custom Stripe Elements field options [\#42](https://github.com/solidusio/solidus_stripe/pull/42) ([stuffmatic](https://github.com/stuffmatic))
 - Improve the way Stripe Elements validation errors are displayed [\#40](https://github.com/solidusio/solidus_stripe/pull/40) ([stuffmatic](https://github.com/stuffmatic))
 - Fix stripe-to-solidus card type mapping [\#38](https://github.com/solidusio/solidus_stripe/pull/38) ([stuffmatic](https://github.com/stuffmatic))
 - Add hook to provide custom Stripe Elements options [\#37](https://github.com/solidusio/solidus_stripe/pull/37) ([stuffmatic](https://github.com/stuffmatic))
 - Change order description that we pass to Stripe [\#35](https://github.com/solidusio/solidus_stripe/pull/35) ([kennyadsl](https://github.com/kennyadsl))
-
-## [v3.2.1](https://github.com/solidusio/solidus_stripe/tree/v3.2.1) (2020-06-29)
-
-[Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v3.2.0...v3.2.1)
-
-**Merged pull requests:**
-
-- Relax solidus\_support version dependency [\#70](https://github.com/solidusio/solidus_stripe/pull/70) ([spaghetticode](https://github.com/spaghetticode))
 
 ## [v3.0.0](https://github.com/solidusio/solidus_stripe/tree/v3.0.0) (2020-03-11)
 
