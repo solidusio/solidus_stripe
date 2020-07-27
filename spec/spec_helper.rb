@@ -23,4 +23,5 @@ RSpec.configure do |config|
   FactoryBot.find_definitions
   config.use_transactional_fixtures = false
   config.include SolidusAddressNameHelper, type: :feature
+  config.include SolidusCardHelper, type: :feature
 end
