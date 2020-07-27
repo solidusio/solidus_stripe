@@ -307,17 +307,8 @@ RSpec.describe "Stripe checkout", type: :feature do
     end
 
     context "when using a card without enough money" do
-      let(:card_number) { "4000 0000 0000 9995" }
-
       it "fails the payment" do
-        within_frame find('#card_number iframe') do
-          card_number.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
-        end
-        within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
-        within_frame(find '#card_expiry iframe') do
-          '0132'.split('').each { |n| find_field('exp-date').native.send_keys(n) }
-        end
-
+        fill_in_card({ number: "4000 0000 0000 9995" })
         click_button "Save and Continue"
 
         expect(page).to have_content "Your card has insufficient funds."
@@ -325,17 +316,8 @@ RSpec.describe "Stripe checkout", type: :feature do
     end
 
     context "when entering the wrong 3D verification code" do
-      let(:card_number) { "4000 0084 0000 1629" }
-
       it "fails the payment" do
-        within_frame find('#card_number iframe') do
-          card_number.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
-        end
-        within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
-        within_frame(find '#card_expiry iframe') do
-          '0132'.split('').each { |n| find_field('exp-date').native.send_keys(n) }
-        end
-
+        fill_in_card({ number: "4000 0084 0000 1629" })
         click_button "Save and Continue"
 
         within_3d_secure_modal do
@@ -435,7 +417,7 @@ RSpec.describe "Stripe checkout", type: :feature do
           fill_in_card({ number: regular_card })
           click_button "Save and Continue"
 
-          expect(page).to have_content "Ending in 4242"
+          expect(page).to have_content "Ending in #{regular_card.last(4)}"
 
           click_link "Payment"
 
@@ -499,13 +481,7 @@ RSpec.describe "Stripe checkout", type: :feature do
   end
 
   def authenticate_3d_secure_card(card_number)
-    within_frame find('#card_number iframe') do
-      card_number.split('').each { |n| find_field('cardnumber').native.send_keys(n) }
-    end
-    within_frame(find '#card_cvc iframe') { fill_in 'cvc', with: '123' }
-    within_frame(find '#card_expiry iframe') do
-      '0132'.split('').each { |n| find_field('exp-date').native.send_keys(n) }
-    end
+    fill_in_card({ number: card_number })
     click_button "Save and Continue"
 
     within_3d_secure_modal do
