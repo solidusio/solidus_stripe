@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module SolidusCardHelper
+module SolidusCardInputHelper
   def fill_in_card(card = {})
     card[:number] ||= "4242 4242 4242 4242"
     card[:code] ||= "123"
