@@ -18,9 +18,13 @@ Dir[File.join(File.dirname(__FILE__), 'support/**/*.rb')].each { |f| require f }
 # Requires factories defined in lib/solidus_stripe/factories.rb
 require 'solidus_stripe/factories'
 
+# Requires card input helper defined in lib/solidus_stripe/testing_support/card_input_helper.rb
+require 'solidus_stripe/testing_support/card_input_helper'
+
 RSpec.configure do |config|
   config.infer_spec_type_from_file_location!
   FactoryBot.find_definitions
   config.use_transactional_fixtures = false
   config.include SolidusAddressNameHelper, type: :feature
+  config.include SolidusCardInputHelper, type: :feature
 end
