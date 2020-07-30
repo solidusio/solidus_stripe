@@ -27,7 +27,7 @@ module Spree
               country: preferred_stripe_country,
               currency: order.currency.downcase,
               label: "Payment for order #{order.number}",
-              amount: (order.total * 100).to_i
+              amount: (order.total * current_order.currency.subunit_to_unit).to_i
             }
           ) if payment_request?
         end

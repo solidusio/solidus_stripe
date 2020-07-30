@@ -51,7 +51,7 @@ module SolidusStripe
 
     def create_payment_intent
       stripe.create_intent(
-        (current_order.total * 100).to_i,
+        (current_order.total * current_order.currency.subunit_to_unit).to_i,
         params[:stripe_payment_method_id],
         description: "Solidus Order ID: #{current_order.number} (pending)",
         currency: current_order.currency,
