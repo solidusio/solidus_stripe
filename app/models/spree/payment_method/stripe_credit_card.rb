@@ -103,39 +103,53 @@ module Spree
       def create_profile(payment)
         return unless payment.source.gateway_customer_profile_id.nil?
 
-        options = {
-          email: payment.order.email,
-          login: preferred_secret_key,
-        }.merge! address_for(payment)
+        order = payment.order
+        user = payment.source.user || order.user
 
         source = update_source!(payment.source)
-        if source.number.blank? && source.gateway_payment_profile_id.present?
-          if v3_intents?
-            creditcard = ActiveMerchant::Billing::StripeGateway::StripePaymentToken.new('id' => source.gateway_payment_profile_id)
-          else
-            creditcard = source.gateway_payment_profile_id
-          end
-        else
-          creditcard = source
-        end
 
-        response = gateway.store(creditcard, options)
-        if response.success?
-          if v3_intents?
-            payment.source.update!(
-              cc_type: payment.source.cc_type,
-              gateway_customer_profile_id: response.params['customer'],
-              gateway_payment_profile_id: response.params['id']
-            )
-          else
-            payment.source.update!(
-              cc_type: payment.source.cc_type,
-              gateway_customer_profile_id: response.params['id'],
-              gateway_payment_profile_id: response.params['default_source'] || response.params['default_card']
-            )
-          end
-        else
-          payment.send(:gateway_error, response.message)
+        # Check to see whether a user's previous payment sources
+        # are linked to a Stripe account
+        user_stripe_payment_sources = user&.wallet&.wallet_payment_sources&.select do |wps|
+          wps.payment_source.payment_method.type == 'Spree::PaymentMethod::StripeCreditCard'
+        end
+        stripe_customer = if user_stripe_payment_sources.present?
+                            customer_id = user_stripe_payment_sources.map { |ps| ps.payment_source&.gateway_customer_profile_id }.compact.last
+                            Stripe::Customer.retrieve(customer_id)
+                          else
+                            bill_address = user&.bill_address || order.bill_address
+                            ship_address = user&.ship_address || order.ship_address
+                            Stripe::Customer.create({
+                              address: stripe_address_hash(bill_address),
+                              email: user&.email || order.email,
+                              # full_name is deprecated in favor of name as of Solidus 3.0
+                              name: bill_address.try(:name) || bill_address&.full_name,
+                              phone: bill_address&.phone,
+                              shipping: {
+                                address: stripe_address_hash(ship_address),
+                                # full_name is deprecated in favor of name as of Solidus 3.0
+                                name: ship_address.try(:name) || ship_address&.full_name,
+                                phone: ship_address&.phone
+                              }.reject { |_, v| v.blank? }
+                            }.reject { |_, v| v.blank? })
+                          end
+
+        # Create new Stripe card / payment method and attach to
+        # (new or existing) Stripe profile
+        if source.gateway_payment_profile_id&.starts_with?('pm_')
+          stripe_payment_method = Stripe::PaymentMethod.attach(source.gateway_payment_profile_id, customer: stripe_customer)
+          payment.source.update!(
+            cc_type: stripe_payment_method.card.brand,
+            gateway_customer_profile_id: stripe_customer.id,
+            gateway_payment_profile_id: stripe_payment_method.id
+          )
+        elsif source.gateway_payment_profile_id&.starts_with?('tok_')
+          stripe_card = Stripe::Customer.create_source(stripe_customer.id, source: source.gateway_payment_profile_id)
+          payment.source.update!(
+            cc_type: stripe_card.brand,
+            gateway_customer_profile_id: stripe_customer.id,
+            gateway_payment_profile_id: stripe_card.id
+          )
         end
       end
 
@@ -165,25 +179,15 @@ module Spree
         [money, creditcard, options]
       end
 
-      def address_for(payment)
-        {}.tap do |options|
-          if address = payment.order.bill_address
-            options[:address] = {
-              address1: address.address1,
-              address2: address.address2,
-              city: address.city,
-              zip: address.zipcode
-            }
-
-            if country = address.country
-              options[:address][:country] = country.name
-            end
-
-            if state = address.state
-              options[:address].merge!(state: state.name)
-            end
-          end
-        end
+      def stripe_address_hash(address)
+        {
+          city: address&.city,
+          country: address&.country&.iso,
+          line1: address&.address1,
+          line2: address&.address2,
+          postal_code: address&.zipcode,
+          state: address&.state_text
+        }.compact
       end
 
       def update_source!(source)
