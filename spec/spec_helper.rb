@@ -21,6 +21,9 @@ require 'solidus_stripe/factories'
 # Requires card input helper defined in lib/solidus_stripe/testing_support/card_input_helper.rb
 require 'solidus_stripe/testing_support/card_input_helper'
 
+# Stripe config
+Stripe.api_key = 'sk_test_VCZnDv3GLU15TRvn8i2EsaAN'
+
 RSpec.configure do |config|
   config.infer_spec_type_from_file_location!
   FactoryBot.find_definitions
