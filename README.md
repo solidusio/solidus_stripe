@@ -56,9 +56,7 @@ Spree.config do |config|
     publishable_key: ENV['STRIPE_PUBLISHABLE_KEY'],
     stripe_country: 'US',
     v3_elements: false,
-    v3_intents: false,
-    server: Rails.env.production? ? 'production' : 'test',
-    test_mode: !Rails.env.production?
+    v3_intents: false
   )
 end
 ```
@@ -100,9 +98,7 @@ Spree.config do |config|
     publishable_key: ENV['STRIPE_PUBLISHABLE_KEY'],
     stripe_country: 'US',
     v3_elements: false,
-    v3_intents: true,
-    server: Rails.env.production? ? 'production' : 'test',
-    test_mode: !Rails.env.production?
+    v3_intents: true
   )
 end
 ```
