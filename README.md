@@ -308,3 +308,4 @@ gem release
 ```
 
 Copyright (c) 2020 Spree Commerce Inc., released under the New BSD License
+Copyright (c) 2020 Solidus Team, released under the New BSD License
