@@ -471,7 +471,7 @@ RSpec.describe "Stripe checkout", type: :feature do
   end
 
   def within_3d_secure_modal
-    within_frame "__privateStripeFrame11" do
+    within_frame find("iframe[src*='authorize-with-url-inner']") do
       within_frame "__stripeJSChallengeFrame" do
         within_frame "acsFrame" do
           yield
