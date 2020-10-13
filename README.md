@@ -80,7 +80,7 @@ account. Conversely, if you need to disable the button you can simply remove
 the `stripe_country` preference.
 
 Please refer to Stripe official
-[documentation](https://stripe.com/docs/stripe-js/elements/payment-request-button)
+[documentation](https://stripe.com/docs/payments/payment-intents)
 for further instructions on how to make this work properly.
 
 The following configuration will use both Payment Intents and the
