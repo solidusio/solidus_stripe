@@ -73,8 +73,10 @@ module Spree
         gateway.capture(money, response_code, transaction_options)
       end
 
-      def credit(money, _creditcard, response_code, _transaction_options)
-        gateway.refund(money, response_code, {})
+      def credit(money, _creditcard, response_code, transaction_options)
+        refund = transaction_options.delete(:originator)
+        store_options = refund.payment.order.store.stripe_options
+        gateway.refund(money, response_code, transaction_options.merge(store_options))
       end
 
       def void(response_code, _creditcard, _transaction_options)
