@@ -1,7 +1,2 @@
 require:
   - solidus_dev_support/rubocop
-
-AllCops:
-  Exclude:
-    - sandbox/**/*
-    - spec/dummy/**/*
