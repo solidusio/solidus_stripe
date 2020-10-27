@@ -15,9 +15,85 @@ RSpec.describe "Payment Request", type: :request do
       json = JSON.parse(response.body)
       expect(json["success"]).to be_truthy
     end
+
+    context "when phone number is provided as param and already set on the address" do
+      it "overrides the address field" do
+        order = create(:order_ready_to_complete)
+        allow_any_instance_of(SolidusStripe::PaymentRequestController).to receive(:current_order).and_return(order)
+
+        expect {
+          with_disabled_forgery_protection do
+            post "/stripe/update_order", params: stripe_update_request_params(order: order, shipping_address: default_shipping_address(phone: nil), phone: '911')
+          end
+        }.to change { order.shipping_address.phone }.to('911')
+      end
+    end
+
+    context "when phone number is provided both as shipping address param and main param, and already set on the address" do
+      it "overrides the address field giving precedence to the shipping address param" do
+        order = create(:order_ready_to_complete)
+        allow_any_instance_of(SolidusStripe::PaymentRequestController).to receive(:current_order).and_return(order)
+
+        expect {
+          with_disabled_forgery_protection do
+            post "/stripe/update_order", params: stripe_update_request_params(order: order, shipping_address: default_shipping_address(phone: '555'), phone: '911')
+          end
+        }.to change { order.shipping_address.phone }.to('555')
+      end
+    end
+
+    context "when phone number is not required, not provided as param and not set on the shipping address" do
+      it "does not populate the address field" do
+        with_address_phone_not_required
+        order = create(:order_ready_to_complete, shipping_address: create(:address, phone: nil))
+        allow_any_instance_of(SolidusStripe::PaymentRequestController).to receive(:current_order).and_return(order)
+
+        expect {
+          with_disabled_forgery_protection do
+            post "/stripe/update_order", params: stripe_update_request_params(order: order, shipping_address: default_shipping_address(phone: nil), phone: nil)
+          end
+        }.not_to change { order.shipping_address.phone }
+      end
+    end
+
+    context "when phone number is not required, provided as param and not set on the shipping address" do
+      it "populates the address field with the phone passed as param" do
+        with_address_phone_not_required
+        order = create(:order_ready_to_complete, shipping_address: create(:address, phone: nil))
+        allow_any_instance_of(SolidusStripe::PaymentRequestController).to receive(:current_order).and_return(order)
+
+        expect {
+          with_disabled_forgery_protection do
+            post "/stripe/update_order", params: stripe_update_request_params(order: order, shipping_address: default_shipping_address(phone: nil), phone: '911')
+          end
+        }.to change { order.shipping_address.phone }.from(nil).to('911')
+      end
+    end
+
+    context "when phone number is not required, provided as param but already set on the shipping address" do
+      it "populates the address field with the phone passed in the shipping field" do
+        with_address_phone_not_required
+        order = create(:order_ready_to_complete, shipping_address: create(:address, phone: nil))
+        allow_any_instance_of(SolidusStripe::PaymentRequestController).to receive(:current_order).and_return(order)
+
+        expect {
+          with_disabled_forgery_protection do
+            post "/stripe/update_order", params: stripe_update_request_params(order: order, shipping_address: default_shipping_address(phone: '555'), phone: '911')
+          end
+        }.to change { order.shipping_address.phone }.from(nil).to('555')
+      end
+    end
   end
 
   private
+
+  def with_address_phone_not_required
+    if Spree::Config.respond_to?(:address_requires_phone)
+      stub_spree_preferences(address_requires_phone: false)
+    else
+      allow_any_instance_of(Spree::Address).to receive(:require_phone?).and_return(false)
+    end
+  end
 
   def with_disabled_forgery_protection
     original_allow_forgery_protection_value = ActionController::Base.allow_forgery_protection

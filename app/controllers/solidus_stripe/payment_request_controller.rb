@@ -22,7 +22,7 @@ module SolidusStripe
       current_order.restart_checkout_flow
 
       address = SolidusStripe::AddressFromParamsService.new(
-        params[:shipping_address],
+        shipping_address_from_params,
         spree_current_user
       ).call
 
@@ -37,6 +37,16 @@ module SolidusStripe
       else
         render json: { success: false, error: address.errors.full_messages.to_sentence }, status: 500
       end
+    end
+
+    private
+
+    def shipping_address_from_params
+      return {} unless params[:shipping_address]
+      return params[:shipping_address] if params.dig(:shipping_address, :phone).present?
+
+      params[:shipping_address][:phone] = params[:phone]
+      params[:shipping_address]
     end
   end
 end

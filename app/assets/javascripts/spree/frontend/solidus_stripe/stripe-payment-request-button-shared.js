@@ -22,6 +22,7 @@
           },
           requestPayerName: true,
           requestPayerEmail: true,
+          requestPayerPhone: true,
           requestShipping: config.requestShipping,
           shippingOptions: []
         });
