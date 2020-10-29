@@ -53,6 +53,7 @@ SolidusStripe.CartPageCheckout.prototype.onPrPayment = function(payment) {
       shipping_option: payment.shippingOption,
       email: payment.payerEmail,
       name: payment.payerName,
+      phone: payment.payerPhone,
       authenticity_token: this.authToken
     })
   }).then(function(response) {
