@@ -56,6 +56,10 @@ RSpec.describe "Stripe checkout", type: :feature do
     # Delivery
     expect(page).to have_current_path("/checkout/delivery")
     expect(page).to have_content("UPS Ground")
+    click_on "Save and Continue"
+
+    # Payment
+    expect(page).to have_current_path("/checkout/payment")
   end
 
   # This will fetch a token from Stripe.com and then pass that to the webserver.
@@ -64,11 +68,6 @@ RSpec.describe "Stripe checkout", type: :feature do
   context 'when using Stripe V2 API library' do
     let(:preferred_v3_elements) { false }
     let(:preferred_v3_intents) { false }
-
-    before do
-      click_on "Save and Continue"
-      expect(page).to have_current_path("/checkout/payment")
-    end
 
     it "can process a valid payment", js: true do
       fill_in_card
@@ -190,11 +189,6 @@ RSpec.describe "Stripe checkout", type: :feature do
     let(:preferred_v3_elements) { true }
     let(:preferred_v3_intents) { false }
 
-    before do
-      click_on "Save and Continue"
-      expect(page).to have_current_path("/checkout/payment")
-    end
-
     it "can process a valid payment" do
       fill_in_card
       click_button "Save and Continue"
@@ -271,7 +265,9 @@ RSpec.describe "Stripe checkout", type: :feature do
             expect(page).to have_content "Completed"
           end
 
-          find('input[value="Cancel"]').click
+          page.accept_alert do
+            find('input[value="Cancel"]').click
+          end
 
           expect(page).to have_content "Order canceled"
 
@@ -288,11 +284,6 @@ RSpec.describe "Stripe checkout", type: :feature do
   context "when using Stripe V3 API library with Intents", :js do
     let(:preferred_v3_elements) { false }
     let(:preferred_v3_intents) { true }
-
-    before do
-      click_on "Save and Continue"
-      expect(page).to have_current_path("/checkout/payment")
-    end
 
     context "when using a valid 3D Secure card" do
       it "successfully completes the checkout" do
@@ -396,7 +387,9 @@ RSpec.describe "Stripe checkout", type: :feature do
             expect(page).to have_content "Completed"
           end
 
-          find('input[value="Cancel"]').click
+          page.accept_alert do
+            find('input[value="Cancel"]').click
+          end
 
           expect(page).to have_content "Order canceled"
 
@@ -471,7 +464,7 @@ RSpec.describe "Stripe checkout", type: :feature do
   end
 
   def within_3d_secure_modal
-    within_frame "__privateStripeFrame11" do
+    within_frame find("iframe[src*='authorize-with-url-inner']") do
       within_frame "__stripeJSChallengeFrame" do
         within_frame "acsFrame" do
           yield

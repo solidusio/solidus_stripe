@@ -22,6 +22,7 @@
           },
           requestPayerName: true,
           requestPayerEmail: true,
+          requestPayerPhone: true,
           requestShipping: config.requestShipping,
           shippingOptions: []
         });
@@ -50,7 +51,7 @@
         };
         paymentRequest.on('paymentmethod', onPrPaymentMethod.bind(this));
 
-        onShippingAddressChange = function(ev) {
+        var onShippingAddressChange = function(ev) {
           var showError = this.showError.bind(this);
 
           fetch('/stripe/shipping_rates', {

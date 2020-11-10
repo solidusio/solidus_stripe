@@ -4,6 +4,6 @@ module Spree
   module RefundDecorator
     attr_reader :response
 
-    Spree::Refund.prepend(self)
+    ::Spree::Refund.prepend(self)
   end
 end

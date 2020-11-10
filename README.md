@@ -56,9 +56,7 @@ Spree.config do |config|
     publishable_key: ENV['STRIPE_PUBLISHABLE_KEY'],
     stripe_country: 'US',
     v3_elements: false,
-    v3_intents: false,
-    server: Rails.env.production? ? 'production' : 'test',
-    test_mode: !Rails.env.production?
+    v3_intents: false
   )
 end
 ```
@@ -82,7 +80,7 @@ account. Conversely, if you need to disable the button you can simply remove
 the `stripe_country` preference.
 
 Please refer to Stripe official
-[documentation](https://stripe.com/docs/stripe-js/elements/payment-request-button)
+[documentation](https://stripe.com/docs/payments/payment-intents)
 for further instructions on how to make this work properly.
 
 The following configuration will use both Payment Intents and the
@@ -100,9 +98,7 @@ Spree.config do |config|
     publishable_key: ENV['STRIPE_PUBLISHABLE_KEY'],
     stripe_country: 'US',
     v3_elements: false,
-    v3_intents: true,
-    server: Rails.env.production? ? 'production' : 'test',
-    test_mode: !Rails.env.production?
+    v3_intents: true
   )
 end
 ```
@@ -312,3 +308,4 @@ gem release
 ```
 
 Copyright (c) 2020 Spree Commerce Inc., released under the New BSD License
+Copyright (c) 2020 Solidus Team, released under the New BSD License

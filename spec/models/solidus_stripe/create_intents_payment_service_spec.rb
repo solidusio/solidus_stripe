@@ -96,7 +96,7 @@ RSpec.describe SolidusStripe::CreateIntentsPaymentService do
 
     context "when there are previous pending payments" do
       let!(:payment) do
-        create(:payment, order: order).tap do |payment|
+        create(:payment, order: order, amount: order.total).tap do |payment|
           payment.update!(state: :pending)
         end
       end
