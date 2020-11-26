@@ -8,11 +8,13 @@ describe Spree::PaymentMethod::StripeCreditCard do
   let(:source) { Spree::CreditCard.new }
 
   let(:bill_address) { nil }
+  let(:ship_address) { nil }
 
   let(:order) {
-    double('Spree::Order',
+    build(:order,
       email: email,
       bill_address: bill_address,
+      ship_address: ship_address,
       currency: 'USD',
       number: 'NUMBER',
       total: 10.99
@@ -84,29 +86,43 @@ describe Spree::PaymentMethod::StripeCreditCard do
 
     context 'with an order that has a bill address' do
       let(:bill_address) {
-        double('Spree::Address',
+        build(:address,
           address1: '123 Happy Road',
           address2: 'Apt 303',
           city: 'Suzarac',
           zipcode: '95671',
-          state: double('Spree::State', name: 'Oregon'),
-          country: double('Spree::Country', name: 'United States'))
+          state: build(:state, name: 'Oregon', abbr: 'OR'),
+          country: build(:country, name: 'United States', iso: 'US'),
+          full_name: 'John Smith',
+          phone: '555-555-5555')
       }
 
       it 'stores the bill address with the gateway' do
-        expect(subject.gateway).to receive(:store).with(payment.source, {
-          email: email,
-          login: secret_key,
-
+        expect(Stripe::Customer).to receive(:create).with(
           address: {
-            address1: '123 Happy Road',
-            address2: 'Apt 303',
+            line1: '123 Happy Road',
+            line2: 'Apt 303',
             city: 'Suzarac',
-            zip: '95671',
-            state: 'Oregon',
-            country: 'United States'
+            postal_code: '95671',
+            state: 'OR',
+            country: 'US'
+          },
+          email: email,
+          name: 'John Smith',
+          phone: '555-555-5555',
+          shipping: {
+            address: {
+              line1: nil,
+              line2: nil,
+              city: nil,
+              postal_code: nil,
+              state: nil,
+              country: nil,
+            },
+            name: nil,
+            phone: nil
           }
-        }).and_return double.as_null_object
+        ).and_return double.as_null_object
 
         subject.create_profile payment
       end
@@ -114,10 +130,31 @@ describe Spree::PaymentMethod::StripeCreditCard do
 
     context 'with an order that does not have a bill address' do
       it 'does not store a bill address with the gateway' do
-        expect(subject.gateway).to receive(:store).with(payment.source, {
+        expect(Stripe::Customer).to receive(:create).with(
+          address: {
+            line1: nil,
+            line2: nil,
+            city: nil,
+            postal_code: nil,
+            state: nil,
+            country: nil,
+          },
           email: email,
-          login: secret_key,
-        }).and_return double.as_null_object
+          name: nil,
+          phone: nil,
+          shipping: {
+            address: {
+              line1: nil,
+              line2: nil,
+              city: nil,
+              postal_code: nil,
+              state: nil,
+              country: nil,
+            },
+            name: nil,
+            phone: nil
+          }
+        ).and_return double.as_null_object
 
         subject.create_profile payment
       end
@@ -154,7 +191,7 @@ describe Spree::PaymentMethod::StripeCreditCard do
       let(:bill_address) { nil }
 
       it 'stores the profile_id as a card' do
-        expect(subject.gateway).to receive(:store).with(source.gateway_payment_profile_id, anything).and_return double.as_null_object
+        expect(Stripe::Customer).to receive(:create_source).with(anything, source: source.gateway_payment_profile_id).and_return double.as_null_object
 
         subject.create_profile payment
       end
