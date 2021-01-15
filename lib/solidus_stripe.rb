@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "active_merchant"
-require "solidus_core"
-require "solidus_support"
-require "solidus_stripe/engine"
-require "solidus_stripe/version"
+require 'active_merchant'
+
+require 'solidus_stripe/configuration'
+require 'solidus_stripe/version'
+require 'solidus_stripe/engine'
