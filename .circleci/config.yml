@@ -26,7 +26,6 @@ workflows:
     jobs:
       - run-specs-with-postgres
       - run-specs-with-mysql
-      - lint-code
 
   "Weekly run specs against master":
     triggers:
