@@ -34,15 +34,26 @@ RSpec.describe SolidusStripe::AddressFromParamsService do
 
       context "when the user has an address compatible with the params" do
         before do
-          user.addresses << create(
-            :address, city: params[:city],
+          name_attributes = if SolidusSupport.combined_first_and_last_name_in_address?
+            {
+              name: 'Clark Kent'
+            }
+          else
+            {
+              firstname: 'Clark',
+              lastname: 'Kent',
+            }
+          end
+
+          address_attributes = {
+            city: params[:city],
             zipcode: params[:postalCode],
-            firstname: 'Clark',
-            lastname: 'Kent',
             address1: params[:addressLine].first,
             address2: nil,
-            phone: '555-555-0199'
-          )
+            phone: '555-555-0199',
+          }.merge!(name_attributes)
+
+          user.addresses << create(:address, address_attributes)
         end
 
         it "returns an existing user's address" do
