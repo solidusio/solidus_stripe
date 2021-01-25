@@ -33,5 +33,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'solidus_support', '~> 0.5'
   spec.add_dependency 'activemerchant', '>= 1.100'
 
-  spec.add_development_dependency 'solidus_dev_support'
+  spec.add_development_dependency 'solidus_dev_support', '~> 2.3'
 end
