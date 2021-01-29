@@ -37,8 +37,7 @@ RSpec.describe SolidusStripe::AddressFromParamsService do
           user.addresses << create(
             :address, city: params[:city],
             zipcode: params[:postalCode],
-            firstname: 'Clark',
-            lastname: 'Kent',
+            name: 'Clark Kent',
             address1: params[:addressLine].first,
             address2: nil,
             phone: '555-555-0199'

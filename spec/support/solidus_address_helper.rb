@@ -5,11 +5,11 @@
 # previous first/last name combination.
 module SolidusAddressNameHelper
   def fill_in_name
-    if Spree::Config.preferences[:use_combined_first_and_last_name_in_address]
-      fill_in "Name", with: "Han Solo"
-    else
+    if has_field?("First Name")
       fill_in "First Name", with: "Han"
       fill_in "Last Name", with: "Solo"
+    else
+      fill_in "Name", with: "Han Solo"
     end
   end
 end

@@ -12,7 +12,13 @@ module SolidusStripe
       if user
         user.addresses.find_or_initialize_by(attributes)
       else
-        Spree::Address.new(attributes)
+        begin
+          Spree::Address.new(attributes)
+        rescue ActiveModel::UnknownAttributeError # Handle old address format
+          name = attributes.delete!(:name)
+          attributes[:first_name], attributes[:last_name] = name.split(/[[:space:]]/, 2)
+          Spree::Address.new(attributes)
+        end
       end
     end
 
@@ -24,12 +30,11 @@ module SolidusStripe
           # possibly anonymized attributes:
           phone = address_params[:phone]
           lines = address_params[:addressLine]
-          names = address_params[:recipient].split(' ')
+          name = address_params[:recipient]
 
           attributes.merge!(
             state_id: state&.id,
-            firstname: names.first,
-            lastname: names.last,
+            name: name,
             phone: phone,
             address1: lines.first,
             address2: lines.second
