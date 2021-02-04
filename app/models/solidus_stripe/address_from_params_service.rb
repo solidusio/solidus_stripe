@@ -26,14 +26,26 @@ module SolidusStripe
           lines = address_params[:addressLine]
           names = address_params[:recipient].split(' ')
 
-          attributes.merge!(
-            state_id: state&.id,
-            firstname: names.first,
-            lastname: names.last,
-            phone: phone,
-            address1: lines.first,
-            address2: lines.second
-          ).reject! { |_, value| value.blank? }
+          name_attributes = if SolidusSupport.combined_first_and_last_name_in_address? && Spree::Address.column_names.include?("name")
+            {
+              name: address_params[:recipient]
+            }
+          else
+            {
+              firstname: names.first,
+              lastname: names.last,
+            }
+          end
+
+          attributes
+            .merge!(name_attributes)
+            .merge!(
+              state_id: state&.id,
+              phone: phone,
+              address1: lines.first,
+              address2: lines.second
+            )
+            .reject! { |_, value| value.blank? }
         end
       end
     end

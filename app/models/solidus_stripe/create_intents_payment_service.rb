@@ -102,7 +102,8 @@ module SolidusStripe
     end
 
     def address_full_name
-      current_order.bill_address&.full_name || form_data[:recipient]
+      bill_address_name = SolidusSupport.combined_first_and_last_name_in_address? ? current_order.bill_address&.name : current_order.bill_address&.full_name
+      bill_address_name || form_data[:recipient]
     end
 
     def update_stripe_payment_description

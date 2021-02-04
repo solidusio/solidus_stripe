@@ -87,10 +87,13 @@ module Spree
 
       def try_void(payment)
         if v3_intents? && payment.completed?
-          payment.refunds.create!(
-            amount: payment.credit_allowed,
-            reason: payment_intents_refund_reason
-          ).response
+          refund = perform_refund(payment)
+
+          if refund.respond_to?(:perform_response)
+            refund.perform_response
+          else
+            refund.response
+          end
         else
           void(payment.response_code, nil, nil)
         end
@@ -189,6 +192,24 @@ module Spree
       def update_source!(source)
         source.cc_type = CARD_TYPE_MAPPING[source.cc_type] if CARD_TYPE_MAPPING.include?(source.cc_type)
         source
+      end
+
+      def perform_refund(payment)
+        refund = payment.refunds.build(
+          amount: payment.credit_allowed,
+          reason: payment_intents_refund_reason
+        )
+
+        if refund.respond_to?(:perform_after_create)
+          refund.perform_after_create = false
+          refund.save!
+          refund.perform!
+        else
+          refund.save!
+          refund.perform! if Gem::Requirement.new('>= 3.0.0.alpha').satisfied_by?(Spree.solidus_gem_version)
+        end
+
+        refund
       end
     end
   end

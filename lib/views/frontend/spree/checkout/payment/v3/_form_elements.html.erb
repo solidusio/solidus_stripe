@@ -1,10 +1,11 @@
 <div id="payment-request-button" data-stripe-config="<%= payment_method.stripe_config(current_order).to_json %>" data-v3-api="<%= stripe_v3_api %>"></div>
 
 <% param_prefix = "payment_source[#{payment_method.id}]" %>
+<% name = SolidusSupport.combined_first_and_last_name_in_address? ? @order.name : "#{@order.billing_firstname} #{@order.billing_lastname}" %>
 
 <div class="field field-required">
   <%= label_tag "name_on_card_#{payment_method.id}", t('spree.name_on_card') %>
-  <%= text_field_tag "#{param_prefix}[name]", "#{@order.billing_firstname} #{@order.billing_lastname}", { id: "name_on_card_#{payment_method.id}", autocomplete: "cc-name" } %>
+  <%= text_field_tag "#{param_prefix}[name]", name, { id: "name_on_card_#{payment_method.id}", autocomplete: "cc-name" } %>
 </div>
 
 <div class="field field-required" data-hook="card_number">
