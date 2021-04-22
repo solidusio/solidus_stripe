@@ -10,16 +10,10 @@ Stripe Payment Method for Solidus. It works as a wrapper for the ActiveMerchant 
 Installation
 ------------
 
-In your Gemfile:
-
-```ruby
-gem 'solidus_stripe', '~> 3.0'
-```
-
-Then run from the command line:
+Run from the command line:
 
 ```shell
-bundle install
+bundle add solidus_stripe
 bundle exec rails g solidus_stripe:install
 ```
 
