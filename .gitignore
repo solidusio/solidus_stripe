@@ -5,8 +5,6 @@
 .DS_Store
 .idea
 .project
-.ruby-version
-.rvmrc
 .sass-cache
 coverage
 Gemfile.lock
@@ -17,3 +15,6 @@ pkg
 spec/dummy
 spec/examples.txt
 /sandbox
+.rvmrc
+.ruby-version
+.ruby-gemset

@@ -66,7 +66,7 @@
 <%- if @order.has_checkout_step?('address') -%>
   <script>
     Spree.stripeAdditionalInfo = {
-      name: "<%= @order.bill_address.full_name %>",
+      name: "<%= SolidusSupport.combined_first_and_last_name_in_address? ? @order.bill_address.name : @order.bill_address.full_name %>",
       address_line1: "<%= @order.bill_address.address1 %>",
       address_line2: "<%= @order.bill_address.address2 %>",
       address_city: "<%= @order.bill_address.city %>",

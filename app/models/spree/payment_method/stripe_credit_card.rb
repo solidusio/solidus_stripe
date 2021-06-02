@@ -87,10 +87,13 @@ module Spree
 
       def try_void(payment)
         if v3_intents? && payment.completed?
-          payment.refunds.create!(
-            amount: payment.credit_allowed,
-            reason: payment_intents_refund_reason
-          ).response
+          refund = perform_refund(payment)
+
+          if refund.respond_to?(:perform_response)
+            refund.perform_response
+          else
+            refund.response
+          end
         else
           void(payment.response_code, nil, nil)
         end
@@ -105,7 +108,7 @@ module Spree
 
         options = {
           email: payment.order.email,
-          login: preferred_secret_key,
+          login: preferred_secret_key
         }.merge! address_for(payment)
 
         source = update_source!(payment.source)
@@ -152,6 +155,7 @@ module Spree
         options[:description] = "Solidus Order ID: #{transaction_options[:order_id]}"
         options[:currency] = transaction_options[:currency]
         options[:off_session] = true if v3_intents?
+        options[:statement_descriptor_suffix] = transaction_options[:statement_descriptor_suffix] if transaction_options[:statement_descriptor_suffix]
 
         if customer = creditcard.gateway_customer_profile_id
           options[:customer] = customer
@@ -193,6 +197,24 @@ module Spree
 
       def reuse_existing_source?(source)
         source.number.blank? && source.gateway_payment_profile_id.present?
+      end
+
+      def perform_refund(payment)
+        refund = payment.refunds.build(
+          amount: payment.credit_allowed,
+          reason: payment_intents_refund_reason
+        )
+
+        if refund.respond_to?(:perform_after_create)
+          refund.perform_after_create = false
+          refund.save!
+          refund.perform!
+        else
+          refund.save!
+          refund.perform! if Gem::Requirement.new('>= 3.0.0.alpha').satisfied_by?(Spree.solidus_gem_version)
+        end
+
+        refund
       end
     end
   end

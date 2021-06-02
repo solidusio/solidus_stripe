@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
-require 'spree/core'
+require 'solidus_core'
+require 'solidus_support'
 
 module SolidusStripe
   class Engine < Rails::Engine
@@ -13,18 +14,6 @@ module SolidusStripe
     # use rspec for tests
     config.generators do |g|
       g.test_framework :rspec
-    end
-
-    if SolidusSupport.backend_available?
-      paths["app/views"] << "lib/views/backend"
-    end
-
-    if SolidusSupport.frontend_available?
-      paths["app/views"] << "lib/views/frontend"
-    end
-
-    if SolidusSupport.api_available?
-      paths["app/views"] << "lib/views/api"
     end
 
     initializer "spree.payment_method.add_stripe_credit_card", after: "spree.register.payment_methods" do |app|

@@ -284,4 +284,33 @@ describe Spree::PaymentMethod::StripeCreditCard do
       end
     end
   end
+
+  describe '#options_for_purchase_or_auth' do
+    let(:card) do
+      FactoryBot.create(
+        :credit_card,
+        gateway_customer_profile_id: 'cus_abcde',
+        imported: false
+      )
+    end
+
+    before do
+      allow(subject).to receive(:options_for_purchase_or_auth).and_call_original
+    end
+
+    context 'transaction_options' do
+      it 'includes basic values and keys' do
+        options = subject.send(:options_for_purchase_or_auth, 19.99, card, {})
+        expect(options[0]).to eq(19.99)
+        expect(options[1]).to eq(card)
+        expect(options[2].keys).to eq([:description, :currency, :customer])
+      end
+
+      it 'includes statement_descriptor_suffix within options' do
+        transaction_options = { statement_descriptor_suffix: 'FFFFFFF' }
+        options = subject.send(:options_for_purchase_or_auth, 19.99, card, transaction_options)
+        expect(options.last[:statement_descriptor_suffix]).to eq('FFFFFFF')
+      end
+    end
+  end
 end
