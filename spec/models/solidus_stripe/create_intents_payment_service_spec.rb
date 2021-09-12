@@ -115,6 +115,18 @@ RSpec.describe SolidusStripe::CreateIntentsPaymentService do
         it "invalidates it" do
           expect { subject }.to change { payment.reload.state }.to 'void'
         end
+
+        context "and the response returns a payment_intent_unexpected_state error" do
+          before do
+            response_params = { 'error' => { 'code' => 'payment_intent_unexpected_state' } }
+            response = double(success?: false, authorization: payment.response_code, params: response_params)
+            expect_any_instance_of(Spree::PaymentMethod::StripeCreditCard).to receive(:void) { response }
+          end
+
+          it "invalidates it" do
+            expect { subject }.to change { payment.reload.state }.to 'void'
+          end
+        end
       end
 
       context "when none is a Payment Intent" do
