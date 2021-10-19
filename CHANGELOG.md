@@ -1,5 +1,44 @@
 # Changelog
 
+## [v4.3.0](https://github.com/solidusio/solidus_stripe/tree/v4.3.0) (2021-10-19)
+
+[Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v4.2.0...v4.3.0)
+
+**Implemented enhancements:**
+
+- Remove Solidus 2.x deprecation to allow 3.0 usage [\#99](https://github.com/solidusio/solidus_stripe/pull/99) ([kennyadsl](https://github.com/kennyadsl))
+- Update gem with the latest dev\_support [\#97](https://github.com/solidusio/solidus_stripe/pull/97) ([kennyadsl](https://github.com/kennyadsl))
+
+**Fixed bugs:**
+
+- Fix 3DS iframe selection [\#86](https://github.com/solidusio/solidus_stripe/pull/86) ([spaghetticode](https://github.com/spaghetticode))
+
+**Closed issues:**
+
+- Could not create payment [\#111](https://github.com/solidusio/solidus_stripe/issues/111)
+- statement\_descriptor\_suffix [\#107](https://github.com/solidusio/solidus_stripe/issues/107)
+- Shipping cost payment refund rejected from Stripe API because of negative charge value [\#101](https://github.com/solidusio/solidus_stripe/issues/101)
+- Remove Solidus 2.x deprecations [\#98](https://github.com/solidusio/solidus_stripe/issues/98)
+- about LICENSE [\#59](https://github.com/solidusio/solidus_stripe/issues/59)
+
+**Merged pull requests:**
+
+- Add statement\_descriptor\_suffix support to options\_for\_purchase\_or\_auth [\#106](https://github.com/solidusio/solidus_stripe/pull/106) ([torukMnk](https://github.com/torukMnk))
+- Update install instructions [\#105](https://github.com/solidusio/solidus_stripe/pull/105) ([kennyadsl](https://github.com/kennyadsl))
+- Allow Solidus 3 [\#104](https://github.com/solidusio/solidus_stripe/pull/104) ([kennyadsl](https://github.com/kennyadsl))
+- Bump minimum solidus\_support version requirement [\#102](https://github.com/solidusio/solidus_stripe/pull/102) ([filippoliverani](https://github.com/filippoliverani))
+-  Relax Ruby required version to support Ruby 3.0+ [\#96](https://github.com/solidusio/solidus_stripe/pull/96) ([filippoliverani](https://github.com/filippoliverani))
+- Update refund\_decorator.rb prepend namespacing [\#91](https://github.com/solidusio/solidus_stripe/pull/91) ([brchristian](https://github.com/brchristian))
+- Retrieve phone number paying with digital wallets [\#90](https://github.com/solidusio/solidus_stripe/pull/90) ([kennyadsl](https://github.com/kennyadsl))
+- Fix Intents API link in README [\#87](https://github.com/solidusio/solidus_stripe/pull/87) ([kennyadsl](https://github.com/kennyadsl))
+- Add missing 'var' [\#85](https://github.com/solidusio/solidus_stripe/pull/85) ([willread](https://github.com/willread))
+- Fixes Rails 6.1 load warnings [\#84](https://github.com/solidusio/solidus_stripe/pull/84) ([marcrohloff](https://github.com/marcrohloff))
+- Dedupe common code in stripe\_checkout\_spec.rb [\#80](https://github.com/solidusio/solidus_stripe/pull/80) ([brchristian](https://github.com/brchristian))
+- Refactor spec with fill\_in\_card helper [\#78](https://github.com/solidusio/solidus_stripe/pull/78) ([brchristian](https://github.com/brchristian))
+- Fix non-breaking space character in comment [\#76](https://github.com/solidusio/solidus_stripe/pull/76) ([brchristian](https://github.com/brchristian))
+- Fix Copyright in README [\#73](https://github.com/solidusio/solidus_stripe/pull/73) ([kennyadsl](https://github.com/kennyadsl))
+- Remove server and test\_mode from README [\#66](https://github.com/solidusio/solidus_stripe/pull/66) ([adammathys](https://github.com/adammathys))
+
 ## [v4.2.0](https://github.com/solidusio/solidus_stripe/tree/v4.2.0) (2020-07-20)
 
 [Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v4.1.0...v4.2.0)
@@ -10,7 +49,7 @@
 
 **Closed issues:**
 
-- A token may not be passed in as a PaymentMethod. Instead, create a PaymentMethod or convert your token to a PaymentMethod by setting the `card\[token\]` parameter to  [\#71](https://github.com/solidusio/solidus_stripe/issues/71)
+- A token may not be passed in as a PaymentMethod. Instead, create a PaymentMethod or convert your token to a PaymentMethod by setting the `card[token]` parameter to  [\#71](https://github.com/solidusio/solidus_stripe/issues/71)
 
 **Merged pull requests:**
 
@@ -50,10 +89,6 @@
 - Using static credentials  [\#52](https://github.com/solidusio/solidus_stripe/issues/52)
 - Auto capture behavior in v4.0.0 [\#50](https://github.com/solidusio/solidus_stripe/issues/50)
 
-**Merged pull requests:**
-
-- Relax solidus\_support version dependency [\#70](https://github.com/solidusio/solidus_stripe/pull/70) ([spaghetticode](https://github.com/spaghetticode))
-
 ## [v4.0.0](https://github.com/solidusio/solidus_stripe/tree/v4.0.0) (2020-04-29)
 
 [Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v3.2.0...v4.0.0)
@@ -81,7 +116,7 @@
 
 **Merged pull requests:**
 
-- Replace deprecated route `/stripe/confirm\_payment` [\#46](https://github.com/solidusio/solidus_stripe/pull/46) ([spaghetticode](https://github.com/spaghetticode))
+- Replace deprecated route `/stripe/confirm_payment` [\#46](https://github.com/solidusio/solidus_stripe/pull/46) ([spaghetticode](https://github.com/spaghetticode))
 
 ## [v3.1.0](https://github.com/solidusio/solidus_stripe/tree/v3.1.0) (2020-04-10)
 
@@ -153,7 +188,7 @@
 **Merged pull requests:**
 
 - Remove ERB from Elements and Intents JS code [\#28](https://github.com/solidusio/solidus_stripe/pull/28) ([spaghetticode](https://github.com/spaghetticode))
-- Remove `update\_attributes!` deprecation [\#24](https://github.com/solidusio/solidus_stripe/pull/24) ([spaghetticode](https://github.com/spaghetticode))
+- Remove `update_attributes!` deprecation [\#24](https://github.com/solidusio/solidus_stripe/pull/24) ([spaghetticode](https://github.com/spaghetticode))
 - Add solidus\_dev\_support gem [\#21](https://github.com/solidusio/solidus_stripe/pull/21) ([spaghetticode](https://github.com/spaghetticode))
 - Fix reusing cards with Stripe v3 [\#17](https://github.com/solidusio/solidus_stripe/pull/17) ([kennyadsl](https://github.com/kennyadsl))
 - Extension maintenance [\#14](https://github.com/solidusio/solidus_stripe/pull/14) ([kennyadsl](https://github.com/kennyadsl))
