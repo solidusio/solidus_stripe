@@ -112,7 +112,7 @@ module Spree
         }.merge! address_for(payment)
 
         source = update_source!(payment.source)
-        if source.number.blank? && source.gateway_payment_profile_id.present?
+        if reuse_existing_source?(source)
           if v3_intents?
             creditcard = ActiveMerchant::Billing::StripeGateway::StripePaymentToken.new('id' => source.gateway_payment_profile_id)
           else
@@ -124,7 +124,7 @@ module Spree
 
         response = gateway.store(creditcard, options)
         if response.success?
-          if v3_intents?
+          if v3_intents? && reuse_existing_source?(source)
             payment.source.update!(
               cc_type: payment.source.cc_type,
               gateway_customer_profile_id: response.params['customer'],
@@ -211,6 +211,10 @@ module Spree
         end
 
         refund
+      end
+
+      def reuse_existing_source?(source)
+        source.number.blank? && source.gateway_payment_profile_id.present?
       end
     end
   end
