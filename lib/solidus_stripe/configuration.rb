@@ -5,6 +5,7 @@ module SolidusStripe
     # Define here the settings for this extension, e.g.:
     #
     # attr_accessor :my_setting
+    attr_accessor :application_fee
   end
 
   class << self
