@@ -266,7 +266,7 @@ RSpec.describe "Stripe checkout", type: :feature do
           end
 
           page.accept_alert do
-            find('input[value="Cancel"]').click
+            click_on "Cancel"
           end
 
           expect(page).to have_content "Order canceled"
@@ -388,7 +388,7 @@ RSpec.describe "Stripe checkout", type: :feature do
           end
 
           page.accept_alert do
-            find('input[value="Cancel"]').click
+            click_on "Cancel"
           end
 
           expect(page).to have_content "Order canceled"
