@@ -10,21 +10,30 @@ orbs:
   # or goes EOL.
   solidusio_extensions: solidusio/extensions@volatile
 
+executors:
+  sqlite:
+    description: Run specs with an in-memory SQLite
+    docker:
+      - image: cimg/ruby:2.7-browsers
+        environment:
+          RAILS_ENV: test
+          DB: sqlite
+
 jobs:
   run-specs-with-postgres:
     executor: solidusio_extensions/postgres
     steps:
-      - browser-tools/install-browser-tools
+      - browser-tools/install-chrome
       - solidusio_extensions/run-tests
   run-specs-with-mysql:
     executor: solidusio_extensions/mysql
     steps:
-      - browser-tools/install-browser-tools
+      - browser-tools/install-chrome
       - solidusio_extensions/run-tests
   run-specs-with-sqlite:
-    executor: solidusio_extensions/sqlite-memory
+    executor: sqlite
     steps:
-      - browser-tools/install-browser-tools
+      - browser-tools/install-chrome
       - solidusio_extensions/run-tests
   lint-code:
     executor: solidusio_extensions/sqlite-memory
