@@ -17,7 +17,7 @@ Gem::Specification.new do |spec|
   spec.metadata['source_code_uri'] = 'https://github.com/solidusio/solidus_stripe'
   spec.metadata['changelog_uri'] = 'https://github.com/solidusio/solidus_stripe/blob/master/CHANGELOG.md'
 
-  spec.required_ruby_version = '>= 2.4.0'
+  spec.required_ruby_version = Gem::Requirement.new('>= 2.5')
 
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
@@ -32,6 +32,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'solidus_core', ['>= 2.3', '< 4']
   spec.add_dependency 'solidus_support', '~> 0.8'
   spec.add_dependency 'activemerchant', '>= 1.105'
+  spec.add_dependency 'rexml'
 
-  spec.add_development_dependency 'solidus_dev_support', '~> 2.3'
+  spec.add_development_dependency 'solidus_dev_support', '~> 2.5'
 end

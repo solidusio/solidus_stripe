@@ -5,10 +5,8 @@
 
 Stripe Payment Method for Solidus. It works as a wrapper for the ActiveMerchant Stripe gateway.
 
----
+## Installation
 
-Installation
-------------
 
 Run from the command line:
 
@@ -277,10 +275,17 @@ bundle exec rubocop
 ```
 
 When testing your application's integration with this extension you may use its factories.
-Simply add this require statement to your spec_helper:
+Simply add this require statement to your `spec/spec_helper.rb`:
 
 ```ruby
-require '<%= file_name %>/factories'
+require 'solidus_stripe/testing_support/factories'
+```
+
+Or, if you are using `FactoryBot.definition_file_paths`, you can load Solidus core
+factories along with this extension's factories using this statement:
+
+```ruby
+SolidusDevSupport::TestingSupport::Factories.load_for(SolidusStripe::Engine)
 ```
 
 ### Running the sandbox

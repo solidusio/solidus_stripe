@@ -26,12 +26,12 @@ RSpec.describe SolidusStripe::CreateIntentsPaymentService do
       stripe_payment_intent_id: intent_id,
       form_data: {
         addressLine: ["31 Cotton Rd"],
-        city: "San Diego",
-        country: "US",
+        city: order.bill_address.city,
+        country: order.bill_address.country.iso,
+        region: order.bill_address.state.abbr,
         phone: "+188836412312",
         postalCode: "12345",
         recipient: "James Edwards",
-        region: "CA"
       }
     }
   end

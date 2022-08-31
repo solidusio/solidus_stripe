@@ -19,7 +19,7 @@ module SolidusStripe
       if create_payment_service.call
         render json: { success: true }
       else
-        render json: { error: "Could not create payment" }, status: 500
+        render json: { error: "Could not create payment" }, status: :internal_server_error
       end
     end
 
@@ -45,7 +45,7 @@ module SolidusStripe
           stripe_payment_intent_id: response['id']
         }
       else
-        render json: { error: response['error']['message'] }, status: 500
+        render json: { error: response['error']['message'] }, status: :internal_server_error
       end
     end
 
