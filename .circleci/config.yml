@@ -12,7 +12,7 @@ orbs:
 
 executors:
   sqlite:
-    description: Run specs with an in-memory SQLite
+    description: Run specs with an SQLite
     docker:
       - image: cimg/ruby:2.7-browsers
         environment:
