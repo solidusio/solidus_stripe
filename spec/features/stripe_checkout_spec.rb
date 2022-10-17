@@ -315,14 +315,14 @@ RSpec.describe "Stripe checkout", type: :feature do
           click_button 'Complete authentication'
         end
 
-        expect(page).to have_content "Your card was declined."
+        expect(page).to have_content "Your card has been declined."
       end
     end
 
     context "when reusing a card" do
       stub_authorization!
 
-      it "succesfully creates a second payment that can be captured in the backend" do
+      it "successfully creates a second payment that can be captured in the backend" do
         authenticate_3d_secure_card(card_3d_secure)
 
         expect(page).to have_current_path("/checkout/confirm")
