@@ -36,11 +36,8 @@ variables you can create the following static configuration:
 
 ```ruby
 # config/initializers/spree.rb
-
-Spree.config do |config|
-  # ...
-
-  config.static_model_preferences.add(
+Rails.application.config.to_prepare do
+  Spree::Config.static_model_preferences.add(
     Spree::PaymentMethod::StripeCreditCard,
     'stripe_env_credentials',
     secret_key: ENV['STRIPE_SECRET_KEY'],
