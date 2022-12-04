@@ -61,20 +61,29 @@ module Spree
         true
       end
 
+      def non_fractional_money(money, currency)
+        amount = money.is_a?(Integer) ? money : money.cents
+        Spree::Money.new((amount * 100), { currency: currency })
+      end
+
+      def localize(money, currency)
+        ActiveMerchant::Billing::Gateway.currencies_without_fractions.include?(currency) ? non_fractional_money(money, currency) : money
+      end
+
       def purchase(money, creditcard, transaction_options)
-        gateway.purchase(*options_for_purchase_or_auth(money, creditcard, transaction_options))
+        gateway.purchase(*options_for_purchase_or_auth(localize(money, transaction_options[:currency]), creditcard, transaction_options))
       end
 
       def authorize(money, creditcard, transaction_options)
-        gateway.authorize(*options_for_purchase_or_auth(money, creditcard, transaction_options))
+        gateway.authorize(*options_for_purchase_or_auth(localize(money, transaction_options[:currency]), creditcard, transaction_options))
       end
 
       def capture(money, response_code, transaction_options)
-        gateway.capture(money, response_code, transaction_options)
+        gateway.capture(localize(money, transaction_options[:currency]), response_code, transaction_options)
       end
 
-      def credit(money, _creditcard, response_code, _transaction_options)
-        gateway.refund(money, response_code, {})
+      def credit(money, _creditcard, response_code, transaction_options)
+        gateway.refund(localize(money, transaction_options[:currency]), response_code, {})
       end
 
       def void(response_code, _creditcard, _transaction_options)
