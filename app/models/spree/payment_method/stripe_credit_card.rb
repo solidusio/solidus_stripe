@@ -61,6 +61,10 @@ module Spree
         true
       end
 
+      def money
+        ActiveMerchant::Billing::Gateway.currencies_without_fractions.include?(order.currency) ? super * 100 : super
+      end
+
       def purchase(money, creditcard, transaction_options)
         gateway.purchase(*options_for_purchase_or_auth(money, creditcard, transaction_options))
       end
