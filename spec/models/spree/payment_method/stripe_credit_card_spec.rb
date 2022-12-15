@@ -171,9 +171,29 @@ describe Spree::PaymentMethod::StripeCreditCard do
     end
   end
 
+  context 'purchasing with fractionless currency' do
+    after do
+      subject.purchase(1999, 'credit card', { currency: 'JPY' })
+    end
+
+    it 'send the payment to the gateway' do
+      expect(gateway).to receive(:purchase).with('money', 'cc', 'opts')
+    end
+  end
+
   context 'authorizing' do
     after do
       subject.authorize(19.99, 'credit card', {})
+    end
+
+    it 'send the authorization to the gateway' do
+      expect(gateway).to receive(:authorize).with('money', 'cc', 'opts')
+    end
+  end
+
+  context 'authorizing with fractionless currency' do
+    after do
+      subject.authorize(1999, 'credit card', { currency: 'JPY' })
     end
 
     it 'send the authorization to the gateway' do
@@ -188,6 +208,20 @@ describe Spree::PaymentMethod::StripeCreditCard do
 
     it 'convert the amount to cents' do
       expect(gateway).to receive(:capture).with(1234, anything, anything)
+    end
+
+    it 'use the response code as the authorization' do
+      expect(gateway).to receive(:capture).with(anything, 'response_code', anything)
+    end
+  end
+
+  context 'capturing with fractionless currency' do
+    after do
+      subject.capture(1234, 'response_code', { currency: 'JPY' })
+    end
+
+    it 'amount not converted to cents' do
+      expect(gateway).to receive(:capture).with(Spree::Money.new(123_400, { currency: 'JPY' }), anything, anything)
     end
 
     it 'use the response code as the authorization' do
