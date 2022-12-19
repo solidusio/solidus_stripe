@@ -6,7 +6,6 @@
 
 **Fixed bugs:**
 
-- Test issue, please disregard [\#145](https://github.com/solidusio/solidus_stripe/issues/145)
 - Fix incorrect charge amount for currencies without fractions [\#138](https://github.com/solidusio/solidus_stripe/issues/138)
 - ActionView::MissingTemplate in Spree::Checkout\#edit [\#127](https://github.com/solidusio/solidus_stripe/issues/127)
 
