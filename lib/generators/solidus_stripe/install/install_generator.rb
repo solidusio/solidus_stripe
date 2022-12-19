@@ -4,9 +4,20 @@ module SolidusStripe
   module Generators
     class InstallGenerator < Rails::Generators::Base
       class_option :auto_run_migrations, type: :boolean, default: false
+      source_root File.expand_path('templates', __dir__)
+
+      def copy_initializer
+        template 'initializer.rb', 'config/initializers/solidus_stripe.rb'
+      end
 
       def add_javascripts
         append_file 'vendor/assets/javascripts/spree/frontend/all.js', "//= require spree/frontend/solidus_stripe\n"
+        append_file 'vendor/assets/javascripts/spree/backend/all.js', "//= require spree/backend/solidus_stripe\n"
+      end
+
+      def add_stylesheets
+        inject_into_file 'vendor/assets/stylesheets/spree/frontend/all.css', " *= require spree/frontend/solidus_stripe\n", before: %r{\*/}, verbose: true # rubocop:disable Layout/LineLength
+        inject_into_file 'vendor/assets/stylesheets/spree/backend/all.css', " *= require spree/backend/solidus_stripe\n", before: %r{\*/}, verbose: true # rubocop:disable Layout/LineLength
       end
 
       def add_migrations
@@ -20,13 +31,6 @@ module SolidusStripe
         else
           puts 'Skipping bin/rails db:migrate, don\'t forget to run it!' # rubocop:disable Rails/Output
         end
-      end
-
-      def populate_seed_data
-        return unless options.auto_run_seeds?
-
-        say_status :loading, 'stripe seed data'
-        rake('db:seed:solidus_stripe')
       end
     end
   end

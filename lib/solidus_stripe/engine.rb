@@ -15,9 +15,5 @@ module SolidusStripe
     config.generators do |g|
       g.test_framework :rspec
     end
-
-    initializer "spree.payment_method.add_stripe_credit_card", after: "spree.register.payment_methods" do |app|
-      app.config.spree.payment_methods << "Spree::PaymentMethod::StripeCreditCard"
-    end
   end
 end

@@ -1,5 +1,5 @@
 # frozen_string_literal: true
 
 module SolidusStripe
-  VERSION = '4.4.0'
+  VERSION = '1.0.0.dev'
 end

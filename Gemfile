@@ -7,9 +7,8 @@ branch = ENV.fetch('SOLIDUS_BRANCH', 'master')
 gem 'solidus', github: 'solidusio/solidus', branch: branch
 
 # The solidus_frontend gem has been pulled out since v3.2
-if (branch == 'master') || (branch >= 'v3.2')
-  gem 'solidus_frontend', github: 'solidusio/solidus_frontend', branch: branch
-end
+gem 'solidus_frontend', github: 'solidusio/solidus_frontend' if branch == 'master'
+gem 'solidus_frontend' if branch >= 'v3.2' # rubocop:disable Bundler/DuplicatedGem
 
 # Needed to help Bundler figure out how to resolve dependencies,
 # otherwise it takes forever to resolve them.
@@ -27,6 +26,11 @@ when 'postgresql'
 else
   gem 'sqlite3'
 end
+
+# While we still support Ruby < 3 we need to workaround a limitation in
+# the 'async' gem that relies on the latest ruby, since RubyGems doesn't
+# resolve gems based on the required ruby version.
+gem 'async', '< 3' if Gem::Version.new(RUBY_VERSION) < Gem::Version.new('3')
 
 gemspec
 
