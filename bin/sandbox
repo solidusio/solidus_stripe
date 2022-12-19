@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
 set -e
+if [ ! -z $DEBUG ]
+then
+  set -x
+fi
 
 case "$DB" in
 postgres|postgresql)
@@ -9,21 +13,36 @@ postgres|postgresql)
 mysql)
   RAILSDB="mysql"
   ;;
-sqlite|'')
+sqlite3|sqlite)
+  RAILSDB="sqlite3"
+  ;;
+'')
+  echo "~~> Use 'export DB=[postgres|mysql|sqlite]' to control the DB adapter"
   RAILSDB="sqlite3"
   ;;
 *)
-  echo "Invalid DB specified: $DB"
+  echo "Invalid value specified for the Solidus sandbox: DB=\"$DB\"."
+  echo "Please use 'postgres', 'mysql', or 'sqlite' instead."
   exit 1
   ;;
 esac
+echo "~~> Using $RAILSDB as the database engine"
 
-if [ ! -z $SOLIDUS_BRANCH ]
+if [ -n $SOLIDUS_BRANCH ]
 then
   BRANCH=$SOLIDUS_BRANCH
 else
+  echo "~~> Use 'export SOLIDUS_BRANCH=[master|v3.2|...]' to control the Solidus branch"
   BRANCH="master"
 fi
+echo "~~> Using branch $BRANCH of solidus"
+
+if [ -z $SOLIDUS_FRONTEND ]
+then
+  echo "~~> Use 'export SOLIDUS_FRONTEND=[solidus_frontend|solidus_starter_frontend]' to control the Solidus frontend"
+  SOLIDUS_FRONTEND="solidus_frontend"
+fi
+echo "~~> Using branch $SOLIDUS_FRONTEND as the solidus frontend"
 
 extension_name="solidus_stripe"
 
@@ -50,7 +69,6 @@ fi
 cd ./sandbox
 cat <<RUBY >> Gemfile
 gem 'solidus', github: 'solidusio/solidus', branch: '$BRANCH'
-gem 'solidus_auth_devise', '>= 2.1.0'
 gem 'rails-i18n'
 gem 'solidus_i18n'
 
@@ -71,16 +89,14 @@ unbundled bundle exec rails generate solidus:install \
   --auto-accept \
   --user_class=Spree::User \
   --enforce_available_locales=true \
-  --with-authentication=false \
+  --with-authentication=true \
   --payment-method=none \
+  --frontend=${SOLIDUS_FRONTEND} \
   $@
 
-unbundled bundle exec rails generate solidus:auth:install
-unbundled bundle exec rails generate ${extension_name}:install
+unbundled bundle exec rails generate solidus:auth:install --auto-run-migrations
+unbundled bundle exec rails generate ${extension_name}:install --auto-run-migrations
 
 echo
 echo "🚀 Sandbox app successfully created for $extension_name!"
-echo "🚀 Using $RAILSDB and Solidus $BRANCH"
-echo "🚀 Use 'export DB=[postgres|mysql|sqlite]' to control the DB adapter"
-echo "🚀 Use 'export SOLIDUS_BRANCH=<BRANCH-NAME>' to control the Solidus version"
-echo "🚀 This app is intended for test purposes."
+echo "🧪 This app is intended for test purposes."

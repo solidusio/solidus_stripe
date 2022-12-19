@@ -1,8 +1,0 @@
-<% if payment_method.v3_elements? %>
-  <%= render 'spree/checkout/payment/v3/elements', payment_method: payment_method %>
-<% elsif payment_method.v3_intents? %>
-  <%= render 'spree/checkout/payment/v3/intents', payment_method: payment_method %>
-<% else %>
-  <%= render "spree/checkout/payment/gateway", payment_method: payment_method %>
-  <%= render 'spree/checkout/payment/v2/javascript', payment_method: payment_method %>
-<% end %>
