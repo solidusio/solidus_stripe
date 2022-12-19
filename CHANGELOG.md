@@ -1,5 +1,39 @@
 # Changelog
 
+## [v4.4.0](https://github.com/solidusio/solidus_stripe/tree/v4.4.0) (2022-12-19)
+
+[Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v4.3.0...v4.4.0)
+
+**Fixed bugs:**
+
+- Test issue, please disregard [\#145](https://github.com/solidusio/solidus_stripe/issues/145)
+- Fix incorrect charge amount for currencies without fractions [\#138](https://github.com/solidusio/solidus_stripe/issues/138)
+- ActionView::MissingTemplate in Spree::Checkout\#edit [\#127](https://github.com/solidusio/solidus_stripe/issues/127)
+
+**Closed issues:**
+
+- RFC: Overhauling solidus\_stripe [\#135](https://github.com/solidusio/solidus_stripe/issues/135)
+- Initializer fails with uninitialized constant Spree::PaymentMethod [\#133](https://github.com/solidusio/solidus_stripe/issues/133)
+- How to pass zip code when add a Credit Card [\#132](https://github.com/solidusio/solidus_stripe/issues/132)
+- Undefined method `cvv\_path' [\#130](https://github.com/solidusio/solidus_stripe/issues/130)
+- Javascript don't working after solidus\_stripe installation [\#126](https://github.com/solidusio/solidus_stripe/issues/126)
+- Facing dependency  issue after upgrade solidus 3 [\#114](https://github.com/solidusio/solidus_stripe/issues/114)
+- New release for solidus 3 [\#113](https://github.com/solidusio/solidus_stripe/issues/113)
+- How to specify API version [\#93](https://github.com/solidusio/solidus_stripe/issues/93)
+- Consistency between README and Wiki [\#67](https://github.com/solidusio/solidus_stripe/issues/67)
+
+**Merged pull requests:**
+
+- Fix adding a new customer card in admin [\#144](https://github.com/solidusio/solidus_stripe/pull/144) ([elia](https://github.com/elia))
+- Fix incorrect charge amount for currencies without fractions [\#139](https://github.com/solidusio/solidus_stripe/pull/139) ([cmbaldwin](https://github.com/cmbaldwin))
+- Fix setup instructions for Rails 7 [\#136](https://github.com/solidusio/solidus_stripe/pull/136) ([diegomichel](https://github.com/diegomichel))
+- Update stale bot to extend org-level config [\#134](https://github.com/solidusio/solidus_stripe/pull/134) ([gsmendoza](https://github.com/gsmendoza))
+- Revert "Add back custom view paths that were mistakenly removed" [\#129](https://github.com/solidusio/solidus_stripe/pull/129) ([elia](https://github.com/elia))
+- Add back custom view paths that were mistakenly removed [\#128](https://github.com/solidusio/solidus_stripe/pull/128) ([elia](https://github.com/elia))
+- Fix the CI after the Solidus v3.2 release [\#125](https://github.com/solidusio/solidus_stripe/pull/125) ([elia](https://github.com/elia))
+- Update to use forked solidus\_frontend when needed [\#124](https://github.com/solidusio/solidus_stripe/pull/124) ([waiting-for-dev](https://github.com/waiting-for-dev))
+- Fix CI and tests on Rails 7 [\#123](https://github.com/solidusio/solidus_stripe/pull/123) ([waiting-for-dev](https://github.com/waiting-for-dev))
+
 ## [v4.3.0](https://github.com/solidusio/solidus_stripe/tree/v4.3.0) (2021-10-19)
 
 [Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v4.2.0...v4.3.0)
