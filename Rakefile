@@ -3,4 +3,9 @@
 require 'solidus_dev_support/rake_tasks'
 SolidusDevSupport::RakeTasks.install
 
-task default: 'extension:specs'
+task :default do
+  require 'bundler'
+  Bundler.with_unbundled_env do
+    sh 'bin/rspec'
+  end
+end
