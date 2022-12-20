@@ -4,5 +4,9 @@ source 'https://rubygems.org'
 
 gemspec
 
-gem 'stringio'
-gem 'timeout'
+# # Required by Ruby
+# gem 'stringio'
+# gem 'timeout'
+
+# Required by solidus_core but it's not declared as a dependency
+gem 'activestorage'
