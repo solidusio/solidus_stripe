@@ -3,3 +3,6 @@
 source 'https://rubygems.org'
 
 gemspec
+
+gem 'stringio'
+gem 'timeout'
