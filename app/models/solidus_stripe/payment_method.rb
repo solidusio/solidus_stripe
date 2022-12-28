@@ -11,5 +11,9 @@ module SolidusStripe
     def gateway_class
       Gateway
     end
+
+    def payment_profiles_supported?
+      true
+    end
   end
 end

@@ -2,7 +2,7 @@
 
 require 'stripe'
 
-# rubocop:disable Lint/UnusedMethodArgument, Style/MethodCallWithoutArgsParentheses, Lint/UselessAssignment
+# rubocop:disable Lint/UnusedMethodArgument, Style/MethodCallWithoutArgsParentheses
 module SolidusStripe
   class Gateway
     def initialize(options)
@@ -30,26 +30,15 @@ module SolidusStripe
 
     # Voids a previously authorized transaction, releasing the funds that are on hold.
     # The source parameter is only needed for payment gateways that support payment profiles.
-    def void(transaction_id, *args)
-      raise ArgumentError, 'too many arguments' if args.size > 2
-
-      options = args.last.is_a?(Hash) ? args.pop : {}
-      source = args.pop if args.any? # the source is the second arg and it's optional
-
+    def void(transaction_id, source, options = {})
       ActiveMerchant::Billing::Response.new()
     end
 
     # Refunds the provided amount on a previously captured transaction.
     # The source parameter is only needed for payment gateways that support payment profiles.
-    def credit(money, *args)
-      raise ArgumentError, 'too many arguments' if args.size > 3
-
-      options = args.last.is_a?(Hash) ? args.pop : {}
-      transaction_id = args.pop
-      source = args.pop if args.any? # the source is the second arg and it's optional
-
+    def credit(money, source, transaction_id, options = {})
       ActiveMerchant::Billing::Response.new()
     end
   end
 end
-# rubocop:enable Style/MethodCallWithoutArgsParentheses, Lint/UnusedMethodArgument, Lint/UselessAssignment
+# rubocop:enable Style/MethodCallWithoutArgsParentheses, Lint/UnusedMethodArgument
