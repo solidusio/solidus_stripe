@@ -3,9 +3,13 @@
 module SolidusStripe
   module Generators
     class InstallGenerator < Rails::Generators::Base
-      class_option :migrate, type: :boolean, default: true
+      class_option :migrations, type: :boolean, default: true
+      class_option :core, type: :boolean, default: true
       class_option :backend, type: :boolean, default: true
       class_option :starter_frontend, type: :boolean, default: true
+
+      class_option :migrate, type: :boolean, default: true
+      class_option :watch, type: :boolean, default: false, hide: true
 
       # This is only used to run all-specs during development and CI,  regular installation limits
       # installed specs to frontend, which are the ones related to code copied to the target application.
@@ -13,11 +17,19 @@ module SolidusStripe
 
       source_root File.expand_path('templates', __dir__)
 
+      def install_migrations
+        say_status :install, "[#{engine.engine_name}] migrations", :blue
+        shell.indent do
+          rake 'railties:install:migrations FROM=solidus_stripe'
+          run 'bin/rails db:migrate' if options[:migrate]
+        end
+      end
+
       def install_solidus_core_support
-        directory 'config/initializers', 'config/initializers'
-        rake 'railties:install:migrations FROM=solidus_stripe'
-        run 'bin/rails db:migrate' if options[:migrate]
-        route "mount SolidusStripe::Engine, at: '/solidus_stripe'"
+        support_code_for(:core) do
+          directory 'config/initializers', 'config/initializers'
+          route "mount SolidusStripe::Engine, at: '/solidus_stripe'"
+        end
       end
 
       def install_solidus_backend_support
@@ -68,6 +80,31 @@ module SolidusStripe
             end
           end
         end
+      end
+
+      def watch
+        return unless options[:watch]
+
+        glob = "#{SolidusStripe::Engine.root}/{app,lib,config}"
+        say_status :watch, "starting watcher... #{glob}", :cyan
+
+        require 'listen'
+        listener = Listen.to(*Dir[glob], relative: true) do |*changes|
+          say_status :watch, "changed: #{changes.flatten.join(', ')}", :cyan
+          shell.indent do
+            install_solidus_core_support
+            install_solidus_backend_support
+            install_solidus_starter_frontend_support
+          end
+          say_status :watch, "update completed", :cyan
+        end
+        listener.start
+        sleep
+      rescue Interrupt
+        say_status :watch, "stopping watcher...", :cyan
+        listener.stop
+      rescue LoadError
+        say_status :error, 'in order for the --watch option to work you need the "listen" gem in your Gemfile', :red
       end
 
       private

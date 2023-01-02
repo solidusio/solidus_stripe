@@ -6,3 +6,5 @@ gemspec
 
 gem 'stringio'
 gem 'timeout'
+
+gem 'listen'
