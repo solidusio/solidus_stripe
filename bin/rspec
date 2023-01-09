@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -e
+
+bin/rails-dummy-app generate solidus_stripe:install --force --migrate --specs=all
+
+cd dummy-app/
+rspec "$@"
+exit_status=$?
+cd -
+exit $exit_status

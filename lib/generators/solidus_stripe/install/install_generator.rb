@@ -3,30 +3,86 @@
 module SolidusStripe
   module Generators
     class InstallGenerator < Rails::Generators::Base
-      class_option :auto_run_migrations, type: :boolean, default: false
+      class_option :migrate, type: :boolean, default: true
+      class_option :backend, type: :boolean, default: true
+      class_option :starter_frontend, type: :boolean, default: true
 
-      def add_javascripts
-        append_file 'vendor/assets/javascripts/spree/frontend/all.js', "//= require spree/frontend/solidus_stripe\n"
+      # This is only used to run all-specs during development and CI,  regular installation limits
+      # installed specs to frontend, which are the ones related to code copied to the target application.
+      class_option :specs, type: :string, enum: %w[all frontend], default: 'frontend', hide: true
+
+      source_root File.expand_path('templates', __dir__)
+
+      def install_solidus_core_support
+        directory 'config/initializers', 'config/initializers'
+        rake 'railties:install:migrations FROM=solidus_stripe'
+        run 'bin/rails db:migrate' if options[:migrate]
+        route "mount SolidusStripe::Engine, at: '/solidus_stripe'"
       end
 
-      def add_migrations
-        run 'bin/rails railties:install:migrations FROM=solidus_stripe'
-      end
-
-      def run_migrations
-        run_migrations = options[:auto_run_migrations] || ['', 'y', 'Y'].include?(ask('Would you like to run the migrations now? [Y/n]')) # rubocop:disable Layout/LineLength
-        if run_migrations
-          run 'bin/rails db:migrate'
-        else
-          puts 'Skipping bin/rails db:migrate, don\'t forget to run it!' # rubocop:disable Rails/Output
+      def install_solidus_backend_support
+        support_code_for(:backend) do
+          append_file(
+            'vendor/assets/javascripts/spree/backend/all.js',
+            "//= require spree/backend/solidus_stripe\n"
+          )
+          inject_into_file(
+            'vendor/assets/stylesheets/spree/backend/all.css',
+            " *= require spree/backend/solidus_stripe\n",
+            before: %r{\*/},
+            verbose: true,
+          )
         end
       end
 
-      def populate_seed_data
-        return unless options.auto_run_seeds?
+      def install_solidus_starter_frontend_support
+        support_code_for(:starter_frontend) do
+          directory 'app', 'app'
+          append_file(
+            'app/assets/javascripts/solidus_starter_frontend.js',
+            "//= require spree/frontend/solidus_stripe\n"
+          )
+          inject_into_file(
+            'app/assets/stylesheets/solidus_starter_frontend.css',
+            " *= require spree/frontend/solidus_stripe\n",
+            before: %r{\*/},
+            verbose: true,
+          )
 
-        say_status :loading, 'stripe seed data'
-        rake('db:seed:solidus_stripe')
+          spec_paths =
+            case options[:specs]
+            when 'all' then %w[spec]
+            when 'frontend'
+              %w[
+                spec/solidus_stripe_spec_helper.rb
+                spec/system/frontend
+                spec/support
+              ]
+            end
+
+          spec_paths.each do |path|
+            if engine.root.join(path).directory?
+              directory engine.root.join(path), path
+            else
+              template engine.root.join(path), path
+            end
+          end
+        end
+      end
+
+      private
+
+      def support_code_for(component_name, &block)
+        if options[component_name]
+          say_status :install, "[#{engine.engine_name}] solidus_#{component_name}", :blue
+          shell.indent(&block)
+        else
+          say_status :skip, "[#{engine.engine_name}] solidus_#{component_name}", :blue
+        end
+      end
+
+      def engine
+        SolidusStripe::Engine
       end
     end
   end
