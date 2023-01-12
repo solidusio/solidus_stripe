@@ -2,7 +2,7 @@
 
 set -e
 
-bin/rails-dummy-app generate solidus_stripe:install --force --migrate --specs=all
+bin/rails-dummy-app generate solidus_stripe:install --force --migrate --specs=all --sync
 
 cd dummy-app/
 rspec "$@"

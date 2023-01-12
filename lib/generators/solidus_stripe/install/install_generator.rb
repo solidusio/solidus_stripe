@@ -10,6 +10,7 @@ module SolidusStripe
 
       class_option :migrate, type: :boolean, default: true
       class_option :watch, type: :boolean, default: false, hide: true
+      class_option :sync, type: :boolean, default: false, hide: true
 
       # This is only used to run all-specs during development and CI,  regular installation limits
       # installed specs to frontend, which are the ones related to code copied to the target application.
@@ -18,6 +19,8 @@ module SolidusStripe
       source_root File.expand_path('templates', __dir__)
 
       def install_migrations
+        return if options[:sync]
+
         say_status :install, "[#{engine.engine_name}] migrations", :blue
         shell.indent do
           rake 'railties:install:migrations FROM=solidus_stripe'
