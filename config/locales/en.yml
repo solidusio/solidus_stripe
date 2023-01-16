@@ -4,4 +4,5 @@
 en:
   activerecord:
     models:
+      solidus_stripe/payment_source: Solidus Stripe Payment Source
       solidus_stripe/payment_method: Solidus Stripe Payment Method
