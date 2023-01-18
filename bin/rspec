@@ -1,11 +1,5 @@
-#!/usr/bin/env bash
+#!/usr/bin/env ruby
 
-set -e
-
-bin/rails-dummy-app generate solidus_stripe:install --force --migrate --specs=all --sync
-
-cd dummy-app/
-rspec "$@"
-exit_status=$?
-cd -
-exit $exit_status
+system "bin/rails-dummy-app generate solidus_stripe:install --force --migrate --specs=all --sync"
+Dir.chdir "dummy-app/"
+exec "rspec", *ARGV
