@@ -53,10 +53,6 @@ module SolidusStripe
       def install_solidus_starter_frontend_support
         support_code_for(:starter_frontend) do
           directory 'app', 'app'
-          append_file(
-            'app/assets/javascripts/solidus_starter_frontend.js',
-            "//= require spree/frontend/solidus_stripe\n"
-          )
           inject_into_file(
             'app/assets/stylesheets/solidus_starter_frontend.css',
             " *= require spree/frontend/solidus_stripe\n",
