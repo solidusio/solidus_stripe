@@ -14,6 +14,16 @@ module SolidusStripe
       app.config.spree.payment_methods << 'SolidusStripe::PaymentMethod'
     end
 
+    initializer "solidus_stripe.pub_sub", after: "spree.core.pub_sub" do |app|
+      require "solidus_stripe/webhook/event"
+      app.reloader.to_prepare do
+        SolidusStripe::Webhook::Event.register(
+          user_events: SolidusStripe.configuration.webhook_events,
+          bus: Spree::Bus
+        )
+      end
+    end
+
     # use rspec for tests
     config.generators do |g|
       g.test_framework :rspec
