@@ -88,7 +88,7 @@ module SolidusStripe
       def watch
         return unless options[:watch]
 
-        glob = "#{SolidusStripe::Engine.root}/{app,lib,config}"
+        glob = "#{::SolidusStripe::Engine.root}/{app,lib,config}"
         say_status :watch, "starting watcher... #{glob}", :cyan
 
         require 'listen'
@@ -122,7 +122,7 @@ module SolidusStripe
       end
 
       def engine
-        SolidusStripe::Engine
+        ::SolidusStripe::Engine
       end
     end
   end
