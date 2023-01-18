@@ -15,7 +15,9 @@ RSpec.describe "Checkout with Stripe", :vcr do
     order.user = user
     order.recalculate
 
-    allow_any_instance_of(CheckoutsController).to receive_messages(
+    allow_any_instance_of( # rubocop:disable RSpec/AnyInstance
+      CheckoutsController
+    ).to receive_messages(
       current_order: order, try_spree_current_user: user
     )
     payment_method = create(:stripe_payment_method)

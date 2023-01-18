@@ -18,10 +18,12 @@ RSpec.describe SolidusStripe::PaymentIntentsController, type: :request do
         currency: 'USD',
         capture_method: 'manual',
       }).and_return(payment_intent, instance_double(Stripe::StripeResponse))
+      # rubocop:disable RSpec/AnyInstance, RSpec/MessageChain
       allow_any_instance_of(described_class).to receive_message_chain(
         :cookies,
         :signed,
       ).and_return(guest_token: order.guest_token)
+      # rubocop:enable RSpec/AnyInstance, RSpec/MessageChain
 
       post "/solidus_stripe/payment_intents?payment_method_id=#{payment_method.id}"
 
