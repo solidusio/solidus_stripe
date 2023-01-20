@@ -7,7 +7,7 @@
         <dt><%= SolidusStripe::PaymentSource.human_attribute_name(:stripe_payment_intent_id) %>:</dt>
         <dd><%= link_to(
           payment.source.stripe_payment_intent_id,
-          "https://dashboard.stripe.com/#{'test/' if payment.payment_method.preferred_test_mode}payments/#{payment.source.stripe_payment_intent_id}",
+          payment.source.stripe_dashboard_url,
           target: :_blank,
         ) %></dd>
       </dl>

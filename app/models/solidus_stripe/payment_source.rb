@@ -16,5 +16,11 @@ module SolidusStripe
 
       payment_intent
     end
+
+    def stripe_dashboard_url
+      path_prefix = '/test' if payment_method.preferred_test_mode
+
+      "https://dashboard.stripe.com#{path_prefix}/payments/#{stripe_payment_intent_id}"
+    end
   end
 end
