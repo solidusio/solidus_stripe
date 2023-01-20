@@ -43,6 +43,16 @@ bin/rails generate solidus_stripe:install
 
 ## Development
 
+Retrieve your API Key and Publishable Key from your [Stripe testing dashboard](https://stripe.com/docs/testing).
+
+Set `SOLIDUS_STRIPE_API_KEY` and `SOLIDUS_STRIPE_PUBLISHABLE_KEY` environment variables (e.g. via `direnv`), this
+will trigger the default initializer to create a static preference for SolidusStripe.
+
+Run `bin/dev` to start both the sandbox rail server and the file watcher that will update the sandbox whenever
+a file is changed.
+
+Visit `/admin/payments` and create a new Stripe payment using the static preferences.
+
 ### Testing the extension
 
 First bundle your dependencies, then run `bin/rake`. `bin/rake` will default to building the dummy
