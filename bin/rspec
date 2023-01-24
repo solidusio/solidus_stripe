@@ -1,5 +1,9 @@
 #!/usr/bin/env ruby
+system(
+  "bin/rails dummy-app generate solidus_stripe:install --force --migrate --specs=all --sync",
+  out: "tmp/rspec-sync.log",
+  err: :out,
+) or abort(File.read("tmp/rspec-sync.log"))
 
-system "bin/rails-dummy-app generate solidus_stripe:install --force --migrate --specs=all --sync"
 Dir.chdir "dummy-app/"
 exec "rspec", *ARGV

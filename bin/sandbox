@@ -32,6 +32,8 @@ unbundled bundle exec rake db:drop db:create
 unbundled bundle exec rails generate solidus:install --auto-accept --payment-method=none "$@"
 unbundled bundle add $extension_name --path ..
 unbundled bundle exec rails generate $extension_name:install --migrate --specs=all
+
 if [[ -n "$SOLIDUS_STRIPE_API_KEY" ]]; then
+  echo "creating the stripe payment method using env credentials..."
   unbundled bundle exec rails runner 'p SolidusStripe::PaymentMethod.create!(name: "SolidusStripe", preference_source: "solidus_stripe_env_credentials")'
 fi

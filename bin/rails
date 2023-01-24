@@ -1,7 +1,42 @@
 #!/usr/bin/env ruby
 
-if %w[g generate].include? ARGV.first
-  exec "#{__dir__}/rails-engine", *ARGV
+case ARGV.first
+when "dummy-app", "sandbox"
+  app_name = ARGV.shift
+  root = "#{__dir__}/.."
+  app_root = "#{root}/#{app_name}"
+
+  unless File.exist? "#{app_root}/bin/rails"
+    warn "Creating the #{app_name} app..."
+    Dir.chdir root do
+      system "#{root}/bin/#{app_name}" or begin
+        warn "Automatic creation of the #{app_name} app failed"
+        exit 1
+      end
+    end
+  end
+
+  Dir.chdir app_root
+  exec "#{app_root}/bin/rails", *ARGV
+when "engine"
+  ARGV.shift
+
+  # Rails will try to match the contents of bin/rails to /(APP|ENGINE)_PATH/
+  # and use that file instead of running, this disrupts the sandbox creation
+  # so we need to break the match in order for this to work.
+  # rubocop:disable Lint/LiteralInInterpolation
+  Object.const_set "ENGINE_#{:ROOT}", File.expand_path('..', __dir__)
+  Object.const_set "ENGINE_#{:PATH}", File.expand_path('../lib/solidus_stripe/engine', __dir__)
+  # rubocop:enable Lint/LiteralInInterpolation
+
+  # Set up gems listed in the Gemfile.
+  ENV['BUNDLE_GEMFILE'] ||= File.expand_path('../Gemfile', __dir__)
+  require 'bundler/setup' if File.exist?(ENV['BUNDLE_GEMFILE'])
+
+  require 'rails/all'
+  require 'rails/engine/commands'
+when "g", "generate"
+  exec RbConfig.ruby, "#{__dir__}/rails", "engine", *ARGV
 else
-  exec "#{__dir__}/rails-sandbox", *ARGV
+  exec RbConfig.ruby, "#{__dir__}/rails", "sandbox", *ARGV
 end
