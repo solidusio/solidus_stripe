@@ -2,4 +2,9 @@
 # See https://github.com/svenfuchs/rails-i18n/tree/master/rails%2Flocale for starting points.
 
 en:
-  hello: Hello world
+  solidus_stripe:
+    loading: 'Loading...'
+  activerecord:
+    models:
+      solidus_stripe/payment_source: Solidus Stripe Payment Source
+      solidus_stripe/payment_method: Solidus Stripe Payment Method

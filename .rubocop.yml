@@ -9,3 +9,28 @@ AllCops:
     - dummy-app/**/*
     - spec/dummy/**/*
     - vendor/bundle/**/*
+
+# Avoiding the nested namespaces can avoid some
+# ambiguities, forcing full references.
+# Also saves horizontal space.
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+# Gain space by indenting from the start of the line,
+# instead of the end of the method name.
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: indented
+
+# More is more.
+RSpec/MultipleExpectations:
+  Enabled: false
+
+# This was suggesting to use the dangling comma instead,
+# which is super cryptic 🙈.
+Style/TrailingUnderscoreVariable:
+  Enabled: false
+
+# System specs aren't describing any specific class/module.
+RSpec/DescribeClass:
+  Exclude:
+    - spec/system/**/*

@@ -3,6 +3,19 @@
 module SolidusStripe
   class PaymentMethod < ::Spree::PaymentMethod
     preference :api_key, :string
+    preference :publishable_key, :string
+
+    def partial_name
+      "stripe"
+    end
+
+    def cart_partial_name
+      "stripe"
+    end
+
+    def product_page_partial_name
+      "stripe"
+    end
 
     def payment_source_class
       PaymentSource
@@ -10,6 +23,20 @@ module SolidusStripe
 
     def gateway_class
       Gateway
+    end
+
+    def create_profile(payment)
+      payment_intent = payment.source.payment_intent
+
+      if payment_intent && payment_intent.customer.blank?
+        payment.payment_method.gateway.client.request do
+          payment_intent.customer = Stripe::Customer.new email: payment.order.email
+          payment_intent.customer.save
+          payment_intent.save
+        end
+      end
+
+      self
     end
 
     def payment_profiles_supported?

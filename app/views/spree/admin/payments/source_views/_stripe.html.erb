@@ -1,0 +1,16 @@
+<fieldset data-hook="credit_card">
+  <legend align="center"><%= SolidusStripe::PaymentSource.model_name.human %></legend>
+
+  <div class="row">
+    <div class="col-4">
+      <dl>
+        <dt><%= SolidusStripe::PaymentSource.human_attribute_name(:stripe_payment_intent_id) %>:</dt>
+        <dd><%= link_to(
+          payment.source.stripe_payment_intent_id,
+          payment.source.stripe_dashboard_url,
+          target: :_blank,
+        ) %></dd>
+      </dl>
+    </div>
+  </div>
+</fieldset>

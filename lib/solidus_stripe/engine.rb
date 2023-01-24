@@ -7,9 +7,12 @@ module SolidusStripe
   class Engine < Rails::Engine
     include SolidusSupport::EngineExtensions
 
-    isolate_namespace ::Spree
-
+    isolate_namespace SolidusStripe
     engine_name 'solidus_stripe'
+
+    initializer "solidus_stripe.add_payment_method", after: "spree.register.payment_methods" do |app|
+      app.config.spree.payment_methods << 'SolidusStripe::PaymentMethod'
+    end
 
     # use rspec for tests
     config.generators do |g|

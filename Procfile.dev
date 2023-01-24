@@ -1,0 +1,2 @@
+web: unset PORT && bin/rails-sandbox server
+installer: bin/rails-sandbox g solidus_stripe:install --force --watch
