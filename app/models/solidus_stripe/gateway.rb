@@ -124,11 +124,13 @@ module SolidusStripe
     #   being performed (required if source is nil)
     #
     # @return ActiveMerchant::Billing::Response
-    def credit(amount_in_cents, source, _transaction_id, options = {})
-      currency = options.fetch(:currency)
-      source ||= options[:originator].source
+    def credit(amount_in_cents, _source, _transaction_id, options = {})
+      refund = options[:originator]
+      payment = refund.payment
+      source = payment.source
+      currency = payment.currency
 
-      refund, _response = client.request do
+      stripe_refund, _response = client.request do
         Stripe::Refund.create(
           amount: to_stripe_amount(amount_in_cents, currency),
           payment_intent: source.stripe_payment_intent_id,
@@ -136,7 +138,7 @@ module SolidusStripe
       end
 
       ActiveMerchant::Billing::Response.new(
-        true, "PaymentIntent was refunded successfully", { 'stripe_refund' => refund.to_json }, {}
+        true, "PaymentIntent was refunded successfully", { 'stripe_refund' => stripe_refund.to_json }, {}
       )
     end
   end
