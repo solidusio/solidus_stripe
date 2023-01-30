@@ -52,7 +52,7 @@ module SolidusStripe
         raise ArgumentError, "the payment-intent id has the wrong format"
       end
 
-      payment_intent, _response = client.request { Stripe::PaymentIntent.capture(payment_intent_id) }
+      payment_intent = request { Stripe::PaymentIntent.capture(payment_intent_id) }
 
       ActiveMerchant::Billing::Response.new(
         true, "Capture was successful", { 'stripe_payment_intent' => payment_intent.to_json }, {}
@@ -76,7 +76,7 @@ module SolidusStripe
       currency = options.fetch(:currency)
 
       # Charge the Customer instead of the card:
-      payment_intent, _response = client.request do
+      payment_intent = request do
         Stripe::PaymentIntent.create({
           amount: to_stripe_amount(amount_in_cents, currency),
           currency: currency,
@@ -98,7 +98,7 @@ module SolidusStripe
     #
     # @return ActiveMerchant::Billing::Response
     def void(_transaction_id, source, _options = {})
-      payment_intent, _response = client.request do
+      payment_intent = request do
         Stripe::PaymentIntent.cancel(source.stripe_payment_intent_id)
       end
 
@@ -130,7 +130,7 @@ module SolidusStripe
       source = payment.source
       currency = payment.currency
 
-      stripe_refund, _response = client.request do
+      stripe_refund = request do
         Stripe::Refund.create(
           amount: to_stripe_amount(amount_in_cents, currency),
           payment_intent: source.stripe_payment_intent_id,
@@ -140,6 +140,13 @@ module SolidusStripe
       ActiveMerchant::Billing::Response.new(
         true, "PaymentIntent was refunded successfully", { 'stripe_refund' => stripe_refund.to_json }, {}
       )
+    end
+
+    # Send a request to stripe using the current api keys
+    # but ignoring the response object.
+    def request(&block)
+      result, _response = client.request(&block)
+      result
     end
   end
 end
