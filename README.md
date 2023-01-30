@@ -131,8 +131,9 @@ Retrieve your API Key and Publishable Key from your [Stripe testing dashboard](h
 Set `SOLIDUS_STRIPE_API_KEY` and `SOLIDUS_STRIPE_PUBLISHABLE_KEY` environment variables (e.g. via `direnv`), this
 will trigger the default initializer to create a static preference for SolidusStripe.
 
-Run `bin/dev` to start both the sandbox rail server and the file watcher that will update the sandbox whenever
-a file is changed.
+Run `bin/dev` to start both the sandbox rail server and the file watcher through Foreman. That will update the sandbox whenever
+a file is changed. When using `bin/dev` you can safely add `debugger` statements, even if Foreman won't provide a TTY, by connecting
+to the debugger session through `rdbg --attach` from another terminal.
 
 Visit `/admin/payments` and create a new Stripe payment using the static preferences.
 

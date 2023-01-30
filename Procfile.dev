@@ -1,2 +1,2 @@
-web: unset PORT && bin/rails-sandbox server
+web: unset PORT && env RUBY_DEBUG_OPEN=true bin/rails-sandbox server
 watch: bin/rails-sandbox g solidus_stripe:install --force --watch
