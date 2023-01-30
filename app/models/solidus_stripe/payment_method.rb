@@ -9,13 +9,8 @@ module SolidusStripe
       "stripe"
     end
 
-    def cart_partial_name
-      "stripe"
-    end
-
-    def product_page_partial_name
-      "stripe"
-    end
+    alias cart_partial_name partial_name
+    alias product_page_partial_name partial_name
 
     def payment_source_class
       PaymentSource
