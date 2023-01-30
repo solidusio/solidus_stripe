@@ -185,7 +185,29 @@ module SolidusStripe
       #
       # We need to ensure the fractional amount is considering the same number of decimals.
       def to_stripe_amount(fractional, currency)
-        money_subunit_to_unit = ::Money::Currency.new(currency).subunit_to_unit
+        solidus_subunit_to_unit, stripe_subunit_to_unit = subunit_to_unit(currency)
+
+        if stripe_subunit_to_unit == solidus_subunit_to_unit
+          fractional
+        else
+          (fractional / solidus_subunit_to_unit.to_d) * stripe_subunit_to_unit.to_d
+        end
+      end
+
+      def to_solidus_amount(fractional, currency)
+        solidus_subunit_to_unit, stripe_subunit_to_unit = subunit_to_unit(currency)
+
+        if stripe_subunit_to_unit == solidus_subunit_to_unit
+          fractional
+        else
+          (fractional / stripe_subunit_to_unit.to_d) * solidus_subunit_to_unit.to_d
+        end
+      end
+
+      private
+
+      def subunit_to_unit(currency)
+        solidus_subunit_to_unit = ::Money::Currency.new(currency).subunit_to_unit
         stripe_subunit_to_unit =
           case currency.to_s.upcase
           when *ZERO_DECIMAL_CURRENCIES then 1
@@ -194,11 +216,7 @@ module SolidusStripe
           else 100
           end
 
-        if stripe_subunit_to_unit == money_subunit_to_unit
-          fractional
-        else
-          (fractional / money_subunit_to_unit.to_d) * stripe_subunit_to_unit
-        end
+        return solidus_subunit_to_unit, stripe_subunit_to_unit
       end
     end
   end
