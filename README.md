@@ -37,9 +37,92 @@ Bundle your dependencies and run the installation generator:
 bin/rails generate solidus_stripe:install
 ```
 
+### Webhooks
+
+This library makes use of some [Stripe
+webhooks](https://stripe.com/docs/webhooks).
+
+On development, you can [test them by using Stripe CLI](https://stripe.com/docs/webhooks/test).
+
+Before going to production, you'll need to [register the
+`/solidus_stripe/webhooks` endpoint with
+Stripe](https://stripe.com/docs/webhooks/go-live), and make sure to subscribe
+to the following events:
+
+[TBD]
+
+In both environments, you'll need to create a
+`solidus_stripe.webhook_endpoint_secret` credential with [the webhook signing
+secret](https://stripe.com/docs/webhooks/signatures):
+
+```bash
+# For development, add `--environment development`
+bin/rails credentials:edit
+```
+
+```yaml
+# config/credentials.yml.enc
+solidus_stripe:
+  webhook_endpoint_secret: "whsec_..."
+```
+
 ## Usage
 
-<!-- Explain how to use your extension once it's been installed. -->
+### Custom webhooks
+
+You can also use [Stripe webhooks](https://stripe.com/docs/webhooks) to trigger
+custom actions in your application.
+
+First, you need to register the event you want to listen to, both [in
+Stripe](https://stripe.com/docs/webhooks/go-live) and in your application:
+
+```ruby
+# config/initializers/solidus_stripe.rb
+SolidusStripe.configure do |config|
+  config.webhook_events = %i[charge.succeeded]
+end
+```
+
+That will register a new `:"stripe.charge.succeeded"` event in the [Solidus
+bus](https://guides.solidus.io/customization/subscribing-to-events). The
+Solidus event will be published whenever a matching incoming webhook event is
+received. You can subscribe to it as regular:
+
+```ruby
+# app/subscribers/update_account_balance_subscriber.rb
+class UpdateAccountBalanceSubscriber
+  include Omnes::Subscriber
+
+  handle :"stripe.charge.succeeded", with: :call
+
+  def call(event)
+    # ...
+  end
+end
+
+# config/initializers/solidus_stripe.rb
+# ...
+Rails.application.config.to_prepare do
+  UpdateAccountBalanceSubscriber.new.subscribe_to(Spree::Bus)
+end
+```
+
+The passed event object is a thin wrapper around the [Stripe
+event](https://www.rubydoc.info/gems/stripe/Stripe/Event) and will
+delegate all methods to it. It can also be used in async [
+adapters](https://github.com/nebulab/omnes#adapters), which is recommended as
+otherwise the response to Stripe will be delayed until subscribers are done.
+
+You can also configure the signature verification tolerance in seconds (it
+defaults to the [same value as Stripe
+default](https://stripe.com/docs/webhooks/signatures#replay-attacks)):
+
+```ruby
+# config/initializers/solidus_stripe.rb
+SolidusStripe.configure do |config|
+  config.webhook_signature_tolerance = 150
+end
+```
 
 ## Development
 
