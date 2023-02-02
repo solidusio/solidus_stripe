@@ -34,11 +34,19 @@ module SolidusStripe
     # @see https://stripe.com/docs/payments/capture-later
     #
     # @todo add support for capturing custom amounts
-    def capture(_amount_in_cents, _transaction_id, options = {})
-      payment = options[:originator] or raise ArgumentError, "please provide a payment with the :originator option"
-      payment_intent_id = payment.source.stripe_payment_intent_id
+    def capture(amount_in_cents, payment_intent_id, options = {})
+      payment = options[:originator] or
+        raise ArgumentError, "please provide a payment with the :originator option"
 
-      raise ArgumentError, "missing transaction_id" unless payment_intent_id
+      unless payment_intent_id
+        raise ArgumentError, "missing payment_intent_id"
+      end
+
+      unless amount_in_cents == payment.display_amount.cents
+        raise \
+          "Capturing a custom amount is not supported yet, " \
+          "tried #{amount_in_cents} but can only accept #{payment.display_amount.cents}."
+      end
 
       unless payment_intent_id.start_with?('pi_')
         raise ArgumentError, "the payment-intent id has the wrong format"
@@ -49,6 +57,7 @@ module SolidusStripe
       build_payment_log(
         success: true,
         message: "Capture was successful",
+        response_code: payment_intent.id,
         data: payment_intent,
       )
     rescue Stripe::InvalidRequestError => e
@@ -75,19 +84,21 @@ module SolidusStripe
       build_payment_log(
         success: true,
         message: "PaymentIntent was created successfully",
+        response_code: payment_intent.id,
         data: payment_intent,
       )
     end
 
     # Voids a previously authorized transaction, releasing the funds that are on hold.
-    def void(_transaction_id, source, _options = {})
+    def void(payment_intent_id, _source, _options = {})
       payment_intent = request do
-        Stripe::PaymentIntent.cancel(source.stripe_payment_intent_id)
+        Stripe::PaymentIntent.cancel(payment_intent_id)
       end
 
       build_payment_log(
         success: true,
         message: "PaymentIntent was canceled successfully",
+        response_code: payment_intent_id,
         data: payment_intent,
       )
     rescue Stripe::InvalidRequestError => e
@@ -99,12 +110,9 @@ module SolidusStripe
     end
 
     # Refunds the provided amount on a previously captured transaction.
-    def credit(amount_in_cents, _source, _transaction_id, options = {})
-      refund = options[:originator]
-      payment = refund.payment
-      source = payment.source
+    def credit(amount_in_cents, _source, payment_intent_id, options = {})
+      payment = options[:originator].payment
       currency = payment.currency
-      payment_intent_id = source.stripe_payment_intent_id
 
       stripe_refund = request do
         Stripe::Refund.create(
@@ -116,6 +124,7 @@ module SolidusStripe
       build_payment_log(
         success: true,
         message: "PaymentIntent was refunded successfully",
+        response_code: payment_intent_id,
         data: stripe_refund,
       )
     end
