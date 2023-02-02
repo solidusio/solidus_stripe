@@ -39,5 +39,12 @@ module SolidusStripe
     def payment_profiles_supported?
       true
     end
+
+    def stripe_dashboard_url(payment)
+      intent_id = payment.source.stripe_payment_intent_id
+      path_prefix = '/test' if preferred_test_mode
+
+      "https://dashboard.stripe.com#{path_prefix}/payments/#{intent_id}"
+    end
   end
 end
