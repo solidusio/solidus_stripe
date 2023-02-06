@@ -10,3 +10,5 @@ gem 'stringio'
 gem 'timeout'
 
 gem 'listen'
+
+gem 'activestorage'
