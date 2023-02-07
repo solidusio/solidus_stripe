@@ -71,31 +71,16 @@ RSpec.describe SolidusStripe::Gateway do
   end
 
   describe '#credit' do
-    it 'refunds when provided a source' do
-      gateway = build(:stripe_payment_method).gateway
-      source = instance_double(SolidusStripe::PaymentSource, stripe_payment_intent_id: 'pi_123')
-      refund = instance_double(Stripe::Refund, to_json: '{foo: "re_123"}')
-      allow(Stripe::Refund).to receive(:create).and_return(refund)
-      transaction_id = instance_double(String)
-
-      result = gateway.credit(123_45, source, transaction_id, currency: 'USD')
-
-      expect(Stripe::Refund).to have_received(:create).with(
-        payment_intent: 'pi_123',
-        amount: 123_45,
-      )
-      expect(result.params['stripe_refund']).to eq('{foo: "re_123"}')
-    end
-
     it 'refunds when provided an originator payment' do
       gateway = build(:stripe_payment_method).gateway
-      source = instance_double(SolidusStripe::PaymentSource, stripe_payment_intent_id: 'pi_123')
-      payment = instance_double(Spree::Payment, source: source)
+      source = build(:stripe_payment_source, stripe_payment_intent_id: 'pi_123')
+      payment = build(:payment, source: source)
+      solidus_refund = build(:refund, payment: payment)
       refund = instance_double(Stripe::Refund, to_json: '{foo: "re_123"}')
       allow(Stripe::Refund).to receive(:create).and_return(refund)
       transaction_id = instance_double(String)
 
-      result = gateway.credit(123_45, nil, transaction_id, currency: 'USD', originator: payment)
+      result = gateway.credit(123_45, nil, transaction_id, currency: 'USD', originator: solidus_refund)
 
       expect(Stripe::Refund).to have_received(:create).with(
         payment_intent: 'pi_123',
