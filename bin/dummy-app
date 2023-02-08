@@ -14,14 +14,11 @@ function unbundled {
 test "$DB" = "sqlite" && export DB="sqlite3"
 
 rm -rf ./dummy-app
-unbundled bundle exec rails new dummy-app \
+rails_version=`bundle exec ruby -e'require "rails"; puts Rails.version'`
+rails _${rails_version}_ new dummy-app \
   --database=${DB:-sqlite3} \
-  --skip-bundle \
   --skip-git \
-  --skip-keeps \
-  --skip-rc \
-  --skip-spring \
-  --skip-javascript
+  --skip-rc
 
 if [ ! -d "dummy-app" ]; then
   echo 'dummy-app rails application failed'
