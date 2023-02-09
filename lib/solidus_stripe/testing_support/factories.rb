@@ -7,8 +7,8 @@ FactoryBot.define do
     available_to_admin { false }
     preferences {
       {
-        api_key: SecureRandom.hex(8),
-        publishable_key: SecureRandom.hex(10),
+        api_key: ENV['SOLIDUS_STRIPE_API_KEY'] || "sk_dummy_#{SecureRandom.hex(24)}",
+        publishable_key: ENV['SOLIDUS_STRIPE_PUBLISHABLE_KEY'] || "pk_dummy_#{SecureRandom.hex(24)}",
       }
     }
   end
