@@ -11,4 +11,8 @@ FactoryBot.define do
       }
     }
   end
+
+  factory :stripe_payment_source, class: 'SolidusStripe::PaymentSource' do
+    association :payment_method, factory: :stripe_payment_method
+  end
 end

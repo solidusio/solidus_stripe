@@ -10,7 +10,7 @@ class SolidusStripe::PaymentIntentsController < Spree::BaseController
       .available_payment_methods.find(params[:payment_method_id])
 
     currency = current_order.currency
-    amount = SolidusStripe::Gateway::MoneyToStripeAmountConverter.to_stripe_amount(
+    amount = SolidusStripe::MoneyToStripeAmountConverter.to_stripe_amount(
       current_order.display_total.money.fractional,
       currency,
     )
