@@ -14,8 +14,7 @@ function unbundled {
 test "$DB" = "sqlite" && export DB="sqlite3"
 
 rm -rf ./dummy-app
-rails_version=`bundle exec ruby -e'require "rails"; puts Rails.version'`
-rails _${rails_version}_ new dummy-app \
+rails ${RAILS_VERSION:+_${RAILS_VERSION}_} new dummy-app \
   --database=${DB:-sqlite3} \
   --skip-git \
   --skip-rc
@@ -26,7 +25,7 @@ if [ ! -d "dummy-app" ]; then
 fi
 
 cd ./dummy-app
-unbundled bundle add solidus --github solidusio/solidus --branch "${BRANCH:-master}" --version '> 0.a'
+unbundled bundle add solidus --github solidusio/solidus --branch "${SOLIDUS_BRANCH:-master}" --version '> 0.a'
 unbundled bundle exec rake db:drop db:create
 unbundled bundle exec rails generate solidus:install --auto-accept --payment-method=none --no-seed --no-sample "$@"
 unbundled bundle add $extension_name --path ..
