@@ -6,3 +6,8 @@ the installer will append this file to the app vendored assets here: 'vendor/ass
 .solidus-stripe-payment {
   padding: 1em 0;
 }
+
+[type="submit"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
