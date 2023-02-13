@@ -8,3 +8,9 @@ en:
     models:
       solidus_stripe/payment_source: Solidus Stripe Payment Source
       solidus_stripe/payment_method: Solidus Stripe Payment Method
+    errors:
+      models:
+        solidus_stripe/payment_method:
+          attributes:
+            available_to_admin:
+              inclusion: "is not allowed for the Stripe payment method"

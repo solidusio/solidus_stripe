@@ -5,6 +5,8 @@ module SolidusStripe
     preference :api_key, :string
     preference :publishable_key, :string
 
+    validates :available_to_admin, inclusion: { in: [false] }
+
     def partial_name
       "stripe"
     end
