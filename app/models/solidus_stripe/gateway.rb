@@ -28,15 +28,6 @@ module SolidusStripe
 
     attr_reader :client
 
-    # Authorizes a certain amount on the provided payment source.
-    #
-    # @see #purchase
-    def authorize(amount_in_cents, source, options = {})
-      payment_intent_options = options[:payment_intent_options].dup.to_h
-      payment_intent_options[:capture_method] = "manual"
-      purchase(amount_in_cents, source, options.merge(payment_intent_options: payment_intent_options))
-    end
-
     # Captures a certain amount from a previously authorized transaction.
     #
     # @see https://stripe.com/docs/api/payment_intents/capture#capture_payment_intent

@@ -3,24 +3,6 @@
 require 'solidus_stripe_spec_helper'
 
 RSpec.describe SolidusStripe::Gateway do
-  describe '#authorize' do
-    it 'uses a manual capture method' do
-      gateway = build(:stripe_payment_method).gateway
-      source = instance_double(SolidusStripe::PaymentSource)
-      payment_intent = instance_double(Stripe::PaymentIntent, to_json: '{foo: "pi_123"}')
-      allow(Stripe::PaymentIntent).to receive(:create).and_return(payment_intent)
-
-      result = gateway.authorize(123_45, source, currency: 'USD')
-
-      expect(Stripe::PaymentIntent).to have_received(:create).with(
-        amount: 123_45,
-        currency: 'USD',
-        capture_method: 'manual',
-      )
-      expect(result.params['data']).to eq('{foo: "pi_123"}')
-    end
-  end
-
   describe '#capture' do
     it 'captures a pre-authorized amount' do
       gateway = build(:stripe_payment_method).gateway
