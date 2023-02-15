@@ -57,6 +57,9 @@ commands:
             bin/rspec --format progress --format RspecJunitFormatter --out "$PWD/test-results/results.xml"
       - store_test_results:
           path: test-results
+      - store_artifacts:
+          path: /home/circleci/project/dummy-app/tmp/capybara/
+          destination: capybara
 
 jobs:
   run-specs:
