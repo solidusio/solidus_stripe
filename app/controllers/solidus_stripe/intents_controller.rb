@@ -42,7 +42,8 @@ module SolidusStripe
         render json: {
           success: true,
           requires_capture: true,
-          stripe_payment_intent_id: response['id']
+          stripe_payment_intent_id: response['id'],
+          client_secret: response['client_secret']
         }
       else
         render json: { error: response['error']['message'] }, status: 500
