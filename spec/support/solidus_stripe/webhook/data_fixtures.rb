@@ -1,31 +1,12 @@
 # frozen_string_literal: true
 
 module SolidusStripe
-  class WebhookFixtures
-    attr_reader :payload, :timestamp, :secret
-
-    def initialize(payload:, timestamp: Time.zone.now, secret: "whsec_123")
-      @payload = payload
-      @timestamp = timestamp
-      @secret = secret
-    end
-
-    def signature
-      @signature ||= Stripe::Webhook::Signature.compute_signature(timestamp, payload, secret)
-    end
-
-    def signature_header
-      @signature_header ||= Stripe::Webhook::Signature.generate_header(timestamp, signature)
-    end
-
-    class << self
-      def charge_succeeded
-        charge_succeeded_base.merge("webhook" => charge_succeeded_base)
-      end
-
-      private
-
-      def charge_succeeded_base
+  module Webhook
+    # Fixtures for Stripe webhook events represented as a Ruby hash.
+    #
+    # Consume with `SolidusStripe::Webhook::EventWithContextFactory.from_data`.
+    module DataFixtures
+      def self.charge_succeeded(with_webhook: true)
         {
           "id" => "evt_3MRUo1JvEPu9yc7w091rP2XV",
           "type" => "charge.succeeded",
@@ -116,7 +97,9 @@ module SolidusStripe
           "livemode" => false,
           "pending_webhooks" => 3,
           "request" => "req_CAHWxuQdLQukn0"
-        }
+        }.tap do |data|
+          data["webhook"] = charge_succeeded(with_webhook: false) if with_webhook
+        end
       end
     end
   end

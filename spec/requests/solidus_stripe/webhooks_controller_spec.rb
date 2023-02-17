@@ -1,51 +1,48 @@
 require "solidus_stripe_spec_helper"
 
-RSpec.describe SolidusStripe::WebhooksController, type: :request do
+RSpec.describe SolidusStripe::WebhooksController, type: [:request, :webhook_request] do
   describe "POST /create" do
-    let(:signature_header_key) { described_class::SIGNATURE_HEADER }
-    let(:fixture) { SolidusStripe::WebhookFixtures.new(payload: payload) }
-
-    before do
-      allow(Rails.application.credentials).to receive(:solidus_stripe)
-        .and_return({ webhook_endpoint_secret: fixture.secret })
+    let(:stripe) { create(:stripe_payment_method) }
+    let(:payment_intent) { stripe.gateway.request { Stripe::PaymentIntent.create(amount: 100, currency: 'usd') } }
+    let(:context) do
+      SolidusStripe::Webhook::EventWithContextFactory.from_object(
+        object: payment_intent,
+        type: "payment_intent.created"
+      )
     end
 
     context "when the request is valid" do
-      let(:payload) { JSON.generate(SolidusStripe::WebhookFixtures.charge_succeeded) }
-
       around do |example|
-        if Spree::Bus.registry.registered?(:"stripe.charge.succeeded")
+        if Spree::Bus.registry.registered?(:"stripe.payment_intent.created")
           example.run
         else
-          Spree::Bus.register(:"stripe.charge.succeeded")
+          Spree::Bus.register(:"stripe.payment_intent.created")
           example.run
-          Spree::Bus.registry.unregister(:"stripe.charge.succeeded")
+          Spree::Bus.registry.unregister(:"stripe.payment_intent.created")
         end
       end
 
       it "triggers a matching event on Spree::Bus" do
         event_type = nil
-        subscription = Spree::Bus.subscribe(:"stripe.charge.succeeded") { |event| event_type = event.type }
+        subscription = Spree::Bus.subscribe(:"stripe.payment_intent.created") { |event| event_type = event.type }
 
-        post "/solidus_stripe/webhooks", params: payload, headers: { signature_header_key => fixture.signature_header }
+        webhook_request(context)
 
-        expect(event_type).to eq("charge.succeeded")
+        expect(event_type).to eq("payment_intent.created")
       ensure
         Spree::Bus.unsubscribe(subscription)
       end
 
       it "returns a 200 status code" do
-        post "/solidus_stripe/webhooks", params: payload, headers: { signature_header_key => fixture.signature_header }
+        webhook_request(context)
 
         expect(response).to have_http_status(:ok)
       end
     end
 
     context "when the event can't be generated" do
-      let(:payload) { "invalid" }
-
       it "returns a 400 status code" do
-        post "/solidus_stripe/webhooks", params: payload, headers: { signature_header_key => fixture.signature_header }
+        webhook_request(context, timestamp: Time.zone.yesterday.to_time)
 
         expect(response).to have_http_status(:bad_request)
       end
