@@ -8,6 +8,7 @@ require 'stripe'
 module SolidusStripe
   class Gateway
     include SolidusStripe::MoneyToStripeAmountConverter
+    include SolidusStripe::LogEntries
 
     def initialize(options)
       # Cannot use kwargs because of how the Gateway is initialized by Solidus.
@@ -54,12 +55,16 @@ module SolidusStripe
 
       payment_intent = request { Stripe::PaymentIntent.capture(payment_intent_id) }
 
-      ActiveMerchant::Billing::Response.new(
-        true, "Capture was successful", { 'stripe_payment_intent' => payment_intent.to_json }, {}
+      build_payment_log(
+        success: true,
+        message: "Capture was successful",
+        data: payment_intent,
       )
     rescue Stripe::InvalidRequestError => e
-      ActiveMerchant::Billing::Response.new(
-        false, e.to_s, { 'json_response' => e.response.to_json }, {}
+      build_payment_log(
+        success: false,
+        message: e.to_s,
+        data: e.response,
       )
     end
 
@@ -84,8 +89,10 @@ module SolidusStripe
         })
       end
 
-      ActiveMerchant::Billing::Response.new(
-        true, "PaymentIntent was created successfully", { 'stripe_payment_intent' => payment_intent.to_json }, {}
+      build_payment_log(
+        success: true,
+        message: "PaymentIntent was created successfully",
+        data: payment_intent,
       )
     end
 
@@ -102,12 +109,16 @@ module SolidusStripe
         Stripe::PaymentIntent.cancel(source.stripe_payment_intent_id)
       end
 
-      ActiveMerchant::Billing::Response.new(
-        true, "PaymentIntent was canceled successfully", { 'stripe_payment_intent' => payment_intent.to_json }, {}
+      build_payment_log(
+        success: true,
+        message: "PaymentIntent was canceled successfully",
+        data: payment_intent,
       )
     rescue Stripe::InvalidRequestError => e
-      ActiveMerchant::Billing::Response.new(
-        false, e.to_s, { 'json_response' => e.response.to_json }, {}
+      build_payment_log(
+        success: false,
+        message: e.to_s,
+        data: e.response,
       )
     end
 
@@ -129,16 +140,19 @@ module SolidusStripe
       payment = refund.payment
       source = payment.source
       currency = payment.currency
+      payment_intent_id = source.stripe_payment_intent_id
 
       stripe_refund = request do
         Stripe::Refund.create(
           amount: to_stripe_amount(amount_in_cents, currency),
-          payment_intent: source.stripe_payment_intent_id,
+          payment_intent: payment_intent_id,
         )
       end
 
-      ActiveMerchant::Billing::Response.new(
-        true, "PaymentIntent was refunded successfully", { 'stripe_refund' => stripe_refund.to_json }, {}
+      build_payment_log(
+        success: true,
+        message: "PaymentIntent was refunded successfully",
+        data: stripe_refund,
       )
     end
 
