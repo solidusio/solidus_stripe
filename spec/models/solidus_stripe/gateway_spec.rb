@@ -17,7 +17,7 @@ RSpec.describe SolidusStripe::Gateway do
         currency: 'USD',
         capture_method: 'manual',
       )
-      expect(result.params['stripe_payment_intent']).to eq('{foo: "pi_123"}')
+      expect(result.params['data']).to eq('{foo: "pi_123"}')
     end
   end
 
@@ -32,7 +32,7 @@ RSpec.describe SolidusStripe::Gateway do
       result = gateway.capture(123_45, nil, originator: payment)
 
       expect(Stripe::PaymentIntent).to have_received(:capture).with('pi_123')
-      expect(result.params['stripe_payment_intent']).to eq('{foo: "pi_123"}')
+      expect(result.params['data']).to eq('{foo: "pi_123"}')
     end
   end
 
@@ -49,7 +49,7 @@ RSpec.describe SolidusStripe::Gateway do
         amount: 123_45,
         currency: 'USD',
       )
-      expect(result.params['stripe_payment_intent']).to eq('{foo: "pi_123"}')
+      expect(result.params['data']).to eq('{foo: "pi_123"}')
     end
   end
 
@@ -66,7 +66,7 @@ RSpec.describe SolidusStripe::Gateway do
       expect(Stripe::PaymentIntent).to have_received(:cancel).with(
         'pi_123'
       )
-      expect(result.params['stripe_payment_intent']).to eq('{foo: "pi_123"}')
+      expect(result.params['data']).to eq('{foo: "pi_123"}')
     end
   end
 
@@ -86,7 +86,7 @@ RSpec.describe SolidusStripe::Gateway do
         payment_intent: 'pi_123',
         amount: 123_45,
       )
-      expect(result.params['stripe_refund']).to eq('{foo: "re_123"}')
+      expect(result.params['data']).to eq('{foo: "re_123"}')
     end
   end
 end
