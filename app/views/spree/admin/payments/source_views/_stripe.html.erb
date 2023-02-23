@@ -6,7 +6,7 @@
       <dl>
         <dt><%= SolidusStripe::PaymentSource.human_attribute_name(:stripe_payment_intent_id) %>:</dt>
         <dd><%= link_to(
-          payment.source.stripe_payment_intent_id,
+          payment.transaction_id,
           payment.payment_method.stripe_dashboard_url(payment),
           target: :_blank,
         ) %></dd>

@@ -24,8 +24,9 @@ end
 begin
   module SolidusStripe::PaymentCreateWithExistingPayment
     def build
-      if attributes[:id]
-        @payment = order.payments.find(attributes[:id])
+      # https://stackoverflow.com/a/62397649
+      if attributes[:stripe_intent_id]
+        @payment = order.payments.find_by!(response_code: attributes[:stripe_intent_id])
       else
         super
       end
@@ -36,7 +37,7 @@ begin
     Spree::PaymentCreate.prepend SolidusStripe::PaymentCreateWithExistingPayment
   end
 
-  Spree::PermittedAttributes.checkout_payment_attributes.first[:payments_attributes] << :id
+  Spree::PermittedAttributes.checkout_payment_attributes.first[:payments_attributes] << :stripe_intent_id
 end
 
 if ENV['SOLIDUS_STRIPE_API_KEY']

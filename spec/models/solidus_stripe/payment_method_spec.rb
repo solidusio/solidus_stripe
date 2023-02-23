@@ -20,16 +20,14 @@ RSpec.describe SolidusStripe::PaymentMethod do
   describe '#stripe_dashboard_url' do
     it 'generates a dashboard link' do
       payment_method = build(:stripe_payment_method, preferred_test_mode: false)
-      payment_source = build(:stripe_payment_source, stripe_payment_intent_id: 'pi_123')
-      payment = build(:payment, source: payment_source)
+      payment = build(:payment, response_code: 'pi_123')
 
       expect(payment_method.stripe_dashboard_url(payment)).to eq("https://dashboard.stripe.com/payments/pi_123")
     end
 
     it 'supports test mode' do
       payment_method = build(:stripe_payment_method, preferred_test_mode: true)
-      payment_source = build(:stripe_payment_source, stripe_payment_intent_id: 'pi_123')
-      payment = build(:payment, source: payment_source)
+      payment = build(:payment, response_code: 'pi_123')
 
       expect(payment_method.stripe_dashboard_url(payment)).to eq("https://dashboard.stripe.com/test/payments/pi_123")
     end

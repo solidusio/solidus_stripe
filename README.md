@@ -1,7 +1,7 @@
 🚧 **WARNING: WORK IN PROGRESS** 🚧
 
 You're looking at the source for `solidus_stripe` v5, which will only support the **starter frontend**
-but at the moment **it is not ready to be used**. 
+but at the moment **it is not ready to be used**.
 
 Please use [`solidus_stripe` v4 on the corresponding branch](https://github.com/solidusio/solidus_stripe/tree/v4).
 
@@ -127,6 +127,45 @@ default](https://stripe.com/docs/webhooks/signatures#replay-attacks)):
 SolidusStripe.configure do |config|
   config.webhook_signature_tolerance = 150
 end
+```
+
+## Implementation
+
+### Payment state-machine vs. PaymentIntent statuses
+
+When compared to the Payment state machine, Stripe payment intents have different set of states and transitions.
+The most important difference is that on Stripe a failure is not a final state, rather just a way to start over.
+
+In order to map these concepts SolidusStripe will match states in a slightly unexpected way, as shown below.
+
+Reference: https://stripe.com/docs/payments/intents?intent=payment
+
+![image](https://user-images.githubusercontent.com/1051/217322027-f49081f5-0795-49f4-994e-285a9de5347c.png)
+
+### ⚠️ Warning: Authorization happens before the order is completed
+
+This setup implies a payment is authorized after the payment information is submitted to Stripe, although the order
+still needs to be completed. That can become an issue if a customer abandons the checkout at the `confirm` step and
+no action is taken to free up the money on the backend.
+
+In order to mitigate this issue, we suggest adapting the frontend by merging the *confirm* and *payment* steps:
+
+1. embed the agreement to the terms of service
+2. add order summary to the payment step
+3. apply the following patch
+
+```patch
+--- a/templates/app/controllers/checkouts_controller.rb
++++ b/templates/app/controllers/checkouts_controller.rb
+@@ -48,6 +48,8 @@ def redirect_on_failure
+   end
+
+   def transition_forward
++    @order.next if @order.has_checkout_step?("payment") && @order.payment?
++
+     if @order.can_complete?
+       @order.complete
+     else
 ```
 
 ## Development
