@@ -8,7 +8,7 @@
   data-solidus-stripe-payment-email-address-value="<%= current_order.email %>"
   data-solidus-stripe-payment-payment-url-value="<%= checkout_state_url(:payment) %>"
   data-solidus-stripe-payment-payment-form-selector-value="#checkout_form_payment"
-  data-action="submit@window->handleSubmit"
+  data-action="submit@window->solidus-stripe-payment#handleSubmit"
 >
   <div data-solidus-stripe-payment-target="paymentElement">
     <!-- Elements will create form elements here -->
