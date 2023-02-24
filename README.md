@@ -45,8 +45,7 @@ bin/rails generate solidus_stripe:install
 
 ### Webhooks
 
-This library makes use of some [Stripe
-webhooks](https://stripe.com/docs/webhooks).
+This library makes use of some [Stripe webhooks](https://stripe.com/docs/webhooks).
 
 On development, you can [test them by using Stripe CLI](https://stripe.com/docs/webhooks/test).
 

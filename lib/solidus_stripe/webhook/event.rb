@@ -6,7 +6,7 @@ module SolidusStripe
     #
     # All unknown methods are delegated to the wrapped Stripe event.
     #
-    # @see Stripe::Event
+    # @see https://www.rubydoc.info/gems/stripe/Stripe/Event
     class Event
       include Omnes::Event
 
@@ -55,8 +55,8 @@ module SolidusStripe
       # Serializable representation of the event.
       #
       # Ready to be consumed by async Omnes adapters, like
-      # {Omnes::Subscriber::Adapter::ActiveJob} or
-      # {Omnes::Subscriber::Adapter::Sidekiq}.
+      # `Omnes::Subscriber::Adapter::ActiveJob` or
+      # `Omnes::Subscriber::Adapter::Sidekiq`.
       #
       # @return [Hash<String, Object>]
       def payload

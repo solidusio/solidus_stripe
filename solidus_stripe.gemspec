@@ -34,7 +34,9 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'stripe', '~> 8.0'
 
+  spec.add_development_dependency 'redcarpet' # used by yard
   spec.add_development_dependency 'solidus_dev_support', '~> 2.5'
+  spec.add_development_dependency 'yard'
 
   spec.post_install_message = <<~TXT
     ------------------------------------------------------------------------

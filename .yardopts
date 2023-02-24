@@ -1,0 +1,1 @@
+{lib,app}/**/*.rb --fail-on-warning --markup markdown

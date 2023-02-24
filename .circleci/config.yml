@@ -79,6 +79,13 @@ jobs:
     executor: solidusio_extensions/sqlite-memory
     steps:
       - solidusio_extensions/lint-code
+      - run:
+          name: Generate documentation
+          command: |
+            bundle exec yardoc
+      - store_artifacts:
+          path: /home/circleci/project/doc
+          destination: doc
 
 workflows:
   build:
