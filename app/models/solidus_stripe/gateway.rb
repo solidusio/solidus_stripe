@@ -2,10 +2,18 @@
 
 require 'stripe'
 
-# Documentation about separate authorization and capture
-# - https://stripe.com/docs/payments/accept-a-payment?platform=web&ui=checkout#auth-and-capture
-# - https://stripe.com/docs/charges/placing-a-hold
 module SolidusStripe
+  # @see https://stripe.com/docs/payments/accept-a-payment?platform=web&ui=checkout#auth-and-capture
+  # @see https://stripe.com/docs/charges/placing-a-hold
+  #
+  # ## About fractional amounts
+  #
+  # All methods in the Gateway class will have `amount_in_cents` arguments representing the
+  # fractional amount as defined by Spree::Money and will be translated to the fractional expected
+  # by Stripe, although for most currencies it's cents some will have a different multiplier and
+  # that is already took into account.
+  #
+  # @see SolidusStripe::MoneyToStripeAmountConverter
   class Gateway
     include SolidusStripe::MoneyToStripeAmountConverter
     include SolidusStripe::LogEntries
@@ -30,19 +38,11 @@ module SolidusStripe
     end
 
     # Captures a certain amount from a previously authorized transaction.
-    # Ref: https://stripe.com/docs/api/payment_intents/capture#capture_payment_intent
-    # Ref: https://stripe.com/docs/payments/capture-later
+    #
+    # @see https://stripe.com/docs/api/payment_intents/capture#capture_payment_intent
+    # @see https://stripe.com/docs/payments/capture-later
     #
     # @todo add support for capturing custom amounts
-    #
-    # @param _amount_in_cents [Integer] The fractional amount as defined by Spree::Money,
-    #   although it's cents for most currencies some will have a different multiplier.
-    #   Currently ignored (see "todo" section).
-    # @param _transaction_id [Object] (currently ignored)
-    # @param options [Hash]
-    # @option options [Spree::Payment] :originator the payment on which the #capture is being performed (required)
-    #
-    # @return ActiveMerchant::Billing::Response
     def capture(_amount_in_cents, _transaction_id, options = {})
       payment = options[:originator] or raise ArgumentError, "please provide a payment with the :originator option"
       payment_intent_id = payment.source.stripe_payment_intent_id
@@ -69,14 +69,6 @@ module SolidusStripe
     end
 
     # Authorizes and captures a certain amount on the provided payment source.
-    #
-    # @param amount_in_cents [Integer] The fractional amount as defined by Spree::Money,
-    #   although it's cents for most currencies some will have a different multiplier.
-    # @param source [Spree::PaymentSource, nil] optionally, payment source from which to create the authorization
-    # @param options [Hash]
-    # @option options [Hash] :payment_intent_options options forwarded to `Stripe::PaymentIntent.create`
-    #
-    # @return ActiveMerchant::Billing::Response
     def purchase(amount_in_cents, _source, options = {})
       currency = options.fetch(:currency)
 
@@ -97,13 +89,6 @@ module SolidusStripe
     end
 
     # Voids a previously authorized transaction, releasing the funds that are on hold.
-    # The source parameter is only needed for payment gateways that support payment profiles.
-    #
-    # @param _transaction_id [Object] (currently ignored)
-    # @param source [Spree::PaymentSource, nil] optionally, payment source from which to create the authorization
-    # @param _options [Hash] (ignored)
-    #
-    # @return ActiveMerchant::Billing::Response
     def void(_transaction_id, source, _options = {})
       payment_intent = request do
         Stripe::PaymentIntent.cancel(source.stripe_payment_intent_id)
@@ -123,18 +108,6 @@ module SolidusStripe
     end
 
     # Refunds the provided amount on a previously captured transaction.
-    # The source parameter is only needed for payment gateways that support payment profiles.
-    #
-    # @param amount_in_cents [Integer] The fractional amount as defined by Spree::Money,
-    #   although it's cents for most currencies some will have a different multiplier.
-    # @param source [Spree::PaymentSource, nil] optionally, payment source from which
-    #   to create the authorization
-    # @param _transaction_id [Object] (currently ignored)
-    # @param options [Hash]
-    # @option options [Spree::Payment] :originator the payment on which the #capture is
-    #   being performed (required if source is nil)
-    #
-    # @return ActiveMerchant::Billing::Response
     def credit(amount_in_cents, _source, _transaction_id, options = {})
       refund = options[:originator]
       payment = refund.payment
@@ -156,8 +129,16 @@ module SolidusStripe
       )
     end
 
-    # Send a request to stripe using the current api keys
-    # but ignoring the response object.
+    # Send a request to stripe using the current api keys but ignoring
+    # the response object.
+    #
+    # @yield Allows to use the `Stripe` gem using the credentials attached
+    #   to the current payment method
+    #
+    # @example Retrieve a payment intent
+    #   request { Stripe::PaymentIntent.retrieve(intent_id) }
+    #
+    # @return forwards the result of the block
     def request(&block)
       result, _response = client.request(&block)
       result

@@ -1,9 +1,19 @@
 # frozen_string_literal: true
 
+# Solidus will provide a "fractional" amount, that is specific for each currency
+# following the configurationo defined in the Money gem.
+#
+# Stripe uses the "smallest currency unit", (e.g., 100 cents to charge $1.00 or
+# 100 to charge ¥100, a zero-decimal currency).
+#
+# @see https://stripe.com/docs/currencies#zero-decimal
+#
+# We need to ensure the fractional amount is considering the same number of decimals.
 module SolidusStripe::MoneyToStripeAmountConverter
   extend ActiveSupport::Concern
   extend self
 
+  # @api private
   ZERO_DECIMAL_CURRENCIES = %w[
     BIF
     CLP
@@ -23,6 +33,7 @@ module SolidusStripe::MoneyToStripeAmountConverter
     XPF
   ].freeze
 
+  # @api private
   THREE_DECIMAL_CURRENCIES = %w[
     BHD
     JOD
@@ -31,22 +42,16 @@ module SolidusStripe::MoneyToStripeAmountConverter
     TND
   ].freeze
 
-  # special currencies that are represented in cents but
-  # should be divisible by 100, thus making them integer only.
+  # @api private
+  #
+  # Special currencies that are represented in cents but should be
+  # divisible by 100, thus making them integer only.
   DIVISIBLE_BY_100 = %w[
     HUF
     TWD
     UGX
   ].freeze
 
-  # Solidus will provide a "fractional" amount, that is specific for each currency
-  # following the configurationo defined in the Money gem.
-  #
-  # Stripe uses the "smallest currency unit",
-  # (e.g., 100 cents to charge $1.00 or 100 to charge ¥100, a zero-decimal currency)
-  # https://stripe.com/docs/currencies#zero-decimal
-  #
-  # We need to ensure the fractional amount is considering the same number of decimals.
   def to_stripe_amount(fractional, currency)
     solidus_subunit_to_unit, stripe_subunit_to_unit = subunit_to_unit(currency)
 

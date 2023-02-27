@@ -6,6 +6,7 @@
 .idea
 .project
 .sass-cache
+.yardoc
 coverage
 Gemfile.lock
 tmp
@@ -16,6 +17,7 @@ spec/dummy
 spec/examples.txt
 /sandbox
 /dummy-app
+/doc
 .rvmrc
 .ruby-version
 .ruby-gemset
