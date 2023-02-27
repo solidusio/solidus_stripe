@@ -85,6 +85,7 @@ workflows:
     jobs:
       - run-specs:
           name: 'run-specs-ruby-<<matrix.ruby>>-db-<<matrix.database>>'
+          context: stripe-test-credentials
           matrix:
             parameters:
               ruby: ['3.2'] # TODO: ['3.2', '3.1', '3.0']
