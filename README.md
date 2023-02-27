@@ -1,7 +1,9 @@
 🚧 **WARNING: WORK IN PROGRESS** 🚧
 
-You're looking at the source for `solidus_stripe` v5, which will only support the **starter frontend** and not the classic frontend
-You can find the source for [v4 on the corresponding branch](https://github.com/solidusio/solidus_stripe/tree/v4)
+You're looking at the source for `solidus_stripe` v5, which will only support the **starter frontend**
+but at the moment **it is not ready to be used**. 
+
+Please use [`solidus_stripe` v4 on the corresponding branch](https://github.com/solidusio/solidus_stripe/tree/v4).
 
 🚧 **WARNING: WORK IN PROGRESS** 🚧
 
