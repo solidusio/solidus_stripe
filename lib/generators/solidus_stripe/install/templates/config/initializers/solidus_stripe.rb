@@ -20,5 +20,6 @@ if ENV['SOLIDUS_STRIPE_API_KEY']
     api_key: ENV.fetch('SOLIDUS_STRIPE_API_KEY'),
     publishable_key: ENV.fetch('SOLIDUS_STRIPE_PUBLISHABLE_KEY'),
     test_mode: ENV.fetch('SOLIDUS_STRIPE_API_KEY').start_with?('sk_test_'),
+    webhook_endpoint_signing_secret: ENV.fetch('SOLIDUS_STRIPE_WEBHOOK_SIGNING_SECRET')
   )
 end

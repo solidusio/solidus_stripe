@@ -7,7 +7,8 @@ RSpec.describe SolidusStripe::WebhooksController, type: [:request, :webhook_requ
     let(:context) do
       SolidusStripe::Webhook::EventWithContextFactory.from_object(
         object: payment_intent,
-        type: "payment_intent.created"
+        type: "payment_intent.created",
+        payment_method: stripe
       )
     end
 

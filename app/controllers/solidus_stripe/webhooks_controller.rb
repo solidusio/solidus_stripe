@@ -12,7 +12,8 @@ module SolidusStripe
     respond_to :json
 
     def create
-      event = Webhook::Event.from_request(payload: request.body.read, signature_header: signature_header)
+      event = Webhook::Event.from_request(payload: request.body.read, signature_header: signature_header,
+        slug: params[:slug])
       return head(:bad_request) unless event
 
       Spree::Bus.publish(event) && head(:ok)

@@ -17,6 +17,16 @@ RSpec.describe SolidusStripe::PaymentMethod do
     ).to be(true)
   end
 
+  describe 'Callbacks' do
+    describe 'after_create' do
+      it 'creates a webhook endpoint' do
+        payment_method = create(:stripe_payment_method)
+
+        expect(payment_method.webhook_endpoint).to be_present
+      end
+    end
+  end
+
   describe '#intent_id_for_payment' do
     context 'when the payment has a transaction_id' do
       it 'fetches the payment intent id from the response code' do

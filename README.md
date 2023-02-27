@@ -47,29 +47,33 @@ bin/rails generate solidus_stripe:install
 
 This library makes use of some [Stripe webhooks](https://stripe.com/docs/webhooks).
 
-On development, you can [test them by using Stripe CLI](https://stripe.com/docs/webhooks/test).
+Every Solidus Stripe payment method you create will get a slug assigned. You
+need to append it to a generic webhook endpoint to get the URL for that payment
+method. For example:
 
-Before going to production, you'll need to [register the
-`/solidus_stripe/webhooks` endpoint with
+```ruby
+SolidusStripe::PaymentMethod.last.webhook_endpoint_secret
+# "365a8435cd11300e87de864c149516e0"
+```
+
+For the above example, and if you mounted the `SolidusStripe::Engine` routes on
+the default scope, the webhook endpoint would look like:
+
+```
+/solidus_stripe/webhooks/365a8435cd11300e87de864c149516e0
+```
+
+Besides, you also need to configure the webhook signing secret for that payment
+method. You can do that through the `webhook_endpoint_signing_secret`
+preference on the payment method.
+
+Before going to production, you'll need to [register the webhook endpoint with
 Stripe](https://stripe.com/docs/webhooks/go-live), and make sure to subscribe
-to the following events:
+to the events listed in [the `SolidusStripe::Webhook::Event::CORE`
+constant](https://github.com/solidusio/solidus_stripe/blob/master/lib/solidus_stripe/webhook/event.rb).
 
-[TBD]
-
-In both environments, you'll need to create a
-`solidus_stripe.webhook_endpoint_secret` credential with [the webhook signing
-secret](https://stripe.com/docs/webhooks/signatures):
-
-```bash
-# For development, add `--environment development`
-bin/rails credentials:edit
-```
-
-```yaml
-# config/credentials.yml.enc
-solidus_stripe:
-  webhook_endpoint_secret: "whsec_..."
-```
+On development, you can
+[test webhooks by using Stripe CLI](https://stripe.com/docs/webhooks/test).
 
 ## Usage
 
@@ -135,8 +139,9 @@ end
 ```
 
 The passed event object is a thin wrapper around the [Stripe
-event](https://www.rubydoc.info/gems/stripe/Stripe/Event) and will
-delegate all methods to it. It can also be used in async [
+event](https://www.rubydoc.info/gems/stripe/Stripe/Event) and the associated
+Solidus Stripe payment method. It will delegate all unknown methods to the
+underlying stripe event object. It can also be used in async [
 adapters](https://github.com/nebulab/omnes#adapters), which is recommended as
 otherwise the response to Stripe will be delayed until subscribers are done.
 
@@ -192,16 +197,19 @@ In order to mitigate this issue, we suggest adapting the frontend by merging the
 
 ## Development
 
-Retrieve your API Key and Publishable Key from your [Stripe testing dashboard](https://stripe.com/docs/testing).
+Retrieve your API Key and Publishable Key from your [Stripe testing dashboard](https://stripe.com/docs/testing). You can
+get your webhook signing secret executing the `stripe listen` command.
 
-Set `SOLIDUS_STRIPE_API_KEY` and `SOLIDUS_STRIPE_PUBLISHABLE_KEY` environment variables (e.g. via `direnv`), this
-will trigger the default initializer to create a static preference for SolidusStripe.
+Set `SOLIDUS_STRIPE_API_KEY`, `SOLIDUS_STRIPE_PUBLISHABLE_KEY` and `SOLIDUS_STRIPE_WEBHOOK_SIGNING_SECRET` environment
+variables (e.g. via `direnv`), this will trigger the default initializer to create a static preference for SolidusStripe.
 
 Run `bin/dev` to start both the sandbox rail server and the file watcher through Foreman. That will update the sandbox whenever
 a file is changed. When using `bin/dev` you can safely add `debugger` statements, even if Foreman won't provide a TTY, by connecting
 to the debugger session through `rdbg --attach` from another terminal.
 
 Visit `/admin/payments` and create a new Stripe payment using the static preferences.
+
+See the [Webhooks section](#webhooks) to learn how to configure Stripe webhooks.
 
 ### Testing the extension
 
