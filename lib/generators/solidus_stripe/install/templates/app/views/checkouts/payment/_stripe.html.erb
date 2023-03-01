@@ -1,14 +1,17 @@
 <script src="https://js.stripe.com/v3/"></script>
 
+<% intent = payment_method.find_intent_for_order(current_order) %>
+
 <div
+  class="solidus-stripe-payment"
   data-controller="solidus-stripe-payment"
+  data-solidus-stripe-payment-client-secret-value="<%= intent.client_secret %>"
   data-solidus-stripe-payment-publishable-key-value="<%= payment_method.preferred_publishable_key %>"
   data-solidus-stripe-payment-solidus-payment-method-id-value="<%= payment_method.id %>"
-  data-solidus-stripe-payment-payment-intent-path-value="<%= solidus_stripe.payment_intents_path %>"
   data-solidus-stripe-payment-email-address-value="<%= current_order.email %>"
-  data-solidus-stripe-payment-payment-url-value="<%= checkout_state_url(:payment) %>"
+  data-solidus-stripe-payment-return-url-value="<%= solidus_stripe.payment_confirmation_url(payment_method) %>"
   data-solidus-stripe-payment-payment-form-selector-value="#checkout_form_payment"
-  data-action="submit@window->handleSubmit"
+  data-action="submit@window->solidus-stripe-payment#handleSubmit"
 >
   <div data-solidus-stripe-payment-target="paymentElement">
     <!-- Elements will create form elements here -->
@@ -19,6 +22,5 @@
     <!-- Display error/notification messages to your customers here -->
   </div>
 
-
-  <%= hidden_field_tag "payment_source[#{payment_method.id}][gateway_payment_profile_id]", '', 'data-solidus-stripe-payment-target' => 'paymentIntentInput' %>
+  <%= hidden_field_tag "order[payments_attributes][][stripe_intent_id]", intent.id %>
 </div>

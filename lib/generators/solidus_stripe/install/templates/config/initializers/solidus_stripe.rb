@@ -13,6 +13,33 @@ SolidusStripe.configure do |config|
   # config.webhook_signature_tolerance = 150
 end
 
+# Allow sending the payment id in the payment form and avoid the automatic
+# creation of an additional payment by Spree::PaymentCreate.
+#
+# We're providing a inline module to make it easier to remove the mokey-patch
+# once the upstream PR is merged and generally available.
+#
+# Fixes https://github.com/solidusio/solidus/issues/2680
+# Fixed by https://github.com/solidusio/solidus/pull/4909
+begin
+  module SolidusStripe::PaymentCreateWithExistingPayment
+    def build
+      # https://stackoverflow.com/a/62397649
+      if attributes[:stripe_intent_id]
+        @payment = order.payments.find_by!(response_code: attributes[:stripe_intent_id])
+      else
+        super
+      end
+    end
+  end
+
+  Rails.application.reloader.to_prepare do
+    Spree::PaymentCreate.prepend SolidusStripe::PaymentCreateWithExistingPayment
+  end
+
+  Spree::PermittedAttributes.checkout_payment_attributes.first[:payments_attributes] << :stripe_intent_id
+end
+
 if ENV['SOLIDUS_STRIPE_API_KEY']
   Rails.application.reloader.to_prepare do
     Spree::Config.static_model_preferences.add(

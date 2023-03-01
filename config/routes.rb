@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 SolidusStripe::Engine.routes.draw do
-  resources :payment_intents, only: :create
+  scope ':payment_method_id' do
+    get :payment_confirmation, controller: :intents
+  end
   resources :webhooks, only: :create, format: false
 end
