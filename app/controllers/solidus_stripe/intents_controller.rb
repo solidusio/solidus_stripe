@@ -32,9 +32,9 @@ class SolidusStripe::IntentsController < Spree::BaseController
     case intent.status
     when 'requires_payment_method'
       ensure_state_is(current_order, :payment)
-      ensure_state_is(payment, :processing)
+      ensure_state_is(payment, :checkout)
     when 'requires_confirmation', 'requires_action', 'processing'
-      ensure_state_is(payment, :processing)
+      ensure_state_is(payment, :checkout)
       current_order.next!
     when 'requires_capture'
       payment.pend! unless payment.pending?

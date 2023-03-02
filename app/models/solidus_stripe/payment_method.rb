@@ -87,7 +87,7 @@ module SolidusStripe
               payment_method: self,
               response_code: intent.id,
               amount: order.total,
-            ).tap(&:started_processing!)
+            )
         end
       end
 
