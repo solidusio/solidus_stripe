@@ -50,6 +50,8 @@ module SolidusStripe
 
       def create_in_progress_payment_for(order)
         transaction do
+          customer = customer_for(order.user)
+
           intent = gateway.request do
             Stripe::PaymentIntent.create({
               amount: gateway.to_stripe_amount(
@@ -61,6 +63,7 @@ module SolidusStripe
               # The capture method should stay manual in order to
               # avoid capturing the money before the order is completed.
               capture_method: 'manual',
+              customer: customer,
             })
           end
 
@@ -72,6 +75,31 @@ module SolidusStripe
               amount: order.total,
             )
         end
+      end
+
+      def find_customer_for(user)
+        gateway.request do
+          raise "unsupported email address: #{user.email.inspect}" if user.email.include?("'")
+
+          Stripe::Customer.search(
+            query: "metadata['solidus_user_id']:'#{user.id}' AND email:'#{user.email}'"
+          ).first
+        end
+      end
+
+      def create_customer_for(user)
+        gateway.request do
+          Stripe::Customer.create(
+            email: user.email,
+            metadata: { solidus_user_id: user.id },
+          )
+        end
+      end
+
+      def customer_for(user)
+        return unless user
+
+        find_customer_for(user) || create_customer_for(user)
       end
 
       def find_or_create_in_progress_payment_for(order)
