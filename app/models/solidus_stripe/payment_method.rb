@@ -4,8 +4,10 @@ module SolidusStripe
   class PaymentMethod < ::Spree::PaymentMethod
     preference :api_key, :string
     preference :publishable_key, :string
+    preference :setup_future_usage, :string, default: ''
 
     validates :available_to_admin, inclusion: { in: [false] }
+    validates :preferred_setup_future_usage, inclusion: { in: ['', 'on_session', 'off_session'] }
 
     concerning :Configuration do
       def partial_name
@@ -63,6 +65,7 @@ module SolidusStripe
               # The capture method should stay manual in order to
               # avoid capturing the money before the order is completed.
               capture_method: 'manual',
+              setup_future_usage: preferred_setup_future_usage.presence,
               customer: customer,
             })
           end
