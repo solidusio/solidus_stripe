@@ -73,6 +73,28 @@ solidus_stripe:
 
 ## Usage
 
+### Showing reusable sources in the checkout
+
+When saving stripe payment methods for future usage the checkout requires
+a partial for each supported payment method type.
+
+For the full list of types see: https://stripe.com/docs/api/payment_methods/object#payment_method_object-type.
+
+The extension will only install a partial for the `card` type, located in `app/views/checkouts/existing_payment/stripe/_card.html.erb`,
+and fall back to a `default` partial otherwise (see `app/views/checkouts/existing_payment/stripe/_default.html.erb`).
+
+As an example, in order to show a wallet source connected to a
+[SEPA Debit payment method](https://stripe.com/docs/api/payment_methods/object#payment_method_object-sepa_debit)
+the following partial should be added:
+
+`app/views/checkouts/existing_payment/stripe/_sepa_debit.html.erb`
+
+```erb
+<% sepa_debit = stripe_payment_method.sepa_debit %>
+🏦 <%= sepa_debit.bank_code %> / <%= sepa_debit.branch_code %><br>
+IBAN: **** **** **** **** **** <%= sepa_debit.last4 %>
+```
+
 ### Custom webhooks
 
 You can also use [Stripe webhooks](https://stripe.com/docs/webhooks) to trigger
