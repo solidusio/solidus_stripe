@@ -104,20 +104,6 @@ module SolidusStripe
     end
 
     concerning :Payment do
-      def create_profile(payment)
-        payment_intent = find_intent_for(payment)
-
-        if payment_intent && payment_intent.customer.blank?
-          payment.payment_method.gateway.request do
-            payment_intent.customer = Stripe::Customer.new email: payment.order.email
-            payment_intent.customer.save
-            payment_intent.save
-          end
-        end
-
-        self
-      end
-
       def find_intent_for_order(order)
         payment = find_or_create_in_progress_payment_for(order)
         find_intent_for(payment) if payment
@@ -135,7 +121,8 @@ module SolidusStripe
       end
 
       def payment_profiles_supported?
-        true
+        # We actually support them, but not in the way expected by Solidus and its ActiveMerchant legacy.
+        false
       end
 
       def stripe_dashboard_url(payment)
