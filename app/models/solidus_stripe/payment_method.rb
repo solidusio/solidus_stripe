@@ -7,24 +7,6 @@ module SolidusStripe
 
     validates :available_to_admin, inclusion: { in: [false] }
 
-    concerning :Actions do
-      def actions
-        %w[capture void credit]
-      end
-
-      def can_capture?(payment)
-        payment.pending?
-      end
-
-      def can_void?(payment)
-        payment.pending?
-      end
-
-      def can_credit?(payment)
-        payment.completed? && payment.credit_allowed > 0
-      end
-    end
-
     concerning :Configuration do
       def partial_name
         "stripe"
@@ -35,7 +17,7 @@ module SolidusStripe
       alias risky_partial_name partial_name
 
       def source_required?
-        false
+        true
       end
 
       def payment_source_class
@@ -85,6 +67,7 @@ module SolidusStripe
           order.payments
             .create!(
               payment_method: self,
+              source: payment_source_class.new(payment_method: self),
               response_code: intent.id,
               amount: order.total,
             )
