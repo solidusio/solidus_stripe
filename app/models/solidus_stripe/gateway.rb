@@ -5,6 +5,7 @@ require 'stripe'
 module SolidusStripe
   # @see https://stripe.com/docs/payments/accept-a-payment?platform=web&ui=checkout#auth-and-capture
   # @see https://stripe.com/docs/charges/placing-a-hold
+  # @see https://guides.solidus.io/advanced-solidus/payments-and-refunds/#custom-payment-gateways
   #
   # ## About fractional amounts
   #
