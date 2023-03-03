@@ -4,21 +4,21 @@
 
 <div
   class="solidus-stripe-payment"
-  data-controller="solidus-stripe-payment"
-  data-solidus-stripe-payment-client-secret-value="<%= intent.client_secret %>"
-  data-solidus-stripe-payment-publishable-key-value="<%= payment_method.preferred_publishable_key %>"
-  data-solidus-stripe-payment-solidus-payment-method-id-value="<%= payment_method.id %>"
-  data-solidus-stripe-payment-email-address-value="<%= current_order.email %>"
-  data-solidus-stripe-payment-return-url-value="<%= solidus_stripe.payment_confirmation_url(payment_method) %>"
-  data-solidus-stripe-payment-payment-form-selector-value="#checkout_form_payment"
-  data-action="submit@window->solidus-stripe-payment#handleSubmit"
+  data-controller="solidus-stripe-intent"
+  data-solidus-stripe-intent-client-secret-value="<%= intent.client_secret %>"
+  data-solidus-stripe-intent-publishable-key-value="<%= payment_method.preferred_publishable_key %>"
+  data-solidus-stripe-intent-solidus-payment-method-id-value="<%= payment_method.id %>"
+  data-solidus-stripe-intent-email-address-value="<%= current_order.email %>"
+  data-solidus-stripe-intent-return-url-value="<%= solidus_stripe.payment_confirmation_url(payment_method) %>"
+  data-solidus-stripe-intent-payment-form-selector-value="#checkout_form_payment"
+  data-action="submit@window->solidus-stripe-intent#handleSubmit"
 >
-  <div data-solidus-stripe-payment-target="paymentElement">
+  <div data-solidus-stripe-intent-target="paymentElement">
     <!-- Elements will create form elements here -->
     <em><%= t('solidus_stripe.loading') %></em>
   </div>
 
-  <div data-solidus-stripe-payment-target="message">
+  <div data-solidus-stripe-intent-target="message">
     <!-- Display error/notification messages to your customers here -->
   </div>
 
