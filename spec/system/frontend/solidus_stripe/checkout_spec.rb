@@ -41,6 +41,48 @@ RSpec.describe "Checkout with Stripe", :js do
     expect_payments_state(order, ['completed'], outstanding: 0)
   end
 
+  it "completes as a registered user and reuses the payment" do
+    # Pay for the first time
+    create(:stripe_payment_method, preferred_setup_future_usage: 'off_session')
+    visit_payment_step(user: create(:user))
+    choose_new_stripe_payment
+    fill_stripe_form
+    submit_payment
+    confirm_order
+
+    order = Spree::Order.last
+    user = order.user
+    payment = order.payments.first
+    reusable_source = payment.source
+
+    expect(Spree::Order.count).to eq(1)
+    expect_checkout_completion(order)
+    expect_payments_state(order, ['pending'])
+    payment.capture!
+    expect_payments_state(order, ['completed'], outstanding: 0)
+    expect(SolidusStripe::PaymentSource.count).to eq(1)
+    expect(reusable_source.stripe_payment_method_id).to be_present
+
+    # Pay with the newly created wallet source
+    visit_payment_step(user: user)
+    find_existing_payment_radio(user.wallet_payment_sources.first.id).choose
+    submit_payment
+    confirm_order
+
+    order = Spree::Order.last
+    payment = order.payments.valid.first
+    expect(Spree::Order.count).to eq(2)
+    expect(order.user).to eq(user)
+    expect_checkout_completion(order)
+    expect_payments_state(order, ['invalid', 'pending'])
+    expect(order.payments.valid.count).to eq(1)
+    payment.capture!
+    expect_payments_state(order, ['invalid', 'completed'], outstanding: 0)
+    expect(SolidusStripe::PaymentSource.count).to eq(2)
+    expect(SolidusStripe::PaymentSource.last.stripe_payment_method_id).not_to be_present
+    expect(payment.source).to eq(reusable_source)
+  end
+
   private
 
   def stripe_payment_method
