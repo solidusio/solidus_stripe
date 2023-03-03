@@ -124,11 +124,12 @@ module SolidusStripe
       end
 
       def find_intent_for(payment)
+        return unless payment.transaction_id
+
         unless payment.payment_method == self
           raise ArgumentError, "this payment is from another payment_method"
         end
 
-        raise "missing payment intent id in response_code" if payment.response_code.blank?
         raise "bad payment intent id format" unless payment.response_code.start_with?('pi_')
 
         gateway.request { Stripe::PaymentIntent.retrieve(payment.response_code) }
