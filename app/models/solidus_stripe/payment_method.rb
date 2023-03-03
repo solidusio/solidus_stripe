@@ -4,26 +4,10 @@ module SolidusStripe
   class PaymentMethod < ::Spree::PaymentMethod
     preference :api_key, :string
     preference :publishable_key, :string
+    preference :setup_future_usage, :string, default: ''
 
     validates :available_to_admin, inclusion: { in: [false] }
-
-    concerning :Actions do
-      def actions
-        %w[capture void credit]
-      end
-
-      def can_capture?(payment)
-        payment.pending?
-      end
-
-      def can_void?(payment)
-        payment.pending?
-      end
-
-      def can_credit?(payment)
-        payment.completed? && payment.credit_allowed > 0
-      end
-    end
+    validates :preferred_setup_future_usage, inclusion: { in: ['', 'on_session', 'off_session'] }
 
     concerning :Configuration do
       def partial_name
@@ -35,7 +19,7 @@ module SolidusStripe
       alias risky_partial_name partial_name
 
       def source_required?
-        false
+        true
       end
 
       def payment_source_class
@@ -68,6 +52,8 @@ module SolidusStripe
 
       def create_in_progress_payment_for(order)
         transaction do
+          customer = customer_for(order.user)
+
           intent = gateway.request do
             Stripe::PaymentIntent.create({
               amount: gateway.to_stripe_amount(
@@ -79,16 +65,44 @@ module SolidusStripe
               # The capture method should stay manual in order to
               # avoid capturing the money before the order is completed.
               capture_method: 'manual',
+              setup_future_usage: preferred_setup_future_usage.presence,
+              customer: customer,
             })
           end
 
           order.payments
             .create!(
               payment_method: self,
+              source: payment_source_class.new(payment_method: self),
               response_code: intent.id,
               amount: order.total,
-            ).tap(&:started_processing!)
+            )
         end
+      end
+
+      def find_customer_for(user)
+        gateway.request do
+          raise "unsupported email address: #{user.email.inspect}" if user.email.include?("'")
+
+          Stripe::Customer.search(
+            query: "metadata['solidus_user_id']:'#{user.id}' AND email:'#{user.email}'"
+          ).first
+        end
+      end
+
+      def create_customer_for(user)
+        gateway.request do
+          Stripe::Customer.create(
+            email: user.email,
+            metadata: { solidus_user_id: user.id },
+          )
+        end
+      end
+
+      def customer_for(user)
+        return unless user
+
+        find_customer_for(user) || create_customer_for(user)
       end
 
       def find_or_create_in_progress_payment_for(order)
@@ -104,38 +118,26 @@ module SolidusStripe
     end
 
     concerning :Payment do
-      def create_profile(payment)
-        payment_intent = find_intent_for(payment)
-
-        if payment_intent && payment_intent.customer.blank?
-          payment.payment_method.gateway.request do
-            payment_intent.customer = Stripe::Customer.new email: payment.order.email
-            payment_intent.customer.save
-            payment_intent.save
-          end
-        end
-
-        self
-      end
-
       def find_intent_for_order(order)
         payment = find_or_create_in_progress_payment_for(order)
         find_intent_for(payment) if payment
       end
 
       def find_intent_for(payment)
+        return unless payment.transaction_id
+
         unless payment.payment_method == self
           raise ArgumentError, "this payment is from another payment_method"
         end
 
-        raise "missing payment intent id in response_code" if payment.response_code.blank?
         raise "bad payment intent id format" unless payment.response_code.start_with?('pi_')
 
         gateway.request { Stripe::PaymentIntent.retrieve(payment.response_code) }
       end
 
       def payment_profiles_supported?
-        true
+        # We actually support them, but not in the way expected by Solidus and its ActiveMerchant legacy.
+        false
       end
 
       def stripe_dashboard_url(payment)

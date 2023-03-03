@@ -15,5 +15,6 @@ FactoryBot.define do
 
   factory :stripe_payment_source, class: 'SolidusStripe::PaymentSource' do
     association :payment_method, factory: :stripe_payment_method
+    stripe_payment_method_id { 'pm_123' }
   end
 end

@@ -32,18 +32,20 @@ class SolidusStripe::IntentsController < Spree::BaseController
     case intent.status
     when 'requires_payment_method'
       ensure_state_is(current_order, :payment)
-      ensure_state_is(payment, :processing)
+      ensure_state_is(payment, :checkout)
     when 'requires_confirmation', 'requires_action', 'processing'
-      ensure_state_is(payment, :processing)
+      ensure_state_is(payment, :checkout)
       current_order.next!
     when 'requires_capture'
       payment.pend! unless payment.pending?
       current_order.next!
+      add_payment_source_to_the_user_wallet(payment, intent)
       ensure_state_is(current_order, :confirm)
       ensure_state_is(payment, :pending)
     when 'succeeded'
       payment.completed! unless payment.completed?
       current_order.next!
+      add_payment_source_to_the_user_wallet(payment, intent)
       ensure_state_is(current_order, :confirm)
       ensure_state_is(payment, :completed)
     when 'canceled'
@@ -59,6 +61,14 @@ class SolidusStripe::IntentsController < Spree::BaseController
   end
 
   private
+
+  def add_payment_source_to_the_user_wallet(payment, intent)
+    return unless current_order.user
+    return if intent.setup_future_usage.blank?
+
+    payment.source.update(stripe_payment_method_id: intent.payment_method)
+    current_order.user.wallet.add payment.source
+  end
 
   def ensure_state_is(object, state)
     return if object.state.to_s == state.to_s

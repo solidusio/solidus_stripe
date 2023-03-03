@@ -1,143 +1,131 @@
 # frozen_string_literal: true
 
 require 'solidus_stripe_spec_helper'
-require 'solidus_starter_frontend_helper'
 
 RSpec.describe "Checkout with Stripe", :js do
-  include Devise::Test::IntegrationHelpers
-  include SystemHelpers
+  include SolidusStripe::CheckoutTestHelper
 
   it "completes as a registered user" do
-    payment_method = create(:stripe_payment_method)
-    order = Spree::TestingSupport::OrderWalkthrough.up_to(:delivery, user: create(:user))
-
-    sign_in order.user
-    visit '/checkout/payment'
-    choose(option: payment_method.id)
+    create(:stripe_payment_method)
+    visit_payment_step(user: create(:user))
+    choose_new_stripe_payment
     fill_stripe_form
-    click_button("Save and Continue")
-    confirm_and_wait_for_the_success_page
-    order.reload
+    submit_payment
+    confirm_order
 
-    expect(page).to have_content("Your order has been processed successfully")
-    expect(page).to have_content(order.number)
-    expect(order).to be_complete
-    expect(order).to be_completed
-    expect(order.payments.first.amount).to eq(20)
-    expect(order.payments.pluck(:state)).to eq(['pending'])
-    expect(order.outstanding_balance.to_f).to eq(20)
+    order = Spree::Order.last
+    payment = order.payments.first
 
-    order.payments.first.capture!
-
-    expect(order.payments.reload.pluck(:state)).to eq(['completed'])
-    expect(order.outstanding_balance.to_f).to eq(0)
+    expect(Spree::Order.count).to eq(1)
+    expect_checkout_completion(order)
+    expect_payments_state(order, ['pending'])
+    payment.capture!
+    expect_payments_state(order, ['completed'], outstanding: 0)
+    expect(SolidusStripe::PaymentSource.count).to eq(1)
+    expect(SolidusStripe::PaymentSource.last.stripe_payment_method_id).to be_blank
   end
 
   it "completes as a guest" do
-    payment_method = create(:stripe_payment_method)
-    order = Spree::TestingSupport::OrderWalkthrough.up_to(:delivery, user: nil)
-    assign_guest_token order.guest_token
-
-    visit '/checkout/payment'
-    choose(option: payment_method.id)
+    create(:stripe_payment_method)
+    visit_payment_step(user: nil)
+    choose_new_stripe_payment
     fill_stripe_form
-    click_button("Save and Continue")
-    confirm_and_wait_for_the_success_page
-    order.reload
+    submit_payment
+    confirm_order
 
-    expect(page).to have_content("Your order has been processed successfully")
-    expect(page).to have_content(order.number)
-    expect(order).to be_complete
-    expect(order).to be_completed
-    expect(order.payments.first.amount).to eq(20)
-    expect(order.payments.pluck(:state)).to eq(['pending'])
-    expect(order.outstanding_balance.to_f).to eq(20)
-
+    order = Spree::Order.last
+    expect(Spree::Order.count).to eq(1)
+    expect_checkout_completion(order)
+    expect_payments_state(order, ['pending'], outstanding: order.total)
     order.payments.first.capture!
+    expect_payments_state(order, ['completed'], outstanding: 0)
+  end
 
-    expect(order.payments.reload.pluck(:state)).to eq(['completed'])
-    expect(order.outstanding_balance.to_f).to eq(0)
+  it "completes as a registered user and reuses the payment" do
+    # Pay for the first time
+    create(:stripe_payment_method, preferred_setup_future_usage: 'off_session')
+    visit_payment_step(user: create(:user))
+    choose_new_stripe_payment
+    fill_stripe_form
+    submit_payment
+    confirm_order
+
+    order = Spree::Order.last
+    user = order.user
+    payment = order.payments.first
+    reusable_source = payment.source
+
+    expect(Spree::Order.count).to eq(1)
+    expect_checkout_completion(order)
+    expect_payments_state(order, ['pending'])
+    payment.capture!
+    expect_payments_state(order, ['completed'], outstanding: 0)
+    expect(SolidusStripe::PaymentSource.count).to eq(1)
+    expect(reusable_source.stripe_payment_method_id).to be_present
+
+    # Pay with the newly created wallet source
+    visit_payment_step(user: user)
+    find_existing_payment_radio(user.wallet_payment_sources.first.id).choose
+    submit_payment
+    confirm_order
+
+    order = Spree::Order.last
+    payment = order.payments.valid.first
+    expect(Spree::Order.count).to eq(2)
+    expect(order.user).to eq(user)
+    expect_checkout_completion(order)
+    expect_payments_state(order, ['invalid', 'pending'])
+    expect(order.payments.valid.count).to eq(1)
+    payment.capture!
+    expect_payments_state(order, ['invalid', 'completed'], outstanding: 0)
+    expect(SolidusStripe::PaymentSource.count).to eq(2)
+    expect(SolidusStripe::PaymentSource.last.stripe_payment_method_id).not_to be_present
+    expect(payment.source).to eq(reusable_source)
   end
 
   private
-
-  def assign_guest_token(guest_token)
-    # rubocop:disable RSpec/AnyInstance
-    allow_any_instance_of(ActionDispatch::Cookies::SignedKeyRotatingCookieJar).tap do |allow_cookie_jar|
-      # Retrieve all other cookies from the original jar.
-      allow_cookie_jar.to receive(:[]).and_call_original
-      allow_cookie_jar.to receive(:[]).with(:guest_token).and_return(guest_token)
-    end
-    # rubocop:enable RSpec/AnyInstance
-  end
-
-  def confirm_and_wait_for_the_success_page
-    check "Agree to Terms of Service"
-    click_button("Place Order")
-    expect(page).to have_content("Your order has been processed successfully")
-  end
-
-  def fill_stripe_form(
-    number: 4242_4242_4242_4242, # rubocop:disable Style/NumericLiterals
-    expiry_month: 12,
-    expiry_year: Time.current.year + 1,
-    cvc: '123',
-    country: 'United States',
-    zip: '90210'
-  )
-    fill_in_stripe_cvc(cvc)
-    fill_in_stripe_expiry_date(year: expiry_year, month: expiry_month)
-    fill_in_stripe_card(number)
-    fill_in_stripe_country(country)
-    fill_in_stripe_zip(zip) if zip # not shown for every country
-  end
-
-  def fill_in_stripe_card(number)
-    fill_in_stripe_input 'number', with: number
-  end
-
-  def fill_in_stripe_expiry_date(year: nil, month: nil, date: nil)
-    date ||= begin
-      month = month.to_s.rjust(2, '0') unless month.is_a? String
-      year = year.to_s[2..3] unless year.is_a? String
-      "#{month}#{year}"
-    end
-
-    fill_in_stripe_input 'expiry', with: date.to_s[0..3]
-  end
-
-  def fill_in_stripe_cvc(cvc)
-    fill_in_stripe_input 'cvc', with: cvc.to_s[0..2].to_s
-  end
-
-  def fill_in_stripe_country(country_name)
-    using_wait_time(10) do
-      within_frame(find_stripe_iframe) do
-        find(%{select[name="country"]}).select(country_name)
-      end
-    end
-  end
-
-  def fill_in_stripe_zip(zip)
-    fill_in_stripe_input 'postalCode', with: zip
-  end
-
-  def fill_in_stripe_input(name, with:)
-    using_wait_time(10) do
-      within_frame(find_stripe_iframe) do
-        with.to_s.chars.each { find(%{input[name="#{name}"]}).send_keys(_1) }
-      end
-    end
-  end
 
   def stripe_payment_method
     # Memoize the payment method id to avoid fetching it multiple times
     @stripe_payment_method ||= SolidusStripe::PaymentMethod.first!
   end
 
-  def find_stripe_iframe
-    fieldset = find_payment_fieldset(stripe_payment_method.id)
-    expect(fieldset).to have_css('iframe') # trigger waiting if the frame is not yet there
-    fieldset.find("iframe")
+  def visit_payment_step(user: nil)
+    order = Spree::TestingSupport::OrderWalkthrough.up_to(:delivery, user: user)
+
+    if user
+      sign_in order.user
+    else
+      assign_guest_token order.guest_token
+    end
+
+    visit '/checkout/payment'
+  end
+
+  def choose_new_stripe_payment
+    choose(option: stripe_payment_method.id)
+  end
+
+  def submit_payment
+    click_button("Save and Continue")
+  end
+
+  def confirm_order
+    check "Agree to Terms of Service"
+    click_button("Place Order")
+    expect(page).to have_content("Your order has been processed successfully")
+  end
+
+  def expect_checkout_completion(order = Spree::Order.last)
+    expect(page).to have_content("Your order has been processed successfully")
+    expect(page).to have_content(order.number)
+    expect(order).to be_complete
+    expect(order).to be_completed
+  end
+
+  def expect_payments_state(order, states, outstanding: order.total)
+    expect(order.payments.valid.sum(:amount)).to eq(order.total)
+    expect(order.payments.reload.pluck(:state)).to eq(states)
+    expect(order.outstanding_balance.to_f).to eq(outstanding)
   end
 end
