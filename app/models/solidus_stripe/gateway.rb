@@ -126,6 +126,7 @@ module SolidusStripe
     end
 
     # Refunds the provided amount on a previously captured transaction.
+    # TODO: check this method params twice.
     def credit(amount_in_cents, _source, payment_intent_id, options = {})
       payment = options[:originator].payment
       currency = payment.currency

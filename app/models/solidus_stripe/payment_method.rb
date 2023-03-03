@@ -5,9 +5,11 @@ module SolidusStripe
     preference :api_key, :string
     preference :publishable_key, :string
     preference :setup_future_usage, :string, default: ''
+    preference :stripe_intents_flow, :string, default: 'setup'
 
     validates :available_to_admin, inclusion: { in: [false] }
     validates :preferred_setup_future_usage, inclusion: { in: ['', 'on_session', 'off_session'] }
+    validates :preferred_stripe_intents_flow, inclusion: { in: ['payment', 'setup'] }
 
     concerning :Configuration do
       def partial_name
@@ -118,6 +120,35 @@ module SolidusStripe
     end
 
     concerning :Payment do
+      def find_or_create_setup_intent_for_order(order)
+        find_setup_intent_for_order(order) or create_setup_intent_for_order(order)
+      end
+
+      def find_setup_intent_for_order(order)
+        SolidusStripe::SetupIntent
+          .find_by(order: order) # TODO: order.setup_intent (?)
+          &.stripe_setup_intent(self)
+      end
+
+      def create_setup_intent_for_order(order)
+        customer = customer_for(order.user)
+
+        intent = gateway.request do
+          Stripe::SetupIntent.create({
+            customer: customer,
+            usage: 'off_session', # TODO: use the payment method's preference
+            metadata: { solidus_order_number: order.number },
+          })
+        end
+
+        SolidusStripe::SetupIntent.create!(
+          order: order,
+          stripe_setup_intent_id: intent.id,
+        )
+
+        intent
+      end
+
       def find_intent_for_order(order)
         payment = find_or_create_in_progress_payment_for(order)
         find_intent_for(payment) if payment
@@ -141,6 +172,7 @@ module SolidusStripe
       end
 
       def stripe_dashboard_url(payment)
+        # TODO: handle when the payment doesn't exist yet in Stripe, but we only have the setup intent
         intent_id = payment.transaction_id
         path_prefix = '/test' if preferred_test_mode
 

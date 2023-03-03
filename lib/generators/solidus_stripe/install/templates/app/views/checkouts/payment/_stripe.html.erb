@@ -1,6 +1,12 @@
 <script src="https://js.stripe.com/v3/"></script>
 
-<% intent = payment_method.find_intent_for_order(current_order) %>
+<% if payment_method.preferred_stripe_intents_flow == 'setup' %>
+  <% intent = payment_method.find_or_create_setup_intent_for_order(current_order) %>
+  <% return_url = solidus_stripe.setup_confirmation_url(payment_method) %>
+<% else %>
+  <% intent = payment_method.find_intent_for_order(current_order) %>
+  <% return_url = solidus_stripe.payment_confirmation_url(payment_method) %>
+<% end %>
 
 <div
   class="solidus-stripe-payment"
@@ -9,8 +15,9 @@
   data-solidus-stripe-intent-publishable-key-value="<%= payment_method.preferred_publishable_key %>"
   data-solidus-stripe-intent-solidus-payment-method-id-value="<%= payment_method.id %>"
   data-solidus-stripe-intent-email-address-value="<%= current_order.email %>"
-  data-solidus-stripe-intent-return-url-value="<%= solidus_stripe.payment_confirmation_url(payment_method) %>"
+  data-solidus-stripe-intent-return-url-value="<%= return_url %>"
   data-solidus-stripe-intent-payment-form-selector-value="#checkout_form_payment"
+  data-solidus-stripe-intent-flow-value="<%= payment_method.preferred_stripe_intents_flow %>"
   data-action="submit@window->solidus-stripe-intent#handleSubmit"
 >
   <div data-solidus-stripe-intent-target="paymentElement">
@@ -21,5 +28,4 @@
   <div data-solidus-stripe-intent-target="message">
     <!-- Display error/notification messages to your customers here -->
   </div>
-
 </div>

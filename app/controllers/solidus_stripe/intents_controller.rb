@@ -7,6 +7,51 @@ class SolidusStripe::IntentsController < Spree::BaseController
 
   before_action :load_payment_method
 
+  def setup_confirmation
+    setup_intent = @payment_method.find_setup_intent_for_order(current_order)
+
+    if params[:setup_intent] != setup_intent.id
+      raise "The setup intent id doesn't match"
+    end
+
+    unless %w[confirm payment].include?(current_order.state.to_s)
+      redirect_to main_app.checkout_state_path(current_order.state)
+      return
+    end
+
+    # Check if this is needed. This was added to be sure the order
+    # in in the right step.
+    current_order.state = :payment
+
+    # TODO: handle log entries
+    # SolidusStripe::LogEntries.setup_log(
+    #   setup_intent,
+    #   success: true,
+    #   message: "Reached return URL",
+    #   data: setup_intent,
+    # )
+
+    # TODO: understand how to handle webhooks. At this stage, we might receive a webhook
+    # with the confirmation of the setup intent. We need to be sure we are not creating
+    # the payment twice.
+    # https://stripe.com/docs/payments/intents?intent=setup#setup-intent-webhooks
+
+    payment = current_order.payments.create!(
+      payment_method: @payment_method,
+      amount: current_order.total, # TODO: double check, remove store credit?
+      source: SolidusStripe::PaymentSource.new(
+        stripe_payment_method_id: setup_intent.payment_method,
+        payment_method: @payment_method,
+      )
+    )
+
+    current_order.next!
+    add_setup_intent_to_the_user_wallet(setup_intent, payment)
+
+    flash[:notice] = t(".setup_intent_status.#{setup_intent.status}")
+    redirect_to main_app.checkout_state_path(current_order.state)
+  end
+
   def payment_confirmation
     payment = @payment_method.find_in_progress_payment_for(current_order)
     intent = @payment_method.find_intent_for(payment)
@@ -61,6 +106,11 @@ class SolidusStripe::IntentsController < Spree::BaseController
   end
 
   private
+
+  def add_setup_intent_to_the_user_wallet(intent, payment)
+    return unless current_order.user
+    current_order.user.wallet.add payment.source
+  end
 
   def add_payment_source_to_the_user_wallet(payment, intent)
     return unless current_order.user
