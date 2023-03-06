@@ -66,6 +66,7 @@ class SolidusStripe::IntentsController < Spree::BaseController
     current_order.state = :payment
 
     payment = current_order.payments.create!(
+      state: 'pending',
       payment_method: @payment_method,
       amount: current_order.total, # TODO: double check, remove store credit?
       response_code: intent.id,
@@ -81,33 +82,7 @@ class SolidusStripe::IntentsController < Spree::BaseController
       data: intent,
     )
 
-    # https://stripe.com/docs/payments/intents?intent=payment
-    case intent.status
-    when 'requires_payment_method'
-      ensure_state_is(current_order, :payment)
-      ensure_state_is(payment, :checkout)
-    when 'requires_confirmation', 'requires_action', 'processing'
-      ensure_state_is(payment, :checkout)
-      current_order.next!
-    when 'requires_capture'
-      payment.pend! unless payment.pending?
-      current_order.next!
-      add_payment_source_to_the_user_wallet(payment, intent)
-      ensure_state_is(current_order, :confirm)
-      ensure_state_is(payment, :pending)
-    when 'succeeded'
-      payment.completed! unless payment.completed?
-      current_order.next!
-      add_payment_source_to_the_user_wallet(payment, intent)
-      ensure_state_is(current_order, :confirm)
-      ensure_state_is(payment, :completed)
-    when 'canceled'
-      payment.void! unless payment.void?
-      ensure_state_is(current_order, :payment)
-      ensure_state_is(payment, :void)
-    else
-      raise "unexpected intent status: #{intent.status}"
-    end
+    current_order.next!
 
     flash[:notice] = t(".intent_status.#{intent.status}")
     redirect_to main_app.checkout_state_path(current_order.state)
