@@ -130,7 +130,7 @@ RSpec.describe "Checkout with Stripe", :js do
     visit_payment_step(user: user)
     find_existing_payment_radio(user.wallet_payment_sources.first.id).choose
     submit_payment
-    expect_payments_state(Spree::Order.last, ['invalid', 'checkout'])
+    expect_payments_state(Spree::Order.last, ['checkout'])
     confirm_order
 
     order = Spree::Order.last
@@ -138,12 +138,12 @@ RSpec.describe "Checkout with Stripe", :js do
     expect(Spree::Order.count).to eq(2)
     expect(order.user).to eq(user)
     expect_checkout_completion(order)
-    expect_payments_state(order, ['invalid', 'pending'])
+    expect_payments_state(order, ['pending'])
     expect(order.payments.valid.count).to eq(1)
     payment.capture!
-    expect_payments_state(order, ['invalid', 'completed'], outstanding: 0)
-    expect(SolidusStripe::PaymentSource.count).to eq(2)
-    expect(SolidusStripe::PaymentSource.last.stripe_payment_method_id).not_to be_present
+    expect_payments_state(order, ['completed'], outstanding: 0)
+    expect(SolidusStripe::PaymentSource.count).to eq(1)
+    expect(SolidusStripe::PaymentSource.last.stripe_payment_method_id).to be_present
     expect(payment.source).to eq(reusable_source)
   end
 

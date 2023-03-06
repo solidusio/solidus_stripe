@@ -52,8 +52,7 @@ class SolidusStripe::IntentsController < Spree::BaseController
   end
 
   def payment_confirmation
-    payment = @payment_method.find_in_progress_payment_for(current_order)
-    intent = @payment_method.find_intent_for(payment)
+    intent = @payment_method.find_payment_intent_for_order(current_order)
 
     if params[:payment_intent] != intent.id
       raise "The payment intent id doesn't match"
@@ -65,6 +64,16 @@ class SolidusStripe::IntentsController < Spree::BaseController
     end
 
     current_order.state = :payment
+
+    payment = current_order.payments.create!(
+      payment_method: @payment_method,
+      amount: current_order.total, # TODO: double check, remove store credit?
+      response_code: intent.id,
+      source: @payment_method.payment_source_class.new(
+        payment_method: @payment_method
+      ),
+    )
+
     SolidusStripe::LogEntries.payment_log(
       payment,
       success: true,

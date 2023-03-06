@@ -3,9 +3,10 @@
 <% if payment_method.preferred_stripe_intents_flow == 'setup' %>
   <% intent = payment_method.find_or_create_setup_intent_for_order(current_order) %>
   <% return_url = solidus_stripe.setup_confirmation_url(payment_method) %>
-<% else %>
-  <% intent = payment_method.find_intent_for_order(current_order) %>
+<% elsif payment_method.preferred_stripe_intents_flow == 'payment' %>
+  <% intent = payment_method.find_or_create_payment_intent_for_order(current_order) %>
   <% return_url = solidus_stripe.payment_confirmation_url(payment_method) %>
+<% else raise 'what the heck!' %>
 <% end %>
 
 <div

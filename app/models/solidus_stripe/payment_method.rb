@@ -33,55 +33,7 @@ module SolidusStripe
       end
     end
 
-    concerning :Order do
-      def find_in_progress_payment_for(order)
-        payments = order.payments
-          .where.not(state: %w[completed invalid void]) # in_progress
-          .where(payment_method: self)
-          .order(:created_at)
-          .entries
-
-        *old_payments, payment = payments
-        old_payments.each(&:invalidate!)
-
-        if payment && payment.amount != order.total
-          payment.cancel!
-          payment = nil
-        end
-
-        payment
-      end
-
-      def create_in_progress_payment_for(order)
-        transaction do
-          customer = customer_for(order.user)
-
-          intent = gateway.request do
-            Stripe::PaymentIntent.create({
-              amount: gateway.to_stripe_amount(
-                order.display_total.money.fractional,
-                order.currency,
-              ),
-              currency: order.currency,
-
-              # The capture method should stay manual in order to
-              # avoid capturing the money before the order is completed.
-              capture_method: 'manual',
-              setup_future_usage: preferred_setup_future_usage.presence,
-              customer: customer,
-            })
-          end
-
-          order.payments
-            .create!(
-              payment_method: self,
-              source: payment_source_class.new(payment_method: self),
-              response_code: intent.id,
-              amount: order.total,
-            )
-        end
-      end
-
+    concerning :Customer do
       def find_customer_for(user)
         gateway.request do
           raise "unsupported email address: #{user.email.inspect}" if user.email.include?("'")
@@ -127,22 +79,11 @@ module SolidusStripe
       def customer_for_order(order)
         find_customer_for(order) || create_customer_for(order)
       end
-
-      def find_or_create_in_progress_payment_for(order)
-        payment = find_in_progress_payment_for(order)
-        intent = find_intent_for(payment) if payment
-
-        payment = nil if intent.nil?
-        payment = nil unless intent&.status == 'requires_payment_method'
-
-        payment ||= create_in_progress_payment_for(order)
-        payment
-      end
     end
 
-    concerning :Payment do
+    concerning :SetupIntents do
       def find_or_create_setup_intent_for_order(order)
-        find_setup_intent_for_order(order) or create_setup_intent_for_order(order)
+        find_setup_intent_for_order(order) || create_setup_intent_for_order(order)
       end
 
       def find_setup_intent_for_order(order)
@@ -169,36 +110,59 @@ module SolidusStripe
 
         intent
       end
+    end
 
-      def find_intent_for_order(order)
-        payment = find_or_create_in_progress_payment_for(order)
-        find_intent_for(payment) if payment
+    concerning :PaymentIntents do
+      def find_or_create_payment_intent_for_order(order)
+        find_payment_intent_for_order(order) || create_payment_intent_for_order(order)
       end
 
-      def find_intent_for(payment)
-        return unless payment.transaction_id
+      def find_payment_intent_for_order(order)
+        SolidusStripe::PaymentIntent
+          .find_by(order: order)
+          &.stripe_payment_intent(self)
+      end
 
-        unless payment.payment_method == self
-          raise ArgumentError, "this payment is from another payment_method"
+      def create_payment_intent_for_order(order)
+        customer = customer_for(order.user) || customer_for_order(order)
+
+        intent = gateway.request do
+          Stripe::PaymentIntent.create({
+            amount: gateway.to_stripe_amount(
+              order.display_total.money.fractional,
+              order.currency,
+            ),
+            currency: order.currency,
+
+            # The capture method should stay manual in order to
+            # avoid capturing the money before the order is completed.
+            capture_method: 'manual',
+            setup_future_usage: preferred_setup_future_usage.presence,
+            customer: customer,
+            metadata: { solidus_order_number: order.number },
+          })
         end
 
-        raise "bad payment intent id format" unless payment.response_code.start_with?('pi_')
+        SolidusStripe::PaymentIntent.create!(
+          order: order,
+          stripe_payment_intent_id: intent.id,
+        )
 
-        gateway.request { Stripe::PaymentIntent.retrieve(payment.response_code) }
+        intent
       end
+    end
 
-      def payment_profiles_supported?
-        # We actually support them, but not in the way expected by Solidus and its ActiveMerchant legacy.
-        false
-      end
+    def payment_profiles_supported?
+      # We actually support them, but not in the way expected by Solidus and its ActiveMerchant legacy.
+      false
+    end
 
-      def stripe_dashboard_url(payment)
-        # TODO: handle when the payment doesn't exist yet in Stripe, but we only have the setup intent
-        intent_id = payment.transaction_id
-        path_prefix = '/test' if preferred_test_mode
+    def stripe_dashboard_url(payment)
+      # TODO: handle when the payment doesn't exist yet in Stripe, but we only have the setup intent
+      intent_id = payment.transaction_id
+      path_prefix = '/test' if preferred_test_mode
 
-        "https://dashboard.stripe.com#{path_prefix}/payments/#{intent_id}"
-      end
+      "https://dashboard.stripe.com#{path_prefix}/payments/#{intent_id}"
     end
   end
 end
