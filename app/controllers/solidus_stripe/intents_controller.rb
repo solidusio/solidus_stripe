@@ -8,9 +8,9 @@ class SolidusStripe::IntentsController < Spree::BaseController
   before_action :load_payment_method
 
   def setup_confirmation
-    setup_intent = @payment_method.find_setup_intent_for_order(current_order)
+    intent = @payment_method.find_setup_intent_for_order(current_order)
 
-    if params[:setup_intent] != setup_intent.id
+    if params[:setup_intent] != intent.id
       raise "The setup intent id doesn't match"
     end
 
@@ -23,14 +23,6 @@ class SolidusStripe::IntentsController < Spree::BaseController
     # in in the right step.
     current_order.state = :payment
 
-    # TODO: handle log entries
-    # SolidusStripe::LogEntries.setup_log(
-    #   setup_intent,
-    #   success: true,
-    #   message: "Reached return URL",
-    #   data: setup_intent,
-    # )
-
     # TODO: understand how to handle webhooks. At this stage, we might receive a webhook
     # with the confirmation of the setup intent. We need to be sure we are not creating
     # the payment twice.
@@ -39,16 +31,23 @@ class SolidusStripe::IntentsController < Spree::BaseController
     payment = current_order.payments.create!(
       payment_method: @payment_method,
       amount: current_order.total, # TODO: double check, remove store credit?
-      source: SolidusStripe::PaymentSource.new(
-        stripe_payment_method_id: setup_intent.payment_method,
+      source: @payment_method.payment_source_class.new(
+        stripe_payment_method_id: intent.payment_method,
         payment_method: @payment_method,
       )
     )
 
-    current_order.next!
-    add_setup_intent_to_the_user_wallet(setup_intent, payment)
+    SolidusStripe::LogEntries.payment_log(
+      payment,
+      success: true,
+      message: "Reached return URL",
+      data: intent,
+    )
 
-    flash[:notice] = t(".setup_intent_status.#{setup_intent.status}")
+    current_order.next!
+    add_setup_intent_to_the_user_wallet(intent, payment)
+
+    flash[:notice] = t(".setup_intent_status.#{intent.status}")
     redirect_to main_app.checkout_state_path(current_order.state)
   end
 
