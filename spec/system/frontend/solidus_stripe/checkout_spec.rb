@@ -26,6 +26,23 @@ RSpec.describe "Checkout with Stripe", :js do
     expect(SolidusStripe::PaymentSource.last.stripe_payment_method_id).to be_present
   end
 
+  it "completes as a guest using setup intents" do
+    create(:stripe_payment_method, preferred_stripe_intents_flow: 'setup')
+    visit_payment_step(user: nil)
+    choose_new_stripe_payment
+    fill_stripe_form
+    submit_payment
+    expect_payments_state(Spree::Order.last, ['checkout'])
+    confirm_order
+
+    order = Spree::Order.last
+    expect(Spree::Order.count).to eq(1)
+    expect_checkout_completion(order)
+    expect_payments_state(order, ['pending'], outstanding: order.total)
+    order.payments.first.capture!
+    expect_payments_state(order, ['completed'], outstanding: 0)
+  end
+
   it "completes as a registered user using payment intents" do
     create(:stripe_payment_method, preferred_stripe_intents_flow: 'payment')
     visit_payment_step(user: create(:user))

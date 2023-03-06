@@ -107,6 +107,27 @@ module SolidusStripe
         find_customer_for(user) || create_customer_for(user)
       end
 
+      def find_customer_for_order(order)
+        gateway.request do
+          Stripe::Customer.search(
+            query: "metadata['solidus_order_number']:'#{order.number}'"
+          ).first
+        end
+      end
+
+      def create_customer_for_order(order)
+        gateway.request do
+          Stripe::Customer.create(
+            email: order.email,
+            metadata: { solidus_order_number: order.number },
+          )
+        end
+      end
+
+      def customer_for_order(order)
+        find_customer_for(order) || create_customer_for(order)
+      end
+
       def find_or_create_in_progress_payment_for(order)
         payment = find_in_progress_payment_for(order)
         intent = find_intent_for(payment) if payment
@@ -131,7 +152,7 @@ module SolidusStripe
       end
 
       def create_setup_intent_for_order(order)
-        customer = customer_for(order.user)
+        customer = customer_for(order.user) || customer_for_order(order)
 
         intent = gateway.request do
           Stripe::SetupIntent.create({
