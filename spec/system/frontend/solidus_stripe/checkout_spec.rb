@@ -65,29 +65,46 @@ RSpec.describe "Checkout with Stripe", :js do
     expect_payments_state(order, ['completed'], outstanding: 0)
   end
 
-  it "completes as a registered user using payment intents" do
-    create(:stripe_payment_method, preferred_stripe_intents_flow: 'payment')
-    visit_payment_step(user: create(:user))
-    choose_new_stripe_payment
-    fill_stripe_form
-    submit_payment
-    expect_payments_state(Spree::Order.last, ['pending'])
-    confirm_order
+  [true, false].each do |skip_confirm|
+    it "completes as a registered user using payment intents #{skip_confirm || ' not'} skipping confirm" do
+      create(
+        :stripe_payment_method,
+        preferred_stripe_intents_flow: 'payment',
+        preferred_skip_confirmation_for_payment_intent: skip_confirm,
+      )
+      visit_payment_step(user: create(:user))
+      choose_new_stripe_payment
+      fill_stripe_form
 
-    order = Spree::Order.last
-    payment = order.payments.first
+      if skip_confirm
+        check "Agree to Terms of Service"
+        click_button("Save and Continue")
+        expect(page).to have_content("Your order has been processed successfully")
+      else
+        submit_payment
+        expect_payments_state(Spree::Order.last, ['pending'])
+        confirm_order
+      end
 
-    expect(Spree::Order.count).to eq(1)
-    expect_checkout_completion(order)
-    expect_payments_state(order, ['pending'])
-    payment.capture!
-    expect_payments_state(order, ['completed'], outstanding: 0)
-    expect(SolidusStripe::PaymentSource.count).to eq(1)
-    expect(SolidusStripe::PaymentSource.last.stripe_payment_method_id).to be_blank
+      order = Spree::Order.last
+      payment = order.payments.first
+
+      expect(Spree::Order.count).to eq(1)
+      expect_checkout_completion(order)
+      expect_payments_state(order, ['pending'])
+      payment.capture!
+      expect_payments_state(order, ['completed'], outstanding: 0)
+      expect(SolidusStripe::PaymentSource.count).to eq(1)
+      expect(SolidusStripe::PaymentSource.last.stripe_payment_method_id).to be_blank
+    end
   end
 
   it "completes as a guest using payment intents" do
-    create(:stripe_payment_method, preferred_stripe_intents_flow: 'payment')
+    create(
+      :stripe_payment_method,
+      preferred_stripe_intents_flow: 'payment',
+      preferred_skip_confirmation_for_payment_intent: false,
+    )
     visit_payment_step(user: nil)
     choose_new_stripe_payment
     fill_stripe_form
@@ -104,8 +121,14 @@ RSpec.describe "Checkout with Stripe", :js do
   end
 
   it "completes as a registered user and reuses the payment using payment intents" do
+    create(
+      :stripe_payment_method,
+      preferred_stripe_intents_flow: 'payment',
+      preferred_setup_future_usage: 'off_session',
+      preferred_skip_confirmation_for_payment_intent: false,
+    )
+
     # Pay for the first time
-    create(:stripe_payment_method, preferred_setup_future_usage: 'off_session', preferred_stripe_intents_flow: 'payment')
     visit_payment_step(user: create(:user))
     choose_new_stripe_payment
     fill_stripe_form

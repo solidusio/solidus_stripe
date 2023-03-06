@@ -29,4 +29,14 @@
   <div data-solidus-stripe-intent-target="message">
     <!-- Display error/notification messages to your customers here -->
   </div>
+
+  <% if payment_method.skip_confirm_step? %>
+    <div class="terms_and_conditions">
+      <%= render 'checkouts/terms_and_conditions' %>
+      <label>
+        <%= check_box_tag :accept_terms_and_conditions, 'accepted', false, required: true, id: nil %>
+        <%= t('spree.agree_to_terms_of_service') %>
+      </label>
+    </div>
+  <% end %>
 </div>

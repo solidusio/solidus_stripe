@@ -6,6 +6,7 @@ module SolidusStripe
     preference :publishable_key, :string
     preference :setup_future_usage, :string, default: ''
     preference :stripe_intents_flow, :string, default: 'setup'
+    preference :skip_confirmation_for_payment_intent, :boolean, default: true
 
     validates :available_to_admin, inclusion: { in: [false] }
     validates :preferred_setup_future_usage, inclusion: { in: ['', 'on_session', 'off_session'] }
@@ -150,6 +151,11 @@ module SolidusStripe
 
         intent
       end
+    end
+
+    def skip_confirm_step?
+      preferred_stripe_intents_flow == 'payment' &&
+        preferred_skip_confirmation_for_payment_intent
     end
 
     def payment_profiles_supported?
