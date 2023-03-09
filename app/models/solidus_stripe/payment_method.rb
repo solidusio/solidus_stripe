@@ -164,11 +164,19 @@ module SolidusStripe
     end
 
     def stripe_dashboard_url(payment)
-      # TODO: handle when the payment doesn't exist yet in Stripe, but we only have the setup intent
-      intent_id = payment.transaction_id
       path_prefix = '/test' if preferred_test_mode
 
-      "https://dashboard.stripe.com#{path_prefix}/payments/#{intent_id}"
+      intent_id =
+        payment.transaction_id ||
+        SolidusStripe::PaymentIntent.where(order: payment.order).pick(:stripe_payment_intent_id) ||
+        SolidusStripe::SetupIntent.where(order: payment.order).pick(:stripe_setup_intent_id)
+
+      case intent_id
+      when /^pi_/
+        "https://dashboard.stripe.com#{path_prefix}/payments/#{intent_id}"
+      when /^seti_/
+        "https://dashboard.stripe.com#{path_prefix}/setup_intents/#{intent_id}"
+      end
     end
   end
 end

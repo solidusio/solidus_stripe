@@ -47,7 +47,7 @@ class SolidusStripe::IntentsController < Spree::BaseController
     current_order.next!
     add_setup_intent_to_the_user_wallet(intent, payment)
 
-    flash[:notice] = t(".setup_intent_status.#{intent.status}")
+    flash[:notice] = t(".intent_status.#{intent.status}")
     redirect_to main_app.checkout_state_path(current_order.state)
   end
 
@@ -91,7 +91,7 @@ class SolidusStripe::IntentsController < Spree::BaseController
       current_order.complete!
       redirect_to main_app.token_order_path(current_order, current_order.guest_token)
     else
-      flash[:notice] = t(".intent_status.#{intent.status}")
+      flash[:notice] = t(".payment_intent_status.#{intent.status}")
       redirect_to main_app.checkout_state_path(current_order.state)
     end
   end

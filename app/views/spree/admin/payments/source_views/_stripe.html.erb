@@ -3,14 +3,11 @@
 
   <div class="row">
     <div class="col-4">
-      <dl>
-        <dt><%= SolidusStripe::PaymentSource.human_attribute_name(:stripe_payment_intent_id) %>:</dt>
-        <dd><%= link_to(
-          payment.transaction_id,
-          payment.payment_method.stripe_dashboard_url(payment),
-          target: :_blank,
-        ) %></dd>
-      </dl>
+      <%= link_to(
+        "Open in the Stripe dashboard ↗",
+        payment.payment_method.stripe_dashboard_url(payment),
+        target: :_blank,
+      ) %>
     </div>
   </div>
 </fieldset>
