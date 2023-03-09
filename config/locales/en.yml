@@ -7,7 +7,7 @@ en:
 
     intents:
       payment_confirmation:
-        intent_status:
+        intent_status: &intent_status
           canceled: 'Your payment has been canceled.'
           processing: 'Your payment is processing.'
           requires_action: 'Some action is needed on your payment before proceeding.'
@@ -15,6 +15,9 @@ en:
           requires_confirmation: 'Please confirm the payment in order to proceed.'
           requires_payment_method: 'Your payment was not successful, please try again.'
           succeeded: 'Payment succeeded!'
+      setup_confirmation:
+        intent_status:
+          <<: *intent_status
 
   activerecord:
     models:
@@ -25,4 +28,4 @@ en:
         solidus_stripe/payment_method:
           attributes:
             available_to_admin:
-              inclusion: "is not allowed for the Stripe payment method"
+              inclusion: 'is not allowed for the Stripe payment method'
