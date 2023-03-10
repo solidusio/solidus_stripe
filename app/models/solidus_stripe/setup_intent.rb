@@ -14,7 +14,7 @@ module SolidusStripe
     end
 
     def create_stripe_intent
-      customer = payment_method.customer_for(order.user) || payment_method.customer_for_order(order)
+      customer = payment_method.customer_for(order)
 
       self.stripe_setup_intent_id = payment_method.gateway.request do
         Stripe::SetupIntent.create({

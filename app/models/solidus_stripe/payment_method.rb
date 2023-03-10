@@ -35,7 +35,15 @@ module SolidusStripe
     end
 
     concerning :Customer do
-      def find_customer_for(user)
+      def customer_for(order)
+        if order.user
+          find_customer_for_user(order.user) || create_customer_for_user(order.user)
+        else
+          find_customer_for_order(order) || create_customer_for_order(order)
+        end
+      end
+
+      def find_customer_for_user(user)
         gateway.request do
           raise "unsupported email address: #{user.email.inspect}" if user.email.include?("'")
 
@@ -45,19 +53,13 @@ module SolidusStripe
         end
       end
 
-      def create_customer_for(user)
+      def create_customer_for_user(user)
         gateway.request do
           Stripe::Customer.create(
             email: user.email,
             metadata: { solidus_user_id: user.id },
           )
         end
-      end
-
-      def customer_for(user)
-        return unless user
-
-        find_customer_for(user) || create_customer_for(user)
       end
 
       def find_customer_for_order(order)
@@ -75,10 +77,6 @@ module SolidusStripe
             metadata: { solidus_order_number: order.number },
           )
         end
-      end
-
-      def customer_for_order(order)
-        find_customer_for(order) || create_customer_for(order)
       end
     end
 
