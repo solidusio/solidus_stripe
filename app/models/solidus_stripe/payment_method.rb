@@ -163,13 +163,18 @@ module SolidusStripe
       false
     end
 
-    def stripe_dashboard_url(payment)
-      path_prefix = '/test' if preferred_test_mode
+    # Fetches the payment intent when available, falls back on the setup intent associated to the order.
+    def self.intent_id_for_payment(payment)
+      return unless payment
 
-      intent_id =
-        payment.transaction_id ||
+      payment.transaction_id || (
         SolidusStripe::PaymentIntent.where(order: payment.order).pick(:stripe_payment_intent_id) ||
         SolidusStripe::SetupIntent.where(order: payment.order).pick(:stripe_setup_intent_id)
+      )
+    end
+
+    def stripe_dashboard_url(intent_id)
+      path_prefix = '/test' if preferred_test_mode
 
       case intent_id
       when /^pi_/
