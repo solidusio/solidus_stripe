@@ -91,13 +91,16 @@ module SolidusStripe
     end
 
     # Fetches the payment intent when available, falls back on the setup intent associated to the order.
+    # @api private
+    # TODO: re-evaluate the need for this and think of ways to always go throught the intent classes.
     def self.intent_id_for_payment(payment)
       return unless payment
 
-      payment.transaction_id || (
-        SolidusStripe::PaymentIntent.where(order: payment.order, payment_method: payment.payment_method)&.pick(:stripe_payment_intent_id) ||
-        SolidusStripe::SetupIntent.where(order: payment.order, payment_method: payment.payment_method)&.pick(:stripe_setup_intent_id)
-      )
+      payment.transaction_id || SolidusStripe::PaymentIntent.where(
+        order: payment.order, payment_method: payment.payment_method
+      )&.pick(:stripe_intent_id) || SolidusStripe::SetupIntent.where(
+        order: payment.order, payment_method: payment.payment_method
+      )&.pick(:stripe_intent_id)
     end
 
     def stripe_dashboard_url(intent_id)

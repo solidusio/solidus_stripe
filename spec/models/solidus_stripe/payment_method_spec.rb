@@ -28,7 +28,7 @@ RSpec.describe SolidusStripe::PaymentMethod do
 
     context 'when the order has a payment intent' do
       it 'fetches the payment intent id' do
-        intent = create(:stripe_payment_intent, stripe_payment_intent_id: 'pi_123')
+        intent = create(:stripe_payment_intent, stripe_intent_id: 'pi_123')
         payment = build(:payment, response_code: nil, payment_method: intent.payment_method, order: intent.order)
 
         expect(described_class.intent_id_for_payment(payment)).to eq("pi_123")
@@ -44,7 +44,7 @@ RSpec.describe SolidusStripe::PaymentMethod do
       end
 
       it 'fetches the setup intent id when the payment intent is not available' do
-        intent = create(:stripe_setup_intent, stripe_setup_intent_id: 'seti_123')
+        intent = create(:stripe_setup_intent, stripe_intent_id: 'seti_123')
         payment = build(:payment, response_code: nil, payment_method: intent.payment_method, order: intent.order)
 
         expect(described_class.intent_id_for_payment(payment)).to eq("seti_123")
