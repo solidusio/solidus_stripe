@@ -69,42 +69,23 @@ class SolidusStripe::IntentsController < Spree::BaseController
       # @payment_method.skip_confirm_step?
     end
 
-    def call_after_intent_change
-      unless %w[confirm payment].include?(current_order.state.to_s)
-        redirect_to main_app.checkout_state_path(current_order.state)
-        return
-      end
+    def call_after_intent_change(log_message:)
+      raise "bad order state" unless %w[confirm payment].include?(current_order.state.to_s)
 
-      # Check if this is needed. This was added to be sure the order
-      # in in the right step.
+      # Check if this is needed. This was added to be sure the order in in the right step.
       current_order.state = :payment
-
-      # TODO: understand how to handle webhooks. At this stage, we might receive a webhook
-      # with the confirmation of the setup intent. We need to be sure we are not creating
-      # the payment twice.
-      # https://stripe.com/docs/payments/intents?intent=setup#setup-intent-webhooks
-
-      payment = handler.create_payment!
-
+      payment = create_payment!
       SolidusStripe::LogEntries.payment_log(
-        payment,
+        result.payment,
         success: true,
-        message: "Reached return URL",
-        data: intent,
+        message: log_message,
+        data: handler.intent,
       )
-
       current_order.next!
+      add_payment_to_the_user_wallet(payment)
+      current_order.complete! if skip_confirm_step?
 
-      handler.add_payment_to_the_user_wallet(payment)
-      if handler.skip_confirm_step?
-        flash.notice = t('spree.order_processed_successfully')
-        flash['order_completed'] = true
-        current_order.complete!
-        redirect_to main_app.token_order_path(current_order, current_order.guest_token)
-      else
-        flash[:notice] = t(".intent_status.#{intent.status}")
-        redirect_to main_app.checkout_state_path(current_order.state)
-      end
+      Result.new(payment: payment)
     end
   end
 
@@ -120,91 +101,13 @@ class SolidusStripe::IntentsController < Spree::BaseController
     end
   end
 
-  def after_confirmation
-    handler = handler_for_intent_id(intent_param)
-    intent = handler.intent
-
-    unless %w[confirm payment].include?(current_order.state.to_s)
-      redirect_to main_app.checkout_state_path(current_order.state)
-      return
-    end
-
-    # Check if this is needed. This was added to be sure the order
-    # in in the right step.
-    current_order.state = :payment
-
-    # TODO: understand how to handle webhooks. At this stage, we might receive a webhook
-    # with the confirmation of the setup intent. We need to be sure we are not creating
-    # the payment twice.
-    # https://stripe.com/docs/payments/intents?intent=setup#setup-intent-webhooks
-
-    payment = handler.create_payment!
-
-    SolidusStripe::LogEntries.payment_log(
-      payment,
-      success: true,
-      message: "Reached return URL",
-      data: intent,
-    )
-
-    current_order.next!
-
-    handler.add_payment_to_the_user_wallet(payment)
-
-    if handler.skip_confirm_step?
-      flash.notice = t('spree.order_processed_successfully')
-      flash['order_completed'] = true
-      current_order.complete!
-      redirect_to main_app.token_order_path(current_order, current_order.guest_token)
-    else
-      flash[:notice] = t(".intent_status.#{intent.status}")
-      redirect_to main_app.checkout_state_path(current_order.state)
-    end
-  end
+  Result = Struct.new(:successful)
 
   def after_confirmation
     handler = handler_for_intent_id(intent_param)
-    # intent = handler.intent
-    #
-    # unless %w[confirm payment].include?(current_order.state.to_s)
-    #   redirect_to main_app.checkout_state_path(current_order.state)
-    #   return
-    # end
-    #
-    # # Check if this is needed. This was added to be sure the order
-    # # in in the right step.
-    # current_order.state = :payment
-    #
-    # # TODO: understand how to handle webhooks. At this stage, we might receive a webhook
-    # # with the confirmation of the setup intent. We need to be sure we are not creating
-    # # the payment twice.
-    # # https://stripe.com/docs/payments/intents?intent=setup#setup-intent-webhooks
-    #
-    # payment = handler.create_payment!
-    #
-    # SolidusStripe::LogEntries.payment_log(
-    #   payment,
-    #   success: true,
-    #   message: "Reached return URL",
-    #   data: intent,
-    # )
-    #
-    # current_order.next!
-    #
-    # handler.add_payment_to_the_user_wallet(payment)
-    # if handler.skip_confirm_step?
-    #   flash.notice = t('spree.order_processed_successfully')
-    #   flash['order_completed'] = true
-    #   current_order.complete!
-    #   redirect_to main_app.token_order_path(current_order, current_order.guest_token)
-    # else
-    #   flash[:notice] = t(".intent_status.#{intent.status}")
-    #   redirect_to main_app.checkout_state_path(current_order.state)
-    # end
+    result = handler.call_after_intent_change(log_message: "Reached return URL")
 
-    result = handler.call_after_intent_change
-
-    if result.success?
+    if result.successful
       if current_order.completed?
         flash.notice = t('spree.order_processed_successfully')
         flash['order_completed'] = true
