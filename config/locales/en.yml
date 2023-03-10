@@ -6,7 +6,7 @@ en:
     loading: 'Loading...'
 
     intents:
-      payment_confirmation:
+      after_confirmation:
         intent_status: &intent_status
           canceled: 'Your payment has been canceled.'
           processing: 'Your payment is processing.'
@@ -15,9 +15,6 @@ en:
           requires_confirmation: 'Please confirm the payment in order to proceed.'
           requires_payment_method: 'Your payment was not successful, please try again.'
           succeeded: 'Payment succeeded!'
-      setup_confirmation:
-        intent_status:
-          <<: *intent_status
 
   activerecord:
     models:
