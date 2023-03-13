@@ -10,10 +10,10 @@
 <% end %>
 
 <%# TODO: See if we can move the intent creation out of the view %>
-<% intent = intent_class.find_or_create_by(
+<% intent = intent_class.retrieve_or_create_stripe_intent(
   payment_method: payment_method,
   order: current_order,
-).stripe_intent %>
+) %>
 
 <div
   class="solidus-stripe-payment"
