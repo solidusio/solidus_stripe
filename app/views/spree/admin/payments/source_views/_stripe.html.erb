@@ -1,3 +1,5 @@
+<%= intent_id = SolidusStripe::PaymentMethod.intent_id_for_payment(payment) %>
+
 <fieldset data-hook="credit_card">
   <legend align="center"><%= SolidusStripe::PaymentSource.model_name.human %></legend>
 
@@ -5,7 +7,7 @@
     <div class="col-4">
       <%= link_to(
         "Open in the Stripe dashboard ↗",
-        payment.payment_method.stripe_dashboard_url(payment),
+        payment.payment_method.stripe_dashboard_url(intent_id),
         target: :_blank,
       ) %>
     </div>

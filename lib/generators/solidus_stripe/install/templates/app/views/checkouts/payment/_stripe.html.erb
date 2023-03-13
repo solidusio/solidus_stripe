@@ -1,13 +1,19 @@
 <script src="https://js.stripe.com/v3/"></script>
 
 <% if payment_method.preferred_stripe_intents_flow == 'setup' %>
-  <% intent = payment_method.find_or_create_setup_intent_for_order(current_order) %>
+  <% intent_class = SolidusStripe::SetupIntent %>
   <% return_url = solidus_stripe.setup_confirmation_url(payment_method) %>
 <% elsif payment_method.preferred_stripe_intents_flow == 'payment' %>
-  <% intent = payment_method.find_or_create_payment_intent_for_order(current_order) %>
+  <% intent_class = SolidusStripe::PaymentIntent %>
   <% return_url = solidus_stripe.payment_confirmation_url(payment_method) %>
 <% else raise 'what the heck!' %>
 <% end %>
+
+<%# TODO: See if we can move the intent creation out of the view %>
+<% intent = intent_class.retrieve_or_create_stripe_intent(
+  payment_method: payment_method,
+  order: current_order,
+) %>
 
 <div
   class="solidus-stripe-payment"

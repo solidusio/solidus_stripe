@@ -8,7 +8,11 @@ class SolidusStripe::IntentsController < Spree::BaseController
   before_action :load_payment_method
 
   def setup_confirmation
-    intent = @payment_method.find_setup_intent_for_order(current_order)
+    intent_class = SolidusStripe::SetupIntent
+    intent = intent_class.find_by!(
+      payment_method: @payment_method,
+      order: current_order,
+    ).stripe_intent
 
     if params[:setup_intent] != intent.id
       raise "The setup intent id doesn't match"
@@ -52,7 +56,11 @@ class SolidusStripe::IntentsController < Spree::BaseController
   end
 
   def payment_confirmation
-    intent = @payment_method.find_payment_intent_for_order(current_order)
+    intent_class = SolidusStripe::PaymentIntent
+    intent = intent_class.find_by!(
+      payment_method: @payment_method,
+      order: current_order,
+    ).stripe_intent
 
     if params[:payment_intent] != intent.id
       raise "The payment intent id doesn't match"

@@ -35,7 +35,15 @@ module SolidusStripe
     end
 
     concerning :Customer do
-      def find_customer_for(user)
+      def customer_for(order)
+        if order.user
+          find_customer_for_user(order.user) || create_customer_for_user(order.user)
+        else
+          find_customer_for_order(order) || create_customer_for_order(order)
+        end
+      end
+
+      def find_customer_for_user(user)
         gateway.request do
           raise "unsupported email address: #{user.email.inspect}" if user.email.include?("'")
 
@@ -45,19 +53,13 @@ module SolidusStripe
         end
       end
 
-      def create_customer_for(user)
+      def create_customer_for_user(user)
         gateway.request do
           Stripe::Customer.create(
             email: user.email,
             metadata: { solidus_user_id: user.id },
           )
         end
-      end
-
-      def customer_for(user)
-        return unless user
-
-        find_customer_for(user) || create_customer_for(user)
       end
 
       def find_customer_for_order(order)
@@ -76,81 +78,6 @@ module SolidusStripe
           )
         end
       end
-
-      def customer_for_order(order)
-        find_customer_for(order) || create_customer_for(order)
-      end
-    end
-
-    concerning :SetupIntents do
-      def find_or_create_setup_intent_for_order(order)
-        find_setup_intent_for_order(order) || create_setup_intent_for_order(order)
-      end
-
-      def find_setup_intent_for_order(order)
-        SolidusStripe::SetupIntent
-          .find_by(order: order) # TODO: order.setup_intent (?)
-          &.stripe_setup_intent(self)
-      end
-
-      def create_setup_intent_for_order(order)
-        customer = customer_for(order.user) || customer_for_order(order)
-
-        intent = gateway.request do
-          Stripe::SetupIntent.create({
-            customer: customer,
-            usage: 'off_session', # TODO: use the payment method's preference
-            metadata: { solidus_order_number: order.number },
-          })
-        end
-
-        SolidusStripe::SetupIntent.create!(
-          order: order,
-          stripe_setup_intent_id: intent.id,
-        )
-
-        intent
-      end
-    end
-
-    concerning :PaymentIntents do
-      def find_or_create_payment_intent_for_order(order)
-        find_payment_intent_for_order(order) || create_payment_intent_for_order(order)
-      end
-
-      def find_payment_intent_for_order(order)
-        SolidusStripe::PaymentIntent
-          .find_by(order: order)
-          &.stripe_payment_intent(self)
-      end
-
-      def create_payment_intent_for_order(order)
-        customer = customer_for(order.user) || customer_for_order(order)
-
-        intent = gateway.request do
-          Stripe::PaymentIntent.create({
-            amount: gateway.to_stripe_amount(
-              order.display_total.money.fractional,
-              order.currency,
-            ),
-            currency: order.currency,
-
-            # The capture method should stay manual in order to
-            # avoid capturing the money before the order is completed.
-            capture_method: 'manual',
-            setup_future_usage: preferred_setup_future_usage.presence,
-            customer: customer,
-            metadata: { solidus_order_number: order.number },
-          })
-        end
-
-        SolidusStripe::PaymentIntent.create!(
-          order: order,
-          stripe_payment_intent_id: intent.id,
-        )
-
-        intent
-      end
     end
 
     def skip_confirm_step?
@@ -163,13 +90,21 @@ module SolidusStripe
       false
     end
 
-    def stripe_dashboard_url(payment)
-      path_prefix = '/test' if preferred_test_mode
+    # Fetches the payment intent when available, falls back on the setup intent associated to the order.
+    # @api private
+    # TODO: re-evaluate the need for this and think of ways to always go throught the intent classes.
+    def self.intent_id_for_payment(payment)
+      return unless payment
 
-      intent_id =
-        payment.transaction_id ||
-        SolidusStripe::PaymentIntent.where(order: payment.order).pick(:stripe_payment_intent_id) ||
-        SolidusStripe::SetupIntent.where(order: payment.order).pick(:stripe_setup_intent_id)
+      payment.transaction_id || SolidusStripe::PaymentIntent.where(
+        order: payment.order, payment_method: payment.payment_method
+      )&.pick(:stripe_intent_id) || SolidusStripe::SetupIntent.where(
+        order: payment.order, payment_method: payment.payment_method
+      )&.pick(:stripe_intent_id)
+    end
+
+    def stripe_dashboard_url(intent_id)
+      path_prefix = '/test' if preferred_test_mode
 
       case intent_id
       when /^pi_/

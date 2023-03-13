@@ -34,3 +34,11 @@ Style/TrailingUnderscoreVariable:
 RSpec/DescribeClass:
   Exclude:
     - spec/system/**/*
+
+Rails/NotNullColumn:
+  Exclude:
+    - db/migrate/20230310152615_add_payment_method_reference_to_stripe_intents.rb
+
+Layout/LineLength:
+  Exclude:
+    - db/migrate/**/*
