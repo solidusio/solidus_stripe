@@ -85,17 +85,15 @@ module SolidusStripe
     end
 
     # Authorizes and captures a certain amount on the provided payment source.
-    def purchase(amount_in_cents, _source, options = {})
-      currency = options.fetch(:currency)
-
+    # @todo add support for purchasing custom amounts
+    def purchase(_amount_in_cents, source, options = {})
       # Charge the Customer instead of the card:
-      payment_intent = request do
-        Stripe::PaymentIntent.create({
-          amount: to_stripe_amount(amount_in_cents, currency),
-          currency: currency,
-          **options[:payment_intent_options].to_h
-        })
-      end
+      payment_intent =
+        SolidusStripe::PaymentIntent.create_stripe_intent(
+          payment_method: source.payment_method,
+          order: options[:originator].order,
+          stripe_intent_options: options[:payment_intent_options] || {}
+        )
 
       build_payment_log(
         success: true,

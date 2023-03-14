@@ -5,14 +5,13 @@ module SolidusStripe
     belongs_to :order, class_name: 'Spree::Order'
     belongs_to :payment_method, class_name: 'SolidusStripe::PaymentMethod'
 
-    def self.retrieve_or_create_stripe_intent(payment_method:, order:)
-      instance = find_or_initialize_by(payment_method: payment_method, order: order)
+    def self.retrieve_stripe_intent(payment_method:, order:)
+      find_by(payment_method: payment_method, order: order)&.stripe_intent
+    end
 
-      if instance.stripe_intent_id
-        instance.stripe_intent
-      else
-        instance.create_stripe_intent.tap { instance.update!(stripe_intent_id: _1.id) }
-      end
+    def self.create_stripe_intent(payment_method:, order:, stripe_intent_options: {})
+      instance = new(payment_method: payment_method, order: order)
+      instance.create_stripe_intent(stripe_intent_options).tap { instance.update!(stripe_intent_id: _1.id) }
     end
 
     def stripe_intent
@@ -21,7 +20,7 @@ module SolidusStripe
       end
     end
 
-    def create_stripe_intent
+    def create_stripe_intent(stripe_intent_options)
       customer = payment_method.customer_for(order)
 
       payment_method.gateway.request do
@@ -38,7 +37,7 @@ module SolidusStripe
           setup_future_usage: payment_method.preferred_setup_future_usage.presence,
           customer: customer,
           metadata: { solidus_order_number: order.number },
-        })
+        }.merge(stripe_intent_options))
       end
     end
   end
