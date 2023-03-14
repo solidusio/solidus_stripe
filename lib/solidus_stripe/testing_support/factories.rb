@@ -38,4 +38,14 @@ FactoryBot.define do
     association :payment_method, factory: :stripe_payment_method
     slug { SecureRandom.hex(16) }
   end
+
+  factory :stripe_customer, class: 'SolidusStripe::Customer' do
+    association :payment_method, factory: :stripe_payment_method
+    association :source, factory: :user
+    stripe_id { "cus_#{SecureRandom.uuid.delete('-')}" }
+
+    trait :guest do
+      association :source, factory: :order, email: 'guest@example.com', user: nil
+    end
+  end
 end
