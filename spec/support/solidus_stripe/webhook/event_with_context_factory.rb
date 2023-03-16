@@ -13,14 +13,14 @@ module SolidusStripe
     # The context for a event is composed by the timestamp and its secret, which
     # in turn affect the header representation.
     class EventWithContextFactory
-      def self.from_data(data:, timestamp: Time.zone.now, secret: "whsec_123")
-        new(data: data, timestamp: timestamp, secret: secret)
+      def self.from_data(data:, payment_method:, timestamp: Time.zone.now)
+        new(data: data, timestamp: timestamp, payment_method: payment_method)
       end
 
-      def self.from_object(object:, type:, timestamp: Time.zone.now, secret: "whsec_123")
+      def self.from_object(object:, type:, payment_method:, timestamp: Time.zone.now)
         data_base = data_base(object, type)
         data = data_base.merge("webhook" => data_base)
-        new(data: data, timestamp: timestamp, secret: secret)
+        new(data: data, timestamp: timestamp, payment_method: payment_method)
       end
 
       def self.data_base(object, type)
@@ -43,12 +43,13 @@ module SolidusStripe
       end
       private_class_method :data_base
 
-      attr_reader :data, :timestamp, :secret
+      attr_reader :data, :timestamp, :secret, :payment_method
 
-      def initialize(data:, timestamp: Time.zone.now, secret: "whsec_123")
+      def initialize(data:, payment_method:, timestamp: Time.zone.now)
         @data = data
         @timestamp = timestamp
-        @secret = secret
+        @payment_method = payment_method
+        @secret = payment_method.preferred_webhook_endpoint_signing_secret
       end
 
       def stripe_object
@@ -65,6 +66,10 @@ module SolidusStripe
 
       def signature
         @signature ||= Stripe::Webhook::Signature.compute_signature(timestamp, json, secret)
+      end
+
+      def slug
+        @payment_method.webhook_endpoint_slug
       end
     end
   end

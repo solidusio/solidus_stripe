@@ -2,7 +2,7 @@
 
 module SolidusStripe
   module Webhook
-    # Omnes event wrapping a Stripe event.
+    # Omnes event wrapping a Stripe event for a given payment method.
     #
     # All unknown methods are delegated to the wrapped Stripe event.
     #
@@ -19,10 +19,16 @@ module SolidusStripe
 
       # @api private
       class << self
-        def from_request(payload:, signature_header:, secret: default_secret, tolerance: default_tolerance)
-          stripe_event = Stripe::Webhook.construct_event(payload, signature_header, secret, tolerance: tolerance)
-          new(stripe_event: stripe_event)
-        rescue Stripe::SignatureVerificationError, JSON::ParserError
+        def from_request(payload:, signature_header:, slug:, tolerance: default_tolerance)
+          payment_method = SolidusStripe::WebhookEndpoint.payment_method(slug)
+          stripe_event = Stripe::Webhook.construct_event(
+            payload,
+            signature_header,
+            payment_method.preferred_webhook_endpoint_signing_secret,
+            tolerance: tolerance
+          )
+          new(stripe_event: stripe_event, spree_payment_method: payment_method)
+        rescue ActiveRecord::RecordNotFound, Stripe::SignatureVerificationError, JSON::ParserError
           nil
         end
 
@@ -37,18 +43,18 @@ module SolidusStripe
         def default_tolerance
           SolidusStripe.configuration.webhook_signature_tolerance
         end
-
-        def default_secret
-          Rails.application.credentials.solidus_stripe[:webhook_endpoint_secret]
-        end
       end
 
       # @api private
       attr_reader :omnes_event_name
 
+      # @attr_reader [SolidusStripe::PaymentMethod]
+      attr_reader :spree_payment_method
+
       # @api private
-      def initialize(stripe_event:)
+      def initialize(stripe_event:, spree_payment_method:)
         @stripe_event = stripe_event
+        @spree_payment_method = spree_payment_method
         @omnes_event_name = :"#{PREFIX}#{stripe_event.type}"
       end
 
@@ -60,7 +66,10 @@ module SolidusStripe
       #
       # @return [Hash<String, Object>]
       def payload
-        @stripe_event.as_json
+        {
+          "stripe_event" => @stripe_event.as_json,
+          "spree_payment_method_id" => @spree_payment_method.id
+        }
       end
 
       private

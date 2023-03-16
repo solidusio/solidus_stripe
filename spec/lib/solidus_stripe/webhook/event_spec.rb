@@ -26,14 +26,15 @@ RSpec.describe SolidusStripe::Webhook::Event do
   describe ".from_request" do
     let(:context) do
       SolidusStripe::Webhook::EventWithContextFactory.from_data(
-        data: SolidusStripe::Webhook::DataFixtures.charge_succeeded
+        data: SolidusStripe::Webhook::DataFixtures.charge_succeeded,
+        payment_method: create(:stripe_payment_method)
       )
     end
 
     context "with a valid event" do
       it "returns an event" do
         event = described_class.from_request(
-          payload: context.json, signature_header: context.signature_header, secret: context.secret
+          payload: context.json, signature_header: context.signature_header, slug: context.slug
         )
 
         expect(event).to be_a(described_class)
@@ -45,7 +46,7 @@ RSpec.describe SolidusStripe::Webhook::Event do
         signature_header = "t=1,v1=1"
 
         event = described_class.from_request(
-          payload: context.json, signature_header: signature_header, secret: context.secret
+          payload: context.json, signature_header: signature_header, slug: context.slug
         )
 
         expect(event).to be(nil)
@@ -55,7 +56,7 @@ RSpec.describe SolidusStripe::Webhook::Event do
     context "when the tolerance has expired" do
       it "returns nil" do
         event = described_class.from_request(
-          payload: context.json, signature_header: context.signature_header, secret: context.secret, tolerance: 0
+          payload: context.json, signature_header: context.signature_header, tolerance: 0, slug: context.slug
         )
 
         expect(event).to be(nil)
@@ -65,7 +66,17 @@ RSpec.describe SolidusStripe::Webhook::Event do
     context "when the payload is malformed" do
       it "returns nil" do
         event = described_class.from_request(
-          payload: "invalid", signature_header: context.signature_header, secret: context.secret
+          payload: "invalid", signature_header: context.signature_header, slug: context.slug
+        )
+
+        expect(event).to be(nil)
+      end
+    end
+
+    context "when the slug is not known" do
+      it "returns nil" do
+        event = described_class.from_request(
+          payload: context.json, signature_header: context.signature_header, slug: "foo"
         )
 
         expect(event).to be(nil)
@@ -74,42 +85,50 @@ RSpec.describe SolidusStripe::Webhook::Event do
   end
 
   describe "#initialize" do
-    let(:stripe_event) do
+    let(:context) do
       SolidusStripe::Webhook::EventWithContextFactory.new(
-        data: SolidusStripe::Webhook::DataFixtures.charge_succeeded
-      ).stripe_object
+        data: SolidusStripe::Webhook::DataFixtures.charge_succeeded,
+        payment_method: create(:stripe_payment_method)
+      )
     end
 
-    it "sets the omnes_event_name from the type field" do
-      event = described_class.new(stripe_event: stripe_event)
+    it "sets the payment method" do
+      event = described_class.new(stripe_event: context.stripe_object, spree_payment_method: context.payment_method)
+
+      expect(event.spree_payment_method).to be(context.payment_method)
+    end
+
+    it "sets the omnes_event_name from the event type field" do
+      event = described_class.new(stripe_event: context.stripe_object, spree_payment_method: context.payment_method)
 
       expect(event.omnes_event_name).to be(:"stripe.charge.succeeded")
     end
 
     it "delegates all other methods to the stripe event" do
-      event = described_class.new(stripe_event: stripe_event)
+      event = described_class.new(stripe_event: context.stripe_object, spree_payment_method: context.payment_method)
 
       expect(event.type).to eq("charge.succeeded")
     end
   end
 
   describe "#payload" do
-    let(:stripe_event) do
+    let(:context) do
       SolidusStripe::Webhook::EventWithContextFactory.new(
-        data: SolidusStripe::Webhook::DataFixtures.charge_succeeded
-      ).stripe_object
+        data: SolidusStripe::Webhook::DataFixtures.charge_succeeded,
+        payment_method: create(:stripe_payment_method)
+      )
     end
 
-    it "returns Hash representation" do
-      event = described_class.new(stripe_event: stripe_event)
+    it "includes stripe event Hash representation" do
+      event = described_class.new(stripe_event: context.stripe_object, spree_payment_method: context.payment_method)
 
-      expect(event.payload).to be_a(Hash)
+      expect(event.payload["stripe_event"]).to eq(context.stripe_object.as_json)
     end
 
-    it "uses strings for the hash keys" do
-      event = described_class.new(stripe_event: stripe_event)
+    it "includes spree payment method id" do
+      event = described_class.new(stripe_event: context.stripe_object, spree_payment_method: context.payment_method)
 
-      expect(event.payload.keys).to include("type")
+      expect(event.payload["spree_payment_method_id"]).to be(context.payment_method.id)
     end
   end
 end

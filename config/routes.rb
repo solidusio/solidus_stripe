@@ -5,5 +5,5 @@ SolidusStripe::Engine.routes.draw do
     get :payment_confirmation, controller: :intents
     get :setup_confirmation, controller: :intents
   end
-  resources :webhooks, only: :create, format: false
+  post '/webhooks/:slug', format: false, to: 'webhooks#create'
 end

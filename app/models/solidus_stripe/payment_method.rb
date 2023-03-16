@@ -8,9 +8,27 @@ module SolidusStripe
     preference :stripe_intents_flow, :string, default: 'setup'
     preference :skip_confirmation_for_payment_intent, :boolean, default: true
 
+    # @attribute [rw] preferred_webhook_endpoint_signing_secret The webhook endpoint signing secret
+    #  for this payment method.
+    # @see https://stripe.com/docs/webhooks/signatures
+    preference :webhook_endpoint_signing_secret, :string
+
     validates :available_to_admin, inclusion: { in: [false] }
     validates :preferred_setup_future_usage, inclusion: { in: ['', 'on_session', 'off_session'] }
     validates :preferred_stripe_intents_flow, inclusion: { in: ['payment', 'setup'] }
+
+    has_one :webhook_endpoint,
+      class_name: 'SolidusStripe::WebhookEndpoint',
+      inverse_of: :payment_method,
+      dependent: :destroy
+
+    after_create :assign_webhook_endpoint
+
+    # @!attribute [r] webhook_endpoint_slug
+    #   @return [String] The slug of the webhook endpoint for this payment method.
+    delegate :slug,
+      to: :webhook_endpoint,
+      prefix: true
 
     concerning :Configuration do
       def partial_name
@@ -112,6 +130,14 @@ module SolidusStripe
       when /^seti_/
         "https://dashboard.stripe.com#{path_prefix}/setup_intents/#{intent_id}"
       end
+    end
+
+    private
+
+    def assign_webhook_endpoint
+      create_webhook_endpoint!(
+        slug: WebhookEndpoint.generate_slug
+      )
     end
   end
 end
