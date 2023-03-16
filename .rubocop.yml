@@ -42,3 +42,7 @@ Rails/NotNullColumn:
 Layout/LineLength:
   Exclude:
     - db/migrate/**/*
+
+RSpec/FilePath:
+  Exclude:
+    - spec/requests/solidus_stripe/webhooks_controller/**/*

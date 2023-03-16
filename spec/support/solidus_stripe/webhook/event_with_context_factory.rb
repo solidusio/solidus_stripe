@@ -8,7 +8,8 @@ module SolidusStripe
     # Factory to create a webhook event along with its context.
     #
     # It allows to create Stripe webhook from different sources (hash, stripe
-    # object) in different representations (json, stripe event object, header).
+    # object) in different representations (json, stripe event object, solidus
+    # stripe object, header).
     #
     # The context for a event is composed by the timestamp and its secret, which
     # in turn affect the header representation.
@@ -54,6 +55,11 @@ module SolidusStripe
 
       def stripe_object
         @stripe_object ||= Stripe::Event.construct_from(data)
+      end
+
+      def solidus_stripe_object
+        @solidus_stripe_object = SolidusStripe::Webhook::Event.new(stripe_event: stripe_object,
+          spree_payment_method: @payment_method)
       end
 
       def json
