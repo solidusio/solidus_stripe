@@ -26,7 +26,7 @@ module SolidusStripe
       payment_method.gateway.request do
         Stripe::SetupIntent.create({
           customer: customer,
-          usage: 'off_session', # TODO: use the payment method's preference
+          usage: payment_method.preferred_setup_future_usage.presence,
           metadata: { solidus_order_number: order.number },
         }.merge(stripe_intent_options))
       end
