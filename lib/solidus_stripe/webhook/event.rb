@@ -13,8 +13,9 @@ module SolidusStripe
       PREFIX = "stripe."
       private_constant :PREFIX
 
-      # TBD
-      CORE_EVENTS = Set[*%i[]].freeze
+      CORE_EVENTS = Set[*%i[
+        payment_intent.succeeded
+      ]].freeze
       private_constant :CORE_EVENTS
 
       # @api private
