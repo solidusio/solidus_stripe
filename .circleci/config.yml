@@ -57,7 +57,9 @@ jobs:
             bundle install
       - run:
           name: "Install dummy app"
-          command: bin/dummy-app
+          command: |
+            <<#parameters.coverage>>export COVERAGE=true<</parameters.coverage>>
+            bin/dummy-app
           environment:
             FRONTEND: starter
             SOLIDUS_BRANCH: master
