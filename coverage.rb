@@ -33,6 +33,7 @@ def (SimpleCov::ResultAdapter).call(result)
   result
 end
 
+warn "Tracking coverage on process #{$$}..."
 SimpleCov.start do
   root __dir__
   enable_coverage_for_eval
