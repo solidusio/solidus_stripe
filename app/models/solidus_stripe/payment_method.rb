@@ -52,52 +52,6 @@ module SolidusStripe
       end
     end
 
-    concerning :Customer do
-      def customer_for(order)
-        if order.user
-          find_customer_for_user(order.user) || create_customer_for_user(order.user)
-        else
-          find_customer_for_order(order) || create_customer_for_order(order)
-        end
-      end
-
-      def find_customer_for_user(user)
-        gateway.request do
-          raise "unsupported email address: #{user.email.inspect}" if user.email.include?("'")
-
-          Stripe::Customer.search(
-            query: "metadata['solidus_user_id']:'#{user.id}' AND email:'#{user.email}'"
-          ).first
-        end
-      end
-
-      def create_customer_for_user(user)
-        gateway.request do
-          Stripe::Customer.create(
-            email: user.email,
-            metadata: { solidus_user_id: user.id },
-          )
-        end
-      end
-
-      def find_customer_for_order(order)
-        gateway.request do
-          Stripe::Customer.search(
-            query: "metadata['solidus_order_number']:'#{order.number}'"
-          ).first
-        end
-      end
-
-      def create_customer_for_order(order)
-        gateway.request do
-          Stripe::Customer.create(
-            email: order.email,
-            metadata: { solidus_order_number: order.number },
-          )
-        end
-      end
-    end
-
     def skip_confirm_step?
       preferred_stripe_intents_flow == 'payment' &&
         preferred_skip_confirmation_for_payment_intent

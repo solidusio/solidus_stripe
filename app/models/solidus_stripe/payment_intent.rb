@@ -21,7 +21,10 @@ module SolidusStripe
     end
 
     def create_stripe_intent(stripe_intent_options)
-      customer = payment_method.customer_for(order)
+      stripe_customer_id = SolidusStripe::Customer.retrieve_or_create_stripe_customer_id(
+        payment_method: payment_method,
+        order: order
+      )
 
       payment_method.gateway.request do
         Stripe::PaymentIntent.create({
@@ -35,7 +38,7 @@ module SolidusStripe
           # avoid capturing the money before the order is completed.
           capture_method: 'manual',
           setup_future_usage: payment_method.preferred_setup_future_usage.presence,
-          customer: customer,
+          customer: stripe_customer_id,
           metadata: { solidus_order_number: order.number },
         }.merge(stripe_intent_options))
       end
