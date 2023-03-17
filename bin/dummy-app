@@ -29,9 +29,9 @@ cd ./dummy-app
 
 # Coverage
 echo "require_relative '../../coverage.rb' if ENV['COVERAGE']" >> config/boot.rb
-echo "gem 'simplecov', '~> 0.22', require: false" >> Gemfile
 echo "gem 'rspec_junit_formatter', require: false" >> Gemfile
-echo "gem 'codecov', require: false" >> Gemfile
+echo "gem 'simplecov', '~> 0.22', require: false" >> Gemfile
+echo "gem 'simplecov-cobertura', require: false" >> Gemfile
 unbundled bundle install
 
 unbundled bundle add solidus --github solidusio/solidus --branch "${SOLIDUS_BRANCH:-master}" --version '> 0.a'
