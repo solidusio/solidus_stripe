@@ -6,4 +6,4 @@ system(
 ) or abort(File.read("tmp/rspec-sync.log"))
 
 Dir.chdir "dummy-app/"
-exec "rspec", *ARGV
+exec "bundle", "exec", "rspec", *ARGV
