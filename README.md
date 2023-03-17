@@ -52,7 +52,7 @@ need to append it to a generic webhook endpoint to get the URL for that payment
 method. For example:
 
 ```ruby
-SolidusStripe::PaymentMethod.last.webhook_endpoint_secret
+SolidusStripe::PaymentMethod.last.webhook_endpoint_slug
 # "365a8435cd11300e87de864c149516e0"
 ```
 
