@@ -2,6 +2,7 @@ version: 2.1
 
 orbs:
   browser-tools: circleci/browser-tools@1.1
+  codecov: codecov/codecov@3.2.4
 
   # Always take the latest version of the orb, this allows us to
   # run specs against Solidus supported versions only without the need
@@ -56,7 +57,9 @@ jobs:
             bundle install
       - run:
           name: "Install dummy app"
-          command: bin/dummy-app
+          command: |
+            <<#parameters.coverage>>export COVERAGE=true<</parameters.coverage>>
+            bin/dummy-app
           environment:
             FRONTEND: starter
             SOLIDUS_BRANCH: master
@@ -69,11 +72,16 @@ jobs:
           command: |
             <<#parameters.coverage>>export COVERAGE=true<</parameters.coverage>>
             bin/rspec --format progress --format RspecJunitFormatter --out "$PWD/test-results/results.xml"
-      - store_test_results:
+      - when:
+          condition: <<parameters.coverage>>
+          steps: ["codecov/upload"]
           path: test-results
       - store_artifacts:
           path: /home/circleci/project/dummy-app/tmp/capybara/
           destination: capybara
+      - store_artifacts:
+          path: /home/circleci/project/coverage/
+          destination: coverage
   lint-code:
     executor: solidusio_extensions/sqlite-memory
     steps:

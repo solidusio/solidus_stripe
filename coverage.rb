@@ -6,20 +6,10 @@ require 'simplecov'
 SimpleCov.root File.expand_path(__dir__)
 
 if ENV['CODECOV_TOKEN']
-  require 'codecov'
-
-  class FixedCodeCovFormatter
-    # The `file_network` method will run a wildcard from inside the current dir
-    # instead of inside the SimpleCov root.
-    def format(result)
-      Dir.chdir(SimpleCov.root) do
-        SimpleCov::Formatter::Codecov.new.format(result)
-      end
-    end
-  end
+  require 'simplecov-cobertura'
 
   SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter.new([
-    FixedCodeCovFormatter,
+    SimpleCov::Formatter::CoberturaFormatter,
     SimpleCov.formatter,
   ])
 else
@@ -43,6 +33,7 @@ def (SimpleCov::ResultAdapter).call(result)
   result
 end
 
+warn "Tracking coverage on process #{$$}..."
 SimpleCov.start do
   root __dir__
   enable_coverage_for_eval

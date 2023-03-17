@@ -13,6 +13,6 @@ gem 'listen'
 
 gem 'activestorage'
 
-gem 'codecov', require: false
 gem 'rspec_junit_formatter', require: false
 gem 'simplecov', '~> 0.22', require: false
+gem 'simplecov-cobertura', require: false
