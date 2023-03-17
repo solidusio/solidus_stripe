@@ -7,17 +7,7 @@ class SolidusStripe::IntentsController < Spree::BaseController
 
   before_action :load_payment_method
 
-  def setup_confirmation
-    intent_class = SolidusStripe::SetupIntent
-    intent = intent_class.find_by!(
-      payment_method: @payment_method,
-      order: current_order,
-    ).stripe_intent
-
-    if params[:setup_intent] != intent.id
-      raise "The setup intent id doesn't match"
-    end
-
+  def after_confirmation
     unless %w[confirm payment].include?(current_order.state.to_s)
       redirect_to main_app.checkout_state_path(current_order.state)
       return
@@ -32,14 +22,23 @@ class SolidusStripe::IntentsController < Spree::BaseController
     # the payment twice.
     # https://stripe.com/docs/payments/intents?intent=setup#setup-intent-webhooks
 
-    payment = current_order.payments.create!(
-      payment_method: @payment_method,
-      amount: current_order.total, # TODO: double check, remove store credit?
-      source: @payment_method.payment_source_class.new(
-        stripe_payment_method_id: intent.payment_method,
+    current_order.next!
+
+    case
+    when params[:setup_intent]
+      intent = SolidusStripe::SetupIntent.find_by!(
         payment_method: @payment_method,
-      )
-    )
+        order: current_order,
+      ).stripe_intent
+      payment = payment_for_setup_intent(intent)
+    when params[:payment_intent]
+      intent = SolidusStripe::PaymentIntent.find_by!(
+        payment_method: @payment_method,
+        order: current_order,
+      ).stripe_intent
+      payment = payment_for_payment_intent(intent)
+    else head :unprocessable_entity
+    end
 
     SolidusStripe::LogEntries.payment_log(
       payment,
@@ -47,51 +46,6 @@ class SolidusStripe::IntentsController < Spree::BaseController
       message: "Reached return URL",
       data: intent,
     )
-
-    current_order.next!
-    add_setup_intent_to_the_user_wallet(intent, payment)
-
-    flash[:notice] = t(".intent_status.#{intent.status}")
-    redirect_to main_app.checkout_state_path(current_order.state)
-  end
-
-  def payment_confirmation
-    intent_class = SolidusStripe::PaymentIntent
-    intent = intent_class.find_by!(
-      payment_method: @payment_method,
-      order: current_order,
-    ).stripe_intent
-
-    if params[:payment_intent] != intent.id
-      raise "The payment intent id doesn't match"
-    end
-
-    unless %w[confirm payment].include?(current_order.state.to_s)
-      redirect_to main_app.checkout_state_path(current_order.state)
-      return
-    end
-
-    current_order.state = :payment
-
-    payment = current_order.payments.create!(
-      state: 'pending',
-      payment_method: @payment_method,
-      amount: current_order.total, # TODO: double check, remove store credit?
-      response_code: intent.id,
-      source: @payment_method.payment_source_class.new(
-        payment_method: @payment_method
-      ),
-    )
-
-    SolidusStripe::LogEntries.payment_log(
-      payment,
-      success: true,
-      message: "Reached return URL",
-      data: intent,
-    )
-
-    current_order.next!
-    add_payment_source_to_the_user_wallet(payment, intent)
 
     if @payment_method.skip_confirm_step?
       flash.notice = t('spree.order_processed_successfully')
@@ -106,18 +60,44 @@ class SolidusStripe::IntentsController < Spree::BaseController
 
   private
 
-  def add_setup_intent_to_the_user_wallet(_intent, payment)
-    return unless current_order.user
+  def payment_for_setup_intent(intent)
+    raise "The setup intent id doesn't match" if params[:setup_intent] != intent.id
 
-    current_order.user.wallet.add payment.source
+    payment = current_order.payments.create!(
+      payment_method: @payment_method,
+      amount: current_order.total, # TODO: double check, remove store credit?
+      source: @payment_method.payment_source_class.new(
+        stripe_payment_method_id: intent.payment_method,
+        payment_method: @payment_method,
+      )
+    )
+
+    if current_order.user
+      current_order.user.wallet.add payment.source
+    end
+
+    payment
   end
 
-  def add_payment_source_to_the_user_wallet(payment, intent)
-    return unless current_order.user
-    return if intent.setup_future_usage.blank?
+  def payment_for_payment_intent(intent)
+    raise "The payment intent id doesn't match" if params[:payment_intent] != intent.id
 
-    payment.source.update(stripe_payment_method_id: intent.payment_method)
-    current_order.user.wallet.add payment.source
+    payment = current_order.payments.create!(
+      state: 'pending',
+      payment_method: @payment_method,
+      amount: current_order.total, # TODO: double check, remove store credit?
+      response_code: intent.id,
+      source: @payment_method.payment_source_class.new(
+        payment_method: @payment_method
+      ),
+    )
+
+    if current_order.user && intent.setup_future_usage.present?
+      payment.source.update(stripe_payment_method_id: intent.payment_method)
+      current_order.user.wallet.add payment.source
+    end
+
+    payment
   end
 
   def ensure_state_is(object, state)
