@@ -4,7 +4,7 @@ require 'solidus_stripe_spec_helper'
 
 RSpec.describe SolidusStripe::Gateway do
   describe '#authorize' do
-    it 'uses a manual capture method' do
+    it 'confirms the Stripe payment' do
       stripe_payment_method = Stripe::PaymentMethod.construct_from(id: "pm_123", customer: "cus_123")
       stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123")
 
@@ -35,40 +35,49 @@ RSpec.describe SolidusStripe::Gateway do
   end
 
   describe '#capture' do
-    it 'captures a pre-authorized amount' do
+    it 'captures a pre-authorized Stripe payment' do
+      stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123")
+
       gateway = build(:stripe_payment_method).gateway
       payment = build(:payment, response_code: "pi_123", amount: 123.45)
-      intent = Stripe::PaymentIntent.construct_from(id: "pi_123", object: "payment_intent")
-      allow(Stripe::PaymentIntent).to receive(:capture).and_return(intent)
+
+      allow(Stripe::PaymentIntent).to receive(:capture).and_return(stripe_payment_intent)
 
       result = gateway.capture(123_45, "pi_123", originator: payment)
 
       expect(Stripe::PaymentIntent).to have_received(:capture).with('pi_123')
-      expect(result.params).to eq("data" => '{"id":"pi_123","object":"payment_intent"}')
+      expect(result.params).to eq("data" => '{"id":"pi_123"}')
     end
   end
 
   describe '#purchase' do
     it 'authorizes and captures in a single operation' do
-      intent = Stripe::PaymentIntent.construct_from(id: "pi_123", object: "payment_intent")
+      stripe_payment_method = Stripe::PaymentMethod.construct_from(id: "pm_123", customer: "cus_123")
+      stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123")
 
       payment_method = build(:stripe_payment_method)
-      gateway = payment_method.gateway
       source = build(:stripe_payment_source, stripe_payment_method_id: "pi_123", payment_method: payment_method)
+      gateway = payment_method.gateway
       order = create(:order,
         line_items: [build(:line_item, price: 123.45)],
         payments: [create(:payment, amount: 123.45, payment_method: payment_method)], &:recalculate)
 
-      allow(Stripe::PaymentIntent).to receive(:create).and_return(intent)
+      allow(source).to receive(:stripe_payment_method).and_return(stripe_payment_method)
+      allow(Stripe::PaymentIntent).to receive(:create).and_return(stripe_payment_intent)
 
       result = gateway.purchase(123_45, source, currency: 'USD', originator: order.payments.first)
 
-      expect(Stripe::PaymentIntent).to have_received(:create).with(a_hash_including(
+      expect(Stripe::PaymentIntent).to have_received(:create).with(
         amount: 123_45,
-        currency: 'USD'
-      ))
-
-      expect(result.params).to eq("data" => '{"id":"pi_123","object":"payment_intent"}')
+        currency: 'USD',
+        capture_method: 'automatic',
+        confirm: true,
+        metadata: { solidus_order_number: order.number },
+        customer: "cus_123",
+        payment_method: "pm_123",
+        setup_future_usage: nil
+      )
+      expect(result.params).to eq("data" => '{"id":"pi_123"}')
     end
   end
 

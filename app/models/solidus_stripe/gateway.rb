@@ -32,16 +32,21 @@ module SolidusStripe
     # Authorizes a certain amount on the provided payment source.
     #
     # @see #purchase
-    def authorize(amount_in_cents, source, options = {})
-      stripe_payment_method = source.stripe_payment_method
-
-      payment_intent_options = options[:payment_intent_options].dup.to_h
-      payment_intent_options[:capture_method] = "manual"
-      payment_intent_options[:confirm] = true
-      payment_intent_options[:payment_method] = stripe_payment_method.id
-      payment_intent_options[:customer] = stripe_payment_method.customer
-
-      purchase(amount_in_cents, source, options.merge(payment_intent_options: payment_intent_options))
+    def authorize(_amount_in_cents, source, options = {})
+      stripe_payment_intent = create_stripe_payment_intent(
+        source,
+        options[:originator].order,
+        stripe_payment_intent_options: {
+          capture_method: "manual",
+          confirm: true
+        }
+      )
+      build_payment_log(
+        success: true,
+        message: "PaymentIntent was confirmed successfully",
+        response_code: stripe_payment_intent.id,
+        data: stripe_payment_intent,
+      )
     end
 
     # Captures a certain amount from a previously authorized transaction.
@@ -68,11 +73,10 @@ module SolidusStripe
         raise ArgumentError, "the payment-intent id has the wrong format"
       end
 
-      payment_intent = request { Stripe::PaymentIntent.capture(payment_intent_id) }
-
+      payment_intent = capture_stripe_payment_intent(payment_intent_id)
       build_payment_log(
         success: true,
-        message: "Capture was successful",
+        message: "PaymentIntent was confirmed successfully",
         response_code: payment_intent.id,
         data: payment_intent,
       )
@@ -87,19 +91,19 @@ module SolidusStripe
     # Authorizes and captures a certain amount on the provided payment source.
     # @todo add support for purchasing custom amounts
     def purchase(_amount_in_cents, source, options = {})
-      # Charge the Customer instead of the card:
-      payment_intent =
-        SolidusStripe::PaymentIntent.create_stripe_intent(
-          payment_method: source.payment_method,
-          order: options[:originator].order,
-          stripe_intent_options: options[:payment_intent_options] || {}
-        )
-
+      stripe_payment_intent = create_stripe_payment_intent(
+        source,
+        options[:originator].order,
+        stripe_payment_intent_options: {
+          capture_method: "automatic",
+          confirm: true
+        }
+      )
       build_payment_log(
         success: true,
-        message: "PaymentIntent was created successfully",
-        response_code: payment_intent.id,
-        data: payment_intent,
+        message: "PaymentIntent was confirmed and captured successfully",
+        response_code: stripe_payment_intent.id,
+        data: stripe_payment_intent,
       )
     end
 
@@ -157,6 +161,25 @@ module SolidusStripe
     def request(&block)
       result, _response = client.request(&block)
       result
+    end
+
+    private
+
+    def create_stripe_payment_intent(source, order, stripe_payment_intent_options:)
+      stripe_payment_method = source.stripe_payment_method
+
+      SolidusStripe::PaymentIntent.create_stripe_intent(
+        payment_method: source.payment_method,
+        order: order,
+        stripe_intent_options: stripe_payment_intent_options.merge(
+          payment_method: stripe_payment_method.id,
+          customer: stripe_payment_method.customer
+        )
+      )
+    end
+
+    def capture_stripe_payment_intent(stripe_payment_intent_id)
+      request { Stripe::PaymentIntent.capture(stripe_payment_intent_id) }
     end
   end
 end
