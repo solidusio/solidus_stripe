@@ -72,7 +72,6 @@ module SolidusStripe
       case preferred_stripe_intents_flow
       when 'setup' then SolidusStripe::SetupIntent
       when 'payment' then SolidusStripe::PaymentIntent
-      else raise "unknown: #{preferred_stripe_intents_flow.inspect}"
       end
     end
 
