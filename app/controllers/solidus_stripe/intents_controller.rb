@@ -29,12 +29,14 @@ class SolidusStripe::IntentsController < Spree::BaseController
       intent = SolidusStripe::SetupIntent.find_by!(
         payment_method: @payment_method,
         order: current_order,
+        stripe_intent_id: params[:setup_intent],
       ).stripe_intent
       payment = payment_for_setup_intent(intent)
     when params[:payment_intent]
       intent = SolidusStripe::PaymentIntent.find_by!(
         payment_method: @payment_method,
         order: current_order,
+        stripe_intent_id: params[:payment_intent],
       ).stripe_intent
       payment = payment_for_payment_intent(intent)
     else head :unprocessable_entity
@@ -61,8 +63,6 @@ class SolidusStripe::IntentsController < Spree::BaseController
   private
 
   def payment_for_setup_intent(intent)
-    raise "The setup intent id doesn't match" if params[:setup_intent] != intent.id
-
     payment = current_order.payments.create!(
       payment_method: @payment_method,
       amount: current_order.total, # TODO: double check, remove store credit?
@@ -80,8 +80,6 @@ class SolidusStripe::IntentsController < Spree::BaseController
   end
 
   def payment_for_payment_intent(intent)
-    raise "The payment intent id doesn't match" if params[:payment_intent] != intent.id
-
     payment = current_order.payments.create!(
       state: 'pending',
       payment_method: @payment_method,
