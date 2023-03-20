@@ -25,7 +25,7 @@ Dir["#{app}/db/migrate/*.#{extension_name}.rb"].sort.reverse_each do |path|
     current_migrations.delete(basename)
   else
     puts "rolling back #{basename}..."
-    Dir.chdir(app) { system("bin/rails db:rollback VERSION=#{timestamp}") }
+    Dir.chdir(app) { system("bin/rails db:migrate:down VERSION=#{timestamp}") }
     puts "removing #{basename}..."
     File.unlink path
   end
