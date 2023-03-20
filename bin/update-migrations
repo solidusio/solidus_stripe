@@ -1,0 +1,45 @@
+#!/usr/bin/env ruby
+
+app = ARGV.first || abort("Please provide the APP_NAME as the first argument")
+extension_name = "solidus_stripe"
+
+current_migrations = {}
+Dir['db/migrate/*.rb'].sort.reverse_each do |path|
+  basename = File.basename(path, ".rb").sub(/^\d+_/, '')
+  current_migrations[basename] = path
+end
+
+Dir["#{app}/db/migrate/*.#{extension_name}.rb"].sort.reverse_each do |path|
+  timestamp, basename = File.basename(path, ".#{extension_name}.rb").split('_', 2)
+  contents = File.read(path)
+
+  if current_migrations[basename]
+    if contents != File.read(current_migrations[basename])
+      puts "rolling back #{basename}..."
+      Dir.chdir(app) { system("bin/rails db:rollback VERSION=#{timestamp}") }
+      puts "updating #{basename}..."
+      File.write(path, File.read(current_migrations[basename]))
+    else
+      puts "ignoring #{basename}..."
+    end
+    current_migrations.delete(basename)
+  else
+    puts "rolling back #{basename}..."
+    Dir.chdir(app) { system("bin/rails db:rollback VERSION=#{timestamp}") }
+    puts "removing #{basename}..."
+    File.unlink path
+  end
+end
+
+# Install missing migrations
+current_migrations.each do |basename, path|
+  puts "installing #{basename}..."
+  timestamp = Time.now.utc.strftime("%F%T").delete('-:')
+  contents = File.read(path)
+
+  File.write("#{app}/db/migrate/#{timestamp}_#{basename}.#{extension_name}.rb", contents)
+end
+
+if current_migrations.any?
+  Dir.chdir(app) { system("bin/rails db:migrate") }
+end
