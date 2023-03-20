@@ -30,23 +30,27 @@ class SolidusStripe::IntentsController < Spree::BaseController
         payment_method: @payment_method,
         order: current_order,
         stripe_intent_id: params[:setup_intent],
-      ).stripe_intent
-      payment = payment_for_setup_intent(intent)
+      )
     when params[:payment_intent]
       intent = SolidusStripe::PaymentIntent.find_by!(
         payment_method: @payment_method,
         order: current_order,
         stripe_intent_id: params[:payment_intent],
-      ).stripe_intent
-      payment = payment_for_payment_intent(intent)
-    else head :unprocessable_entity
+      )
+    else
+      return head :unprocessable_entity
     end
+
+    payment = intent.create_payment!(
+      amount: current_order.total, # TODO: double check, remove store credit?
+      add_to_wallet: true
+    )
 
     SolidusStripe::LogEntries.payment_log(
       payment,
       success: true,
       message: "Reached return URL",
-      data: intent,
+      data: intent.stripe_intent,
     )
 
     if @payment_method.skip_confirm_step?
@@ -55,54 +59,12 @@ class SolidusStripe::IntentsController < Spree::BaseController
       current_order.complete!
       redirect_to main_app.token_order_path(current_order, current_order.guest_token)
     else
-      flash[:notice] = t(".intent_status.#{intent.status}")
+      flash[:notice] = t(".intent_status.#{intent.stripe_intent.status}")
       redirect_to main_app.checkout_state_path(current_order.state)
     end
   end
 
   private
-
-  def payment_for_setup_intent(intent)
-    payment = current_order.payments.create!(
-      payment_method: @payment_method,
-      amount: current_order.total, # TODO: double check, remove store credit?
-      source: @payment_method.payment_source_class.new(
-        stripe_payment_method_id: intent.payment_method,
-        payment_method: @payment_method,
-      )
-    )
-
-    if current_order.user
-      current_order.user.wallet.add payment.source
-    end
-
-    payment
-  end
-
-  def payment_for_payment_intent(intent)
-    payment = current_order.payments.create!(
-      state: 'pending',
-      payment_method: @payment_method,
-      amount: current_order.total, # TODO: double check, remove store credit?
-      response_code: intent.id,
-      source: @payment_method.payment_source_class.new(
-        payment_method: @payment_method
-      ),
-    )
-
-    if current_order.user && intent.setup_future_usage.present?
-      payment.source.update(stripe_payment_method_id: intent.payment_method)
-      current_order.user.wallet.add payment.source
-    end
-
-    payment
-  end
-
-  def ensure_state_is(object, state)
-    return if object.state.to_s == state.to_s
-
-    raise "unexpected object state #{object.state}, should have been #{state}"
-  end
 
   def load_payment_method
     @payment_method = current_order(create_order_if_necessary: true)

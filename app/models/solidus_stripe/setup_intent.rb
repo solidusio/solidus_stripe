@@ -20,6 +20,23 @@ module SolidusStripe
       end
     end
 
+    def create_payment!(amount: order.total, add_to_wallet: false)
+      payment = order.payments.create!(
+        payment_method: payment_method,
+        amount: amount,
+        source: payment_method.payment_source_class.new(
+          stripe_payment_method_id: stripe_intent.payment_method,
+          payment_method: payment_method,
+        )
+      )
+
+      if add_to_wallet && order.user
+        order.user.wallet.add payment.source
+      end
+
+      payment
+    end
+
     def create_stripe_intent(stripe_intent_options)
       stripe_customer_id = SolidusStripe::Customer.retrieve_or_create_stripe_customer_id(
         payment_method: payment_method,
