@@ -132,13 +132,13 @@ RSpec.describe SolidusStripe::Gateway do
   describe '#void' do
     it 'voids a payment that hasn not been captured yet' do
       gateway = build(:stripe_payment_method).gateway
-      intent = Stripe::PaymentIntent.construct_from(id: "pi_123", object: "payment_intent")
-      allow(Stripe::PaymentIntent).to receive(:cancel).and_return(intent)
+      stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123")
+      allow(Stripe::PaymentIntent).to receive(:cancel).and_return(stripe_payment_intent)
 
       result = gateway.void('pi_123', :source)
 
       expect(Stripe::PaymentIntent).to have_received(:cancel).with('pi_123')
-      expect(result.params).to eq("data" => '{"id":"pi_123","object":"payment_intent"}')
+      expect(result.params).to eq("data" => '{"id":"pi_123"}')
     end
 
     it "raises if no payment_intent_id is given" do
