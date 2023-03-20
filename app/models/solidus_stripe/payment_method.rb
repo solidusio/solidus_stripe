@@ -30,26 +30,24 @@ module SolidusStripe
       to: :webhook_endpoint,
       prefix: true
 
-    concerning :Configuration do
-      def partial_name
-        "stripe"
-      end
+    def partial_name
+      "stripe"
+    end
 
-      alias cart_partial_name partial_name
-      alias product_page_partial_name partial_name
-      alias risky_partial_name partial_name
+    alias cart_partial_name partial_name
+    alias product_page_partial_name partial_name
+    alias risky_partial_name partial_name
 
-      def source_required?
-        true
-      end
+    def source_required?
+      true
+    end
 
-      def payment_source_class
-        PaymentSource
-      end
+    def payment_source_class
+      PaymentSource
+    end
 
-      def gateway_class
-        Gateway
-      end
+    def gateway_class
+      Gateway
     end
 
     def skip_confirm_step?
