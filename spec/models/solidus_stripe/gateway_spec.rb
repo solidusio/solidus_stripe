@@ -11,9 +11,7 @@ RSpec.describe SolidusStripe::Gateway do
       payment_method = build(:stripe_payment_method)
       source = build(:stripe_payment_source, stripe_payment_method_id: "pi_123", payment_method: payment_method)
       gateway = payment_method.gateway
-      order = create(:order,
-        line_items: [build(:line_item, price: 123.45)],
-        payments: [create(:payment, amount: 123.45, payment_method: payment_method)], &:recalculate)
+      order = create(:order_with_stripe_payment, amount: 123.45, payment_method: payment_method)
 
       allow(source).to receive(:stripe_payment_method).and_return(stripe_payment_method)
       allow(Stripe::PaymentIntent).to receive(:create).and_return(stripe_payment_intent)
@@ -32,6 +30,16 @@ RSpec.describe SolidusStripe::Gateway do
       )
       expect(result.params).to eq("data" => '{"id":"pi_123"}')
     end
+
+    it "raises if the given amount doesn't match the order total" do
+      payment_method = build(:stripe_payment_method)
+      gateway = payment_method.gateway
+      order = create(:order_with_stripe_payment, amount: 123.45, payment_method: payment_method)
+
+      expect { gateway.authorize(10, :source, originator: order.payments.first ) }.to raise_error(
+        /custom amount is not supported/
+      )
+    end
   end
 
   describe '#capture' do
@@ -48,6 +56,38 @@ RSpec.describe SolidusStripe::Gateway do
       expect(Stripe::PaymentIntent).to have_received(:capture).with('pi_123')
       expect(result.params).to eq("data" => '{"id":"pi_123"}')
     end
+
+    it "raises if the given amount doesn't match the order total" do
+      payment_method = build(:stripe_payment_method)
+      gateway = payment_method.gateway
+      order = create(:order_with_stripe_payment, amount: 123.45, payment_method: payment_method)
+
+      expect { gateway.capture(10, :payment_intent_id, originator: order.payments.first ) }.to raise_error(
+        /custom amount is not supported/
+      )
+    end
+
+    it "raises if no payment_intent_id is given" do
+      payment_method = build(:stripe_payment_method)
+      gateway = payment_method.gateway
+      order = create(:order_with_stripe_payment, amount: 123.45, payment_method: payment_method)
+
+      expect { gateway.capture(123_45, nil, originator: order.payments.first ) }.to raise_error(
+        ArgumentError,
+        /missing payment_intent_id/
+      )
+    end
+
+    it "raises if payment_intent_id is not valid" do
+      payment_method = build(:stripe_payment_method)
+      gateway = payment_method.gateway
+      order = create(:order_with_stripe_payment, amount: 123.45, payment_method: payment_method)
+
+      expect { gateway.capture(123_45, "invalid", originator: order.payments.first ) }.to raise_error(
+        ArgumentError,
+        /payment intent id has the wrong format/
+      )
+    end
   end
 
   describe '#purchase' do
@@ -58,9 +98,7 @@ RSpec.describe SolidusStripe::Gateway do
       payment_method = build(:stripe_payment_method)
       source = build(:stripe_payment_source, stripe_payment_method_id: "pi_123", payment_method: payment_method)
       gateway = payment_method.gateway
-      order = create(:order,
-        line_items: [build(:line_item, price: 123.45)],
-        payments: [create(:payment, amount: 123.45, payment_method: payment_method)], &:recalculate)
+      order = create(:order_with_stripe_payment, amount: 123.45, payment_method: payment_method)
 
       allow(source).to receive(:stripe_payment_method).and_return(stripe_payment_method)
       allow(Stripe::PaymentIntent).to receive(:create).and_return(stripe_payment_intent)
@@ -79,6 +117,16 @@ RSpec.describe SolidusStripe::Gateway do
       )
       expect(result.params).to eq("data" => '{"id":"pi_123"}')
     end
+
+    it "raises if the given amount doesn't match the order total" do
+      payment_method = build(:stripe_payment_method)
+      gateway = payment_method.gateway
+      order = create(:order_with_stripe_payment, amount: 123.45, payment_method: payment_method)
+
+      expect { gateway.purchase(10, :source, originator: order.payments.first ) }.to raise_error(
+        /custom amount is not supported/
+      )
+    end
   end
 
   describe '#void' do
@@ -87,10 +135,30 @@ RSpec.describe SolidusStripe::Gateway do
       intent = Stripe::PaymentIntent.construct_from(id: "pi_123", object: "payment_intent")
       allow(Stripe::PaymentIntent).to receive(:cancel).and_return(intent)
 
-      result = gateway.void('pi_123', nil)
+      result = gateway.void('pi_123', :source)
 
       expect(Stripe::PaymentIntent).to have_received(:cancel).with('pi_123')
       expect(result.params).to eq("data" => '{"id":"pi_123","object":"payment_intent"}')
+    end
+
+    it "raises if no payment_intent_id is given" do
+      payment_method = build(:stripe_payment_method)
+      gateway = payment_method.gateway
+
+      expect { gateway.void(nil, :source) }.to raise_error(
+        ArgumentError,
+        /missing payment_intent_id/
+      )
+    end
+
+    it "raises if payment_intent_id is not valid" do
+      payment_method = build(:stripe_payment_method)
+      gateway = payment_method.gateway
+
+      expect { gateway.void("invalid", :source) }.to raise_error(
+        ArgumentError,
+        /payment intent id has the wrong format/
+      )
     end
   end
 
@@ -101,7 +169,7 @@ RSpec.describe SolidusStripe::Gateway do
       refund = instance_double(Stripe::Refund, to_json: '{foo: "re_123"}')
       allow(Stripe::Refund).to receive(:create).and_return(refund)
 
-      result = gateway.credit(123_45, nil, 'pi_123', currency: 'USD', originator: instance_double(
+      result = gateway.credit(123_45, :source, 'pi_123', currency: 'USD', originator: instance_double(
         Spree::Refund,
         payment: payment
       ))
@@ -111,6 +179,26 @@ RSpec.describe SolidusStripe::Gateway do
         amount: 123_45,
       )
       expect(result.params).to eq("data" => '{foo: "re_123"}')
+    end
+
+    it "raises if no payment_intent_id is given" do
+      payment_method = build(:stripe_payment_method)
+      gateway = payment_method.gateway
+
+      expect { gateway.credit(:amount, :source, nil) }.to raise_error(
+        ArgumentError,
+        /missing payment_intent_id/
+      )
+    end
+
+    it "raises if payment_intent_id is not valid" do
+      payment_method = build(:stripe_payment_method)
+      gateway = payment_method.gateway
+
+      expect { gateway.credit(:amount, :source, "invalid") }.to raise_error(
+        ArgumentError,
+        /payment intent id has the wrong format/
+      )
     end
   end
 end

@@ -48,4 +48,18 @@ FactoryBot.define do
       association :source, factory: :order, email: 'guest@example.com', user: nil
     end
   end
+
+  factory :order_with_stripe_payment, parent: :order do
+    transient do
+      amount { 10 }
+      payment_method { build(:stripe_payment_method) }
+    end
+
+    line_items { [build(:line_item, price: amount)] }
+
+    after(:create) do |order, evaluator|
+      build(:payment, amount: evaluator.amount, order: order, payment_method: evaluator.payment_method)
+      order.recalculate
+    end
+  end
 end
