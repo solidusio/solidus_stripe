@@ -62,6 +62,20 @@ module SolidusStripe
       false
     end
 
+    def intent_for_order(order)
+      # TODO: See if we can move the intent creation out of the view
+      intent_class.retrieve_stripe_intent(payment_method: self, order: order) ||
+        intent_class.create_stripe_intent(payment_method: self, order: order)
+    end
+
+    def intent_class
+      case preferred_stripe_intents_flow
+      when 'setup' then SolidusStripe::SetupIntent
+      when 'payment' then SolidusStripe::PaymentIntent
+      else raise "unknown: #{preferred_stripe_intents_flow.inspect}"
+      end
+    end
+
     # Fetches the payment intent when available, falls back on the setup intent associated to the order.
     # @api private
     # TODO: re-evaluate the need for this and think of ways to always go throught the intent classes.
