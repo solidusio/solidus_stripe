@@ -4,6 +4,7 @@ require 'solidus_starter_frontend_spec_helper'
 
 module SolidusStripe::CheckoutTestHelper
   include SolidusStarterFrontend::SystemHelpers
+
   def self.included(base)
     base.include Devise::Test::IntegrationHelpers
   end
