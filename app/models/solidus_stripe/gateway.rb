@@ -33,15 +33,22 @@ module SolidusStripe
     #
     # @see #purchase
     def authorize(amount_in_cents, source, options = {})
-      stripe_payment_method = source.stripe_payment_method
+      check_given_amount_matches_payment_intent(amount_in_cents, options)
 
-      payment_intent_options = options[:payment_intent_options].dup.to_h
-      payment_intent_options[:capture_method] = "manual"
-      payment_intent_options[:confirm] = true
-      payment_intent_options[:payment_method] = stripe_payment_method.id
-      payment_intent_options[:customer] = stripe_payment_method.customer
-
-      purchase(amount_in_cents, source, options.merge(payment_intent_options: payment_intent_options))
+      stripe_payment_intent = create_stripe_payment_intent(
+        source,
+        options[:originator].order,
+        stripe_payment_intent_options: {
+          capture_method: "manual",
+          confirm: true
+        }
+      )
+      build_payment_log(
+        success: true,
+        message: "PaymentIntent was confirmed successfully",
+        response_code: stripe_payment_intent.id,
+        data: stripe_payment_intent,
+      )
     end
 
     # Captures a certain amount from a previously authorized transaction.
@@ -51,28 +58,13 @@ module SolidusStripe
     #
     # @todo add support for capturing custom amounts
     def capture(amount_in_cents, payment_intent_id, options = {})
-      payment = options[:originator] or
-        raise ArgumentError, "please provide a payment with the :originator option"
+      check_given_amount_matches_payment_intent(amount_in_cents, options)
+      check_payment_intent_id(payment_intent_id)
 
-      unless payment_intent_id
-        raise ArgumentError, "missing payment_intent_id"
-      end
-
-      unless amount_in_cents == payment.display_amount.cents
-        raise \
-          "Capturing a custom amount is not supported yet, " \
-          "tried #{amount_in_cents} but can only accept #{payment.display_amount.cents}."
-      end
-
-      unless payment_intent_id.start_with?('pi_')
-        raise ArgumentError, "the payment-intent id has the wrong format"
-      end
-
-      payment_intent = request { Stripe::PaymentIntent.capture(payment_intent_id) }
-
+      payment_intent = capture_stripe_payment_intent(payment_intent_id)
       build_payment_log(
         success: true,
-        message: "Capture was successful",
+        message: "PaymentIntent was confirmed successfully",
         response_code: payment_intent.id,
         data: payment_intent,
       )
@@ -86,25 +78,29 @@ module SolidusStripe
 
     # Authorizes and captures a certain amount on the provided payment source.
     # @todo add support for purchasing custom amounts
-    def purchase(_amount_in_cents, source, options = {})
-      # Charge the Customer instead of the card:
-      payment_intent =
-        SolidusStripe::PaymentIntent.create_stripe_intent(
-          payment_method: source.payment_method,
-          order: options[:originator].order,
-          stripe_intent_options: options[:payment_intent_options] || {}
-        )
+    def purchase(amount_in_cents, source, options = {})
+      check_given_amount_matches_payment_intent(amount_in_cents, options)
 
+      stripe_payment_intent = create_stripe_payment_intent(
+        source,
+        options[:originator].order,
+        stripe_payment_intent_options: {
+          capture_method: "automatic",
+          confirm: true
+        }
+      )
       build_payment_log(
         success: true,
-        message: "PaymentIntent was created successfully",
-        response_code: payment_intent.id,
-        data: payment_intent,
+        message: "PaymentIntent was confirmed and captured successfully",
+        response_code: stripe_payment_intent.id,
+        data: stripe_payment_intent,
       )
     end
 
     # Voids a previously authorized transaction, releasing the funds that are on hold.
     def void(payment_intent_id, _source, _options = {})
+      check_payment_intent_id(payment_intent_id)
+
       payment_intent = request do
         Stripe::PaymentIntent.cancel(payment_intent_id)
       end
@@ -126,6 +122,8 @@ module SolidusStripe
     # Refunds the provided amount on a previously captured transaction.
     # TODO: check this method params twice.
     def credit(amount_in_cents, _source, payment_intent_id, options = {})
+      check_payment_intent_id(payment_intent_id)
+
       payment = options[:originator].payment
       currency = payment.currency
 
@@ -157,6 +155,46 @@ module SolidusStripe
     def request(&block)
       result, _response = client.request(&block)
       result
+    end
+
+    private
+
+    def create_stripe_payment_intent(source, order, stripe_payment_intent_options:)
+      stripe_payment_method = source.stripe_payment_method
+
+      SolidusStripe::PaymentIntent.create_stripe_intent(
+        payment_method: source.payment_method,
+        order: order,
+        stripe_intent_options: stripe_payment_intent_options.merge(
+          payment_method: stripe_payment_method.id,
+          customer: stripe_payment_method.customer
+        )
+      )
+    end
+
+    def capture_stripe_payment_intent(stripe_payment_intent_id)
+      request { Stripe::PaymentIntent.capture(stripe_payment_intent_id) }
+    end
+
+    def check_given_amount_matches_payment_intent(amount_in_cents, options)
+      payment = options[:originator] or
+        raise ArgumentError, "please provide a payment with the :originator option"
+
+      return if amount_in_cents == payment.display_amount.cents
+
+      raise \
+        "Using a custom amount is not supported yet, " \
+        "tried #{amount_in_cents} but can only accept #{payment.display_amount.cents}."
+    end
+
+    def check_payment_intent_id(payment_intent_id)
+      unless payment_intent_id
+        raise ArgumentError, "missing payment_intent_id"
+      end
+
+      return if payment_intent_id.start_with?('pi_')
+
+      raise ArgumentError, "the payment intent id has the wrong format"
     end
   end
 end
