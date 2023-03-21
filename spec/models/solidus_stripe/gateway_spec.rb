@@ -12,6 +12,7 @@ RSpec.describe SolidusStripe::Gateway do
       source = build(:stripe_payment_source, stripe_payment_method_id: "pi_123", payment_method: payment_method)
       gateway = payment_method.gateway
       order = create(:order_with_stripe_payment, amount: 123.45, payment_method: payment_method)
+      payment = order.payments.last
 
       allow(source).to receive(:stripe_payment_method).and_return(stripe_payment_method)
       allow(Stripe::PaymentIntent).to receive(:create).and_return(stripe_payment_intent)
@@ -31,6 +32,7 @@ RSpec.describe SolidusStripe::Gateway do
       )
       expect(Stripe::PaymentIntent).to have_received(:confirm).with("pi_123")
       expect(result.params).to eq("data" => '{"id":"pi_123"}')
+      expect(payment.reload.response_code).to eq("pi_123")
     end
 
     it "raises if the given amount doesn't match the order total" do
@@ -101,6 +103,7 @@ RSpec.describe SolidusStripe::Gateway do
       source = build(:stripe_payment_source, stripe_payment_method_id: "pi_123", payment_method: payment_method)
       gateway = payment_method.gateway
       order = create(:order_with_stripe_payment, amount: 123.45, payment_method: payment_method)
+      payment = order.payments.last
 
       allow(source).to receive(:stripe_payment_method).and_return(stripe_payment_method)
       allow(Stripe::PaymentIntent).to receive(:create).and_return(stripe_payment_intent)
@@ -120,6 +123,7 @@ RSpec.describe SolidusStripe::Gateway do
       )
       expect(Stripe::PaymentIntent).to have_received(:confirm).with("pi_123")
       expect(result.params).to eq("data" => '{"id":"pi_123"}')
+      expect(payment.reload.response_code).to eq("pi_123")
     end
 
     it "raises if the given amount doesn't match the order total" do

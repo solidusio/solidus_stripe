@@ -34,12 +34,15 @@ module SolidusStripe
     # We create and confirm the Stripe payment intent in two steps. That's to
     # guarantee that we associate a Solidus payment on the creation, and we can
     # fetch it after the webhook event is published on confirmation.
+    #
+    # The Stripe payment intent id is copied over the Solidus payment
+    # `response_code` field.
     def authorize(amount_in_cents, source, options = {})
       check_given_amount_matches_payment_intent(amount_in_cents, options)
 
       stripe_payment_intent = create_confirmed_stripe_payment_intent(
-        source,
-        options[:originator].order,
+        source: source,
+        payment: options[:originator],
         stripe_payment_intent_options: {
           capture_method: "manual"
         }
@@ -79,16 +82,15 @@ module SolidusStripe
 
     # Authorizes and captures a certain amount on the provided payment source.
     #
-    # See `#authorize` for why the payment intent is created and confirmed in
-    # two steps.
+    # See `#authorize` for how the confirmation step is performed.
     #
     # @todo add support for purchasing custom amounts
     def purchase(amount_in_cents, source, options = {})
       check_given_amount_matches_payment_intent(amount_in_cents, options)
 
       stripe_payment_intent = create_confirmed_stripe_payment_intent(
-        source,
-        options[:originator].order,
+        source: source,
+        payment: options[:originator],
         stripe_payment_intent_options: {
           capture_method: "automatic"
         }
@@ -163,18 +165,21 @@ module SolidusStripe
 
     private
 
-    def create_confirmed_stripe_payment_intent(source, order, stripe_payment_intent_options:)
+    def create_confirmed_stripe_payment_intent(source:, payment:, stripe_payment_intent_options:)
       stripe_payment_method = source.stripe_payment_method
 
       SolidusStripe::PaymentIntent.create_stripe_intent(
         payment_method: source.payment_method,
-        order: order,
+        order: payment.order,
         stripe_intent_options: stripe_payment_intent_options.merge(
           payment_method: stripe_payment_method.id,
           customer: stripe_payment_method.customer,
           confirm: false
         )
-      ).tap { confirm_stripe_payment_intent(_1.id) }
+      ).tap do
+        payment.update_column(:response_code, _1.id) # rubocop:disable Rails/SkipsModelValidations
+        confirm_stripe_payment_intent(_1.id)
+      end
     end
 
     def confirm_stripe_payment_intent(stripe_payment_intent_id)
