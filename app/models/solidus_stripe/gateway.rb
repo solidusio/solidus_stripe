@@ -31,16 +31,17 @@ module SolidusStripe
 
     # Authorizes a certain amount on the provided payment source.
     #
-    # @see #purchase
+    # We create and confirm the Stripe payment intent in two steps. That's to
+    # guarantee that we associate a Solidus payment on the creation, and we can
+    # fetch it after the webhook event is published on confirmation.
     def authorize(amount_in_cents, source, options = {})
       check_given_amount_matches_payment_intent(amount_in_cents, options)
 
-      stripe_payment_intent = create_stripe_payment_intent(
+      stripe_payment_intent = create_confirmed_stripe_payment_intent(
         source,
         options[:originator].order,
         stripe_payment_intent_options: {
-          capture_method: "manual",
-          confirm: true
+          capture_method: "manual"
         }
       )
       build_payment_log(
@@ -77,16 +78,19 @@ module SolidusStripe
     end
 
     # Authorizes and captures a certain amount on the provided payment source.
+    #
+    # See `#authorize` for why the payment intent is created and confirmed in
+    # two steps.
+    #
     # @todo add support for purchasing custom amounts
     def purchase(amount_in_cents, source, options = {})
       check_given_amount_matches_payment_intent(amount_in_cents, options)
 
-      stripe_payment_intent = create_stripe_payment_intent(
+      stripe_payment_intent = create_confirmed_stripe_payment_intent(
         source,
         options[:originator].order,
         stripe_payment_intent_options: {
-          capture_method: "automatic",
-          confirm: true
+          capture_method: "automatic"
         }
       )
       build_payment_log(
@@ -159,7 +163,7 @@ module SolidusStripe
 
     private
 
-    def create_stripe_payment_intent(source, order, stripe_payment_intent_options:)
+    def create_confirmed_stripe_payment_intent(source, order, stripe_payment_intent_options:)
       stripe_payment_method = source.stripe_payment_method
 
       SolidusStripe::PaymentIntent.create_stripe_intent(
@@ -167,9 +171,14 @@ module SolidusStripe
         order: order,
         stripe_intent_options: stripe_payment_intent_options.merge(
           payment_method: stripe_payment_method.id,
-          customer: stripe_payment_method.customer
+          customer: stripe_payment_method.customer,
+          confirm: false
         )
-      )
+      ).tap { confirm_stripe_payment_intent(_1.id) }
+    end
+
+    def confirm_stripe_payment_intent(stripe_payment_intent_id)
+      request { Stripe::PaymentIntent.confirm(stripe_payment_intent_id) }
     end
 
     def capture_stripe_payment_intent(stripe_payment_intent_id)
