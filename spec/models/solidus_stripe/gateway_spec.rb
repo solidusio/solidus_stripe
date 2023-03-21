@@ -15,6 +15,7 @@ RSpec.describe SolidusStripe::Gateway do
 
       allow(source).to receive(:stripe_payment_method).and_return(stripe_payment_method)
       allow(Stripe::PaymentIntent).to receive(:create).and_return(stripe_payment_intent)
+      allow(Stripe::PaymentIntent).to receive(:confirm).with("pi_123").and_return(stripe_payment_intent)
 
       result = gateway.authorize(123_45, source, currency: 'USD', originator: order.payments.first)
 
@@ -22,12 +23,13 @@ RSpec.describe SolidusStripe::Gateway do
         amount: 123_45,
         currency: 'USD',
         capture_method: 'manual',
-        confirm: true,
+        confirm: false,
         metadata: { solidus_order_number: order.number },
         customer: "cus_123",
         payment_method: "pm_123",
         setup_future_usage: nil
       )
+      expect(Stripe::PaymentIntent).to have_received(:confirm).with("pi_123")
       expect(result.params).to eq("data" => '{"id":"pi_123"}')
     end
 
@@ -102,6 +104,7 @@ RSpec.describe SolidusStripe::Gateway do
 
       allow(source).to receive(:stripe_payment_method).and_return(stripe_payment_method)
       allow(Stripe::PaymentIntent).to receive(:create).and_return(stripe_payment_intent)
+      allow(Stripe::PaymentIntent).to receive(:confirm).with("pi_123").and_return(stripe_payment_intent)
 
       result = gateway.purchase(123_45, source, currency: 'USD', originator: order.payments.first)
 
@@ -109,12 +112,13 @@ RSpec.describe SolidusStripe::Gateway do
         amount: 123_45,
         currency: 'USD',
         capture_method: 'automatic',
-        confirm: true,
+        confirm: false,
         metadata: { solidus_order_number: order.number },
         customer: "cus_123",
         payment_method: "pm_123",
         setup_future_usage: nil
       )
+      expect(Stripe::PaymentIntent).to have_received(:confirm).with("pi_123")
       expect(result.params).to eq("data" => '{"id":"pi_123"}')
     end
 
