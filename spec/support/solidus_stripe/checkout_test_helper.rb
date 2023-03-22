@@ -28,10 +28,18 @@ module SolidusStripe::CheckoutTestHelper
     setup_future_usage: 'off_session',
     skip_confirmation: false
   )
-    @payment_method = create(:stripe_payment_method,
-      preferred_stripe_intents_flow: intents_flow,
-      preferred_setup_future_usage: setup_future_usage,
-      preferred_skip_confirmation_for_payment_intent: skip_confirmation)
+    @payment_method = create(:stripe_payment_method)
+
+    if intents_flow == 'setup'
+      strategy_class = Class.new(SolidusStripe::PaymentFlowStrategy::SetupIntent)
+      strategy_class.define_method(:intent_options) { { usage: setup_future_usage.presence } }
+    else
+      strategy_class = Class.new(SolidusStripe::PaymentFlowStrategy::PaymentIntent)
+      strategy_class.define_method(:skip_confirmation?) { skip_confirmation }
+      strategy_class.define_method(:intent_options) { { setup_future_usage: setup_future_usage.presence } }
+    end
+
+    SolidusStripe.configuration.payment_flow_strategy = strategy_class
   end
 
   def payment_method
@@ -199,7 +207,10 @@ module SolidusStripe::CheckoutTestHelper
 
   def completes_order
     checks_terms_of_service
-    if payment_method.skip_confirm_step?
+
+    strategy = SolidusStripe::PaymentFlowStrategy.for(order: Spree::Order.last, payment_method: payment_method)
+
+    if strategy.skip_confirm_step?
       submits_payment
     else
       confirms_order
@@ -314,7 +325,9 @@ module SolidusStripe::CheckoutTestHelper
     chooses_new_stripe_payment
     fills_stripe_form
 
-    unless payment_method.skip_confirm_step?
+    strategy = SolidusStripe::PaymentFlowStrategy.for(order: Spree::Order.last, payment_method: payment_method)
+
+    unless strategy.skip_confirm_step?
       submits_payment
       expect(page).to have_content('Payment successfully authorized!')
     end

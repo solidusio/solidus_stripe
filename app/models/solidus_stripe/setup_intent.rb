@@ -5,6 +5,11 @@ module SolidusStripe
     belongs_to :order, class_name: 'Spree::Order'
     belongs_to :payment_method, class_name: 'SolidusStripe::PaymentMethod'
 
+    def self.retrieve_or_create_stripe_intent(payment_method:, order:)
+      intent_class.retrieve_stripe_intent(payment_method: payment_method, order: order) ||
+        intent_class.create_stripe_intent(payment_method: payment_method, order: order)
+    end
+
     def self.retrieve_stripe_intent(payment_method:, order:)
       find_by(payment_method: payment_method, order: order)&.stripe_intent
     end
@@ -46,7 +51,6 @@ module SolidusStripe
       payment_method.gateway.request do
         Stripe::SetupIntent.create({
           customer: stripe_customer_id,
-          usage: payment_method.preferred_setup_future_usage.presence,
           metadata: { solidus_order_number: order.number },
         }.merge(stripe_intent_options))
       end

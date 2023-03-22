@@ -28,7 +28,6 @@ RSpec.describe SolidusStripe::Gateway do
         metadata: { solidus_order_number: order.number },
         customer: "cus_123",
         payment_method: "pm_123",
-        setup_future_usage: nil
       )
       expect(Stripe::PaymentIntent).to have_received(:confirm).with("pi_123")
       expect(result.params).to eq("data" => '{"id":"pi_123"}')
@@ -119,7 +118,6 @@ RSpec.describe SolidusStripe::Gateway do
         metadata: { solidus_order_number: order.number },
         customer: "cus_123",
         payment_method: "pm_123",
-        setup_future_usage: nil
       )
       expect(Stripe::PaymentIntent).to have_received(:confirm).with("pi_123")
       expect(result.params).to eq("data" => '{"id":"pi_123"}')

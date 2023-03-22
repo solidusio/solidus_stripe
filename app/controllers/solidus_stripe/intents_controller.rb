@@ -53,7 +53,9 @@ class SolidusStripe::IntentsController < Spree::BaseController
       data: intent.stripe_intent,
     )
 
-    if @payment_method.skip_confirm_step?
+    strategy = @payment_method.strategy_for(current_order)
+
+    if strategy.skip_confirm_step?
       flash.notice = t('spree.order_processed_successfully')
       flash['order_completed'] = true
       current_order.complete!

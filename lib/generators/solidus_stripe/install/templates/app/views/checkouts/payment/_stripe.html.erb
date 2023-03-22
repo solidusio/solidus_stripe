@@ -1,6 +1,9 @@
 <script src="https://js.stripe.com/v3/"></script>
 
-<% intent = payment_method.intent_for_order(current_order) %>
+<% strategy = payment_method.strategy_for(current_order) %>
+
+<%# TODO: See if we can move the intent creation out of the view %>
+<% intent = strategy.retrieve_or_create_stripe_intent %>
 
 <div
   class="solidus-stripe-payment"
@@ -9,7 +12,7 @@
   data-solidus-stripe-intent-publishable-key-value="<%= payment_method.preferred_publishable_key %>"
   data-solidus-stripe-intent-email-address-value="<%= current_order.email %>"
   data-solidus-stripe-intent-return-url-value="<%= solidus_stripe.after_confirmation_url(payment_method) %>"
-  data-solidus-stripe-intent-flow-value="<%= payment_method.preferred_stripe_intents_flow %>"
+  data-solidus-stripe-intent-flow-value="<%= strategy.intent_flow %>"
   data-solidus-stripe-intent-radio-selector-value="#order_payments_attributes__payment_method_id_<%= payment_method.id %>"
   data-solidus-stripe-intent-submit-selector-value="#checkout_form_payment [type='submit']"
   data-action="submit@window->solidus-stripe-intent#handleSubmit"
@@ -23,7 +26,7 @@
     <!-- Display error/notification messages to your customers here -->
   </div>
 
-  <% if payment_method.skip_confirm_step? %>
+  <% if strategy.skip_confirm_step? %>
     <div class="terms_and_conditions">
       <%= render 'checkouts/terms_and_conditions' %>
       <label>

@@ -5,8 +5,6 @@ module SolidusStripe
     preference :api_key, :string
     preference :publishable_key, :string
     preference :setup_future_usage, :string, default: ''
-    preference :stripe_intents_flow, :string, default: 'setup'
-    preference :skip_confirmation_for_payment_intent, :boolean, default: true
 
     # @attribute [rw] preferred_webhook_endpoint_signing_secret The webhook endpoint signing secret
     #  for this payment method.
@@ -14,8 +12,6 @@ module SolidusStripe
     preference :webhook_endpoint_signing_secret, :string
 
     validates :available_to_admin, inclusion: { in: [false] }
-    validates :preferred_setup_future_usage, inclusion: { in: ['', 'on_session', 'off_session'] }
-    validates :preferred_stripe_intents_flow, inclusion: { in: ['payment', 'setup'] }
 
     has_one :webhook_endpoint,
       class_name: 'SolidusStripe::WebhookEndpoint',
@@ -50,27 +46,16 @@ module SolidusStripe
       Gateway
     end
 
-    def skip_confirm_step?
-      preferred_stripe_intents_flow == 'payment' &&
-        preferred_skip_confirmation_for_payment_intent
-    end
-
     def payment_profiles_supported?
       # We actually support them, but not in the way expected by Solidus and its ActiveMerchant legacy.
       false
     end
 
-    def intent_for_order(order)
-      # TODO: See if we can move the intent creation out of the view
-      intent_class.retrieve_stripe_intent(payment_method: self, order: order) ||
-        intent_class.create_stripe_intent(payment_method: self, order: order)
-    end
-
-    def intent_class
-      case preferred_stripe_intents_flow
-      when 'setup' then SolidusStripe::SetupIntent
-      when 'payment' then SolidusStripe::PaymentIntent
-      end
+    def strategy_for(order)
+      SolidusStripe::PaymentFlowStrategy.for(
+        payment_method: self,
+        order: order,
+      )
     end
 
     # Fetches the payment intent when available, falls back on the setup intent associated to the order.

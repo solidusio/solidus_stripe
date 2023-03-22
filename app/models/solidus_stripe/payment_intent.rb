@@ -56,7 +56,6 @@ module SolidusStripe
           # The capture method should stay manual in order to
           # avoid capturing the money before the order is completed.
           capture_method: 'manual',
-          setup_future_usage: payment_method.preferred_setup_future_usage.presence,
           customer: stripe_customer_id,
           metadata: { solidus_order_number: order.number },
         }.merge(stripe_intent_options))
