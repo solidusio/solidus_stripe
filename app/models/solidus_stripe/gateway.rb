@@ -110,7 +110,7 @@ module SolidusStripe
     end
 
     # Voids a previously authorized transaction, releasing the funds that are on hold.
-    def void(payment_intent_id, _source, _options = {})
+    def void(payment_intent_id, _options = {})
       check_payment_intent_id(payment_intent_id)
 
       payment_intent = request do
@@ -133,7 +133,7 @@ module SolidusStripe
 
     # Refunds the provided amount on a previously captured transaction.
     # TODO: check this method params twice.
-    def credit(amount_in_cents, _source, payment_intent_id, options = {})
+    def credit(amount_in_cents, payment_intent_id, options = {})
       check_payment_intent_id(payment_intent_id)
 
       payment = options[:originator].payment
