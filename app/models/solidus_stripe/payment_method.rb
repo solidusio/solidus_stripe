@@ -30,26 +30,24 @@ module SolidusStripe
       to: :webhook_endpoint,
       prefix: true
 
-    concerning :Configuration do
-      def partial_name
-        "stripe"
-      end
+    def partial_name
+      "stripe"
+    end
 
-      alias cart_partial_name partial_name
-      alias product_page_partial_name partial_name
-      alias risky_partial_name partial_name
+    alias cart_partial_name partial_name
+    alias product_page_partial_name partial_name
+    alias risky_partial_name partial_name
 
-      def source_required?
-        true
-      end
+    def source_required?
+      true
+    end
 
-      def payment_source_class
-        PaymentSource
-      end
+    def payment_source_class
+      PaymentSource
+    end
 
-      def gateway_class
-        Gateway
-      end
+    def gateway_class
+      Gateway
     end
 
     def skip_confirm_step?
@@ -60,6 +58,19 @@ module SolidusStripe
     def payment_profiles_supported?
       # We actually support them, but not in the way expected by Solidus and its ActiveMerchant legacy.
       false
+    end
+
+    def intent_for_order(order)
+      # TODO: See if we can move the intent creation out of the view
+      intent_class.retrieve_stripe_intent(payment_method: self, order: order) ||
+        intent_class.create_stripe_intent(payment_method: self, order: order)
+    end
+
+    def intent_class
+      case preferred_stripe_intents_flow
+      when 'setup' then SolidusStripe::SetupIntent
+      when 'payment' then SolidusStripe::PaymentIntent
+      end
     end
 
     # Fetches the payment intent when available, falls back on the setup intent associated to the order.
