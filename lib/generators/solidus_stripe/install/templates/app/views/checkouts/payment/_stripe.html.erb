@@ -7,11 +7,11 @@
   data-controller="solidus-stripe-intent"
   data-solidus-stripe-intent-client-secret-value="<%= intent.client_secret %>"
   data-solidus-stripe-intent-publishable-key-value="<%= payment_method.preferred_publishable_key %>"
-  data-solidus-stripe-intent-solidus-payment-method-id-value="<%= payment_method.id %>"
   data-solidus-stripe-intent-email-address-value="<%= current_order.email %>"
   data-solidus-stripe-intent-return-url-value="<%= solidus_stripe.after_confirmation_url(payment_method) %>"
-  data-solidus-stripe-intent-payment-form-selector-value="#checkout_form_payment"
   data-solidus-stripe-intent-flow-value="<%= payment_method.preferred_stripe_intents_flow %>"
+  data-solidus-stripe-intent-radio-selector-value="#order_payments_attributes__payment_method_id_<%= payment_method.id %>"
+  data-solidus-stripe-intent-submit-selector-value="#checkout_form_payment [type='submit']"
   data-action="submit@window->solidus-stripe-intent#handleSubmit"
 >
   <div data-solidus-stripe-intent-target="paymentElement">
