@@ -51,7 +51,13 @@ module SolidusStripe
         success: true,
         message: "PaymentIntent was confirmed successfully",
         response_code: stripe_payment_intent.id,
-        data: stripe_payment_intent,
+        data: stripe_payment_intent
+      )
+    rescue Stripe::StripeError => e
+      build_payment_log(
+        success: false,
+        message: e.message,
+        data: e.response
       )
     end
 

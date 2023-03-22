@@ -35,6 +35,26 @@ RSpec.describe SolidusStripe::Gateway do
       expect(payment.reload.response_code).to eq("pi_123")
     end
 
+    it 'generates error response on failure' do
+      stripe_payment_method = Stripe::PaymentMethod.construct_from(id: "pm_123", customer: "cus_123")
+      stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123")
+
+      payment_method = build(:stripe_payment_method)
+      source = build(:stripe_payment_source, stripe_payment_method_id: "pi_123", payment_method: payment_method)
+      gateway = payment_method.gateway
+      order = create(:order_with_stripe_payment, amount: 123.45, payment_method: payment_method)
+
+      allow(source).to receive(:stripe_payment_method).and_return(stripe_payment_method)
+      allow(Stripe::PaymentIntent).to receive(:create).and_return(stripe_payment_intent)
+      allow(Stripe::PaymentIntent).to receive(:confirm).with("pi_123").and_raise(Stripe::StripeError.new("auth error"))
+
+      result = gateway.authorize(123_45, source, currency: 'USD', originator: order.payments.first)
+
+      expect(Stripe::PaymentIntent).to have_received(:confirm).with("pi_123")
+      expect(result.success?).to be(false)
+      expect(result.message).to eq("auth error")
+    end
+
     it "raises if the given amount doesn't match the order total" do
       payment_method = build(:stripe_payment_method)
       gateway = payment_method.gateway

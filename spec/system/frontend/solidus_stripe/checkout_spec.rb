@@ -164,7 +164,7 @@ RSpec.describe 'SolidusStripe Checkout', :js do
   end
 
   context 'with declined cards' do
-    it 'reject transactions with declined cards or invalid fields and return an appropriate response' do
+    it 'reject transactions with cards declined at intent creation or invalid fields and return an appropriate response' do # rubocop:disable Metrics/LineLength
       creates_payment_method
       visits_payment_step(user: create(:user))
       chooses_new_stripe_payment
@@ -180,7 +180,17 @@ RSpec.describe 'SolidusStripe Checkout', :js do
       # Check the Stripe documentation for more information on
       # how to test declined payments:
       # https://stripe.com/docs/testing#declined-payments
-      declined_cards_are_notified
+      declined_cards_at_intent_creation_are_notified
+    end
+
+    it 'reject transactions with cards declined at the confirm step and return an appropriate response' do
+      creates_payment_method(
+        intents_flow: 'setup'
+      )
+      visits_payment_step(user: create(:user))
+      chooses_new_stripe_payment
+
+      declined_cards_at_confirm_are_notified
     end
 
     context 'with 3D Secure cards' do

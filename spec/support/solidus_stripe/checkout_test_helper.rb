@@ -208,6 +208,15 @@ module SolidusStripe::CheckoutTestHelper
     expect(page).to have_content('Your order has been processed successfully')
   end
 
+  def moves_order_back_to_payment
+    expect(page).to have_current_path('/checkout/payment')
+    expect(Spree::Order.last.state).to eq('payment')
+  end
+
+  def fails_the_payment
+    expect(Spree::Payment.last.state).to eq('failed')
+  end
+
   # Test methods
   #
   # These are methods that are used specifically for testing the Stripe
@@ -279,7 +288,7 @@ module SolidusStripe::CheckoutTestHelper
     end
   end
 
-  def declined_cards_are_notified
+  def declined_cards_at_intent_creation_are_notified
     fills_in_stripe_country('United States')
 
     [
@@ -298,6 +307,20 @@ module SolidusStripe::CheckoutTestHelper
         expect(page).to have_content(text)
       end
     end
+  end
+
+  def declined_cards_at_confirm_are_notified
+    fills_in_stripe_country('United States')
+
+    clears_stripe_form
+    fills_stripe_form(number: '4100000000000019')
+    submits_payment
+    checks_terms_of_service
+    confirms_order
+
+    expect(page).to have_content('Your card was declined')
+    moves_order_back_to_payment
+    fails_the_payment
   end
 
   def successfully_creates_a_setup_intent(user: nil)
