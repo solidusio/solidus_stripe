@@ -51,13 +51,6 @@ module SolidusStripe
       false
     end
 
-    def strategy_for(order)
-      SolidusStripe::PaymentFlowStrategy.for(
-        payment_method: self,
-        order: order,
-      )
-    end
-
     # Fetches the payment intent when available, falls back on the setup intent associated to the order.
     # @api private
     # TODO: re-evaluate the need for this and think of ways to always go throught the intent classes.
