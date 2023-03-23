@@ -25,12 +25,6 @@ class SolidusStripe::IntentsController < Spree::BaseController
     current_order.next!
 
     case
-    when params[:setup_intent]
-      intent = SolidusStripe::SetupIntent.find_by!(
-        payment_method: @payment_method,
-        order: current_order,
-        stripe_intent_id: params[:setup_intent],
-      )
     when params[:payment_intent]
       intent = SolidusStripe::PaymentIntent.find_by!(
         payment_method: @payment_method,
@@ -53,15 +47,8 @@ class SolidusStripe::IntentsController < Spree::BaseController
       data: intent.stripe_intent,
     )
 
-    if @payment_method.skip_confirm_step?
-      flash.notice = t('spree.order_processed_successfully')
-      flash['order_completed'] = true
-      current_order.complete!
-      redirect_to main_app.token_order_path(current_order, current_order.guest_token)
-    else
-      flash[:notice] = t(".intent_status.#{intent.stripe_intent.status}")
-      redirect_to main_app.checkout_state_path(current_order.state)
-    end
+    flash[:notice] = t(".intent_status.#{intent.stripe_intent.status}")
+    redirect_to main_app.checkout_state_path(current_order.state)
   end
 
   private

@@ -71,12 +71,6 @@ FactoryBot.define do
     stripe_intent_id { "pm_#{SecureRandom.uuid.delete('-')}" }
   end
 
-  factory :stripe_setup_intent, class: 'SolidusStripe::SetupIntent' do
-    association :order
-    association :payment_method, factory: :stripe_payment_method
-    stripe_intent_id { "seti_#{SecureRandom.uuid.delete('-')}" }
-  end
-
   factory :stripe_webhook_endpoint, class: 'SolidusStripe::WebhookEndpoint' do
     association :payment_method, factory: :stripe_payment_method
     slug { SecureRandom.hex(16) }
