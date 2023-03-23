@@ -16,7 +16,7 @@ Dir["#{app}/db/migrate/*.#{extension_name}.rb"].sort.reverse_each do |path|
   if current_migrations[basename]
     if contents != File.read(current_migrations[basename])
       puts "rolling back #{basename}..."
-      Dir.chdir(app) { system("bin/rails db:rollback VERSION=#{timestamp}") }
+      Dir.chdir(app) { system("bin/rails db:migrate:down VERSION=#{timestamp}") }
       puts "updating #{basename}..."
       File.write(path, File.read(current_migrations[basename]))
     else
@@ -32,9 +32,10 @@ Dir["#{app}/db/migrate/*.#{extension_name}.rb"].sort.reverse_each do |path|
 end
 
 # Install missing migrations
-current_migrations.each do |basename, path|
+base_time = Time.now.utc.to_i
+current_migrations.reverse_each.with_index do |(basename, path), index|
   puts "installing #{basename}..."
-  timestamp = Time.now.utc.strftime("%F%T").delete('-:')
+  timestamp = Time.at(base_time + index).strftime("%F%T").delete('-:') # rubocop:disable Rails/TimeZone
   contents = File.read(path)
 
   File.write("#{app}/db/migrate/#{timestamp}_#{basename}.#{extension_name}.rb", contents)
