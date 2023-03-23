@@ -16,6 +16,7 @@ module SolidusStripe
       CORE_EVENTS = Set[*%i[
         payment_intent.succeeded
         payment_intent.payment_failed
+        payment_intent.canceled
       ]].freeze
       private_constant :CORE_EVENTS
 

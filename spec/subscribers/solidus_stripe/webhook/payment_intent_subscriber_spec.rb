@@ -124,4 +124,65 @@ RSpec.describe SolidusStripe::Webhook::PaymentIntentSubscriber do
       expect(payment.log_entries.count).to be(0)
     end
   end
+
+  describe "#void_payment" do
+    it "voids a pending payment" do
+      payment_method = create(:stripe_payment_method)
+      stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123", cancellation_reason: "duplicate")
+      payment = create(:payment,
+        payment_method: payment_method,
+        response_code: stripe_payment_intent.id,
+        state: "pending")
+      event = SolidusStripe::Webhook::EventWithContextFactory.from_object(
+        payment_method: payment_method,
+        object: stripe_payment_intent,
+        type: "payment_intent.canceled"
+      ).solidus_stripe_object
+
+      described_class.new.void_payment(event)
+
+      expect(payment.reload.state).to eq "void"
+    end
+
+    it "adds a log entry to the payment" do
+      payment_method = create(:stripe_payment_method)
+      stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123", cancellation_reason: "duplicate")
+      payment = create(:payment,
+        payment_method: payment_method,
+        response_code: stripe_payment_intent.id,
+        state: "pending")
+      event = SolidusStripe::Webhook::EventWithContextFactory.from_object(
+        payment_method: payment_method,
+        object: stripe_payment_intent,
+        type: "payment_intent.canceled"
+      ).solidus_stripe_object
+
+      described_class.new.void_payment(event)
+
+      details = payment.log_entries.last.parsed_details
+      expect(details.success?).to be(true)
+      expect(
+        details.message
+      ).to eq "Payment was voided after payment_intent.voided webhook (duplicate)"
+    end
+
+    it "does nothing if the payment is already voided" do
+      payment_method = create(:stripe_payment_method)
+      stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123")
+      payment = create(:payment,
+        payment_method: payment_method,
+        response_code: stripe_payment_intent.id,
+        state: "void")
+      event = SolidusStripe::Webhook::EventWithContextFactory.from_object(
+        payment_method: payment_method,
+        object: stripe_payment_intent,
+        type: "payment_intent.payment_void",
+      ).solidus_stripe_object
+
+      described_class.new.void_payment(event)
+
+      expect(payment.reload.state).to eq "void"
+      expect(payment.log_entries.count).to be(0)
+    end
+  end
 end
