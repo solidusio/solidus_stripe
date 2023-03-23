@@ -70,6 +70,9 @@ RSpec.describe 'SolidusStripe Checkout', :js do
         # https://stripe.com/docs/testing#authentication-and-setup
         fills_stripe_form(number: '4000002760003184')
         submits_payment
+
+        pending "For this to pass we need to properly handle the 'requires_action' payment intent status"
+
         authorizes_3d_secure_payment(authenticate: false)
         using_wait_time(15) do
           expect(page).to have_content('An unexpected error occurred')

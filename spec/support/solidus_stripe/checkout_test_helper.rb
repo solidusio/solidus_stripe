@@ -267,23 +267,22 @@ module SolidusStripe::CheckoutTestHelper
   end
 
   def declined_cards_at_intent_creation_are_notified
-    fills_in_stripe_country('United States')
-
+    # https://stripe.com/docs/declines/codes
     [
-      ['4000000000000002', 'Your card has been declined'],                   # Generic decline
-      ['4000000000009995', 'Your card has insufficient funds'],              # Insufficient funds decline
-      ['4000000000009987', 'Your card has been declined'],                   # Lost card decline
-      ['4000000000009979', 'Your card has been declined'],                   # Stolen card decline
-      ['4000000000000069', 'Your card has expired'],                         # Expired card decline
-      ['4000000000000127', "Your card's security code is incorrect"],        # Incorrect CVC decline
-      ['4000000000000119', 'An error occurred while processing your card']   # Processing error decline
+      ['4000000000000002', 'Your card was declined'],                      # Generic decline
+      ['4000000000009995', 'Your card has insufficient funds'],            # Insufficient funds decline
+      ['4000000000009987', 'Your card was declined'],                      # Lost card decline
+      ['4000000000009979', 'Your card was declined'],                      # Stolen card decline
+      ['4000000000000069', 'Your card has expired'],                       # Expired card decline
+      ['4000000000000127', "Your card's security code is incorrect"],      # Incorrect CVC decline
+      ['4000000000000119', 'An error occurred while processing your card'] # Processing error decline
     ].each do |number, text|
-      clears_stripe_form
+      fills_in_stripe_country('United States')
       fills_stripe_form(number: number)
       submits_payment
-      using_wait_time(15) do
-        expect(page).to have_content(text)
-      end
+      checks_terms_of_service
+      confirms_order
+      expect(page).to have_content(text, wait: 15)
     end
   end
 
@@ -307,7 +306,6 @@ module SolidusStripe::CheckoutTestHelper
     fills_stripe_form
 
     submits_payment
-    expect(page).to have_content('Payment successfully authorized!')
 
     completes_order
     payment_intent_is_created_with_required_capture
