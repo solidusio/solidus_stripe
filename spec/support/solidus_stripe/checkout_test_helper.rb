@@ -114,7 +114,7 @@ module SolidusStripe::CheckoutTestHelper
 
   def finds_stripe_iframe
     fieldset = find_payment_fieldset(payment_method.id)
-    expect(fieldset).to have_css('iframe') # trigger waiting if the frame is not yet there
+    expect(fieldset).to have_css('iframe', wait: 15) # trigger waiting if the frame is not yet there
     fieldset.find("iframe")
   end
 
@@ -267,15 +267,20 @@ module SolidusStripe::CheckoutTestHelper
   end
 
   def declined_cards_at_intent_creation_are_notified
-    # https://stripe.com/docs/declines/codes
     [
-      ['4000000000000002', 'Your card was declined'],                      # Generic decline
-      ['4000000000009995', 'Your card has insufficient funds'],            # Insufficient funds decline
-      ['4000000000009987', 'Your card was declined'],                      # Lost card decline
-      ['4000000000009979', 'Your card was declined'],                      # Stolen card decline
-      ['4000000000000069', 'Your card has expired'],                       # Expired card decline
-      ['4000000000000127', "Your card's security code is incorrect"],      # Incorrect CVC decline
-      ['4000000000000119', 'An error occurred while processing your card'] # Processing error decline
+      # Decline codes
+      # https://stripe.com/docs/declines/codes
+      ['4000000000000002', 'Your card has been declined.'],                  # Generic decline
+      ['4000000000009995', 'Your card has insufficient funds.'],             # Insufficient funds decline
+      ['4000000000009987', 'Your card has been declined.'],                  # Lost card decline
+      ['4000000000009979', 'Your card has been declined.'],                  # Stolen card decline
+      ['4000000000000069', 'Your card has expired.'],                        # Expired card decline
+      ['4000000000000127', "Your card's security code is incorrect."],       # Incorrect CVC decline
+      ['4000000000000119', 'An error occurred while processing your card.'], # Processing error decline
+
+      # Fraudulent cards
+      # https://stripe.com/docs/testing#fraud-prevention
+      ['4100000000000019', 'Your card has been declined.'],                  # Always blocked
     ].each do |number, text|
       fills_in_stripe_country('United States')
       fills_stripe_form(number: number)
@@ -284,20 +289,6 @@ module SolidusStripe::CheckoutTestHelper
       confirms_order
       expect(page).to have_content(text, wait: 15)
     end
-  end
-
-  def declined_cards_at_confirm_are_notified
-    fills_in_stripe_country('United States')
-
-    clears_stripe_form
-    fills_stripe_form(number: '4100000000000019')
-    submits_payment
-    checks_terms_of_service
-    confirms_order
-
-    expect(page).to have_content('Your card was declined')
-    moves_order_back_to_payment
-    fails_the_payment
   end
 
   def successfully_creates_a_payment_intent(user: nil)

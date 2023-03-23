@@ -8,47 +8,35 @@ class SolidusStripe::IntentsController < Spree::BaseController
   before_action :load_payment_method
 
   def after_confirmation
-    unless %w[confirm payment].include?(current_order.state.to_s)
+    unless params[:payment_intent]
+      return head :unprocessable_entity
+    end
+
+    unless current_order.confirm?
       redirect_to main_app.checkout_state_path(current_order.state)
       return
     end
 
-    # Check if this is needed. This was added to be sure the order
-    # in in the right step.
-    current_order.state = :payment
+    intent = SolidusStripe::PaymentIntent.find_by!(
+      payment_method: @payment_method,
+      order: current_order,
+      stripe_intent_id: params[:payment_intent],
+    )
 
-    # TODO: understand how to handle webhooks. At this stage, we might receive a webhook
-    # with the confirmation of the setup intent. We need to be sure we are not creating
-    # the payment twice.
-    # https://stripe.com/docs/payments/intents?intent=setup#setup-intent-webhooks
+    if intent.process_payment
+      flash.notice = t('spree.order_processed_successfully')
 
-    current_order.next!
+      flash['order_completed'] = true
 
-    case
-    when params[:payment_intent]
-      intent = SolidusStripe::PaymentIntent.find_by!(
-        payment_method: @payment_method,
-        order: current_order,
-        stripe_intent_id: params[:payment_intent],
+      redirect_to(
+        spree_current_user ?
+          main_app.order_path(current_order) :
+          main_app.token_order_path(current_order, current_order.guest_token)
       )
     else
-      return head :unprocessable_entity
+      flash[:error] = params[:error_message] || t('spree.payment_processing_failed')
+      redirect_to(main_app.checkout_state_path(:payment))
     end
-
-    payment = intent.create_payment!(
-      amount: current_order.total, # TODO: double check, remove store credit?
-      add_to_wallet: true
-    )
-
-    SolidusStripe::LogEntries.payment_log(
-      payment,
-      success: true,
-      message: "Reached return URL",
-      data: intent.stripe_intent,
-    )
-
-    flash[:notice] = t(".intent_status.#{intent.stripe_intent.status}")
-    redirect_to main_app.checkout_state_path(current_order.state)
   end
 
   private

@@ -28,7 +28,7 @@ RSpec.describe 'SolidusStripe Checkout', :js do
   end
 
   context 'with declined cards' do
-    it 'reject transactions with cards declined at intent creation or invalid fields and return an appropriate response' do # rubocop:disable Metrics/LineLength
+    it 'reject transactions with cards declined at intent creation or invalid fields and return an appropriate response' do # rubocop:disable Layout/LineLength
       creates_payment_method
       visits_payment_step(user: create(:user))
       chooses_new_stripe_payment
@@ -47,16 +47,6 @@ RSpec.describe 'SolidusStripe Checkout', :js do
       declined_cards_at_intent_creation_are_notified
     end
 
-    it 'reject transactions with cards declined at the confirm step and return an appropriate response' do
-      skip "Does this make sense with payment intent?"
-
-      creates_payment_method
-      visits_payment_step(user: create(:user))
-      chooses_new_stripe_payment
-
-      declined_cards_at_confirm_are_notified
-    end
-
     context 'with 3D Secure cards' do
       it 'reject transaction with failed authentication and return an appropriate response' do
         creates_payment_method
@@ -71,24 +61,73 @@ RSpec.describe 'SolidusStripe Checkout', :js do
         fills_stripe_form(number: '4000002760003184')
         submits_payment
 
-        pending "For this to pass we need to properly handle the 'requires_action' payment intent status"
-
+        checks_terms_of_service
+        confirms_order
         authorizes_3d_secure_payment(authenticate: false)
-        using_wait_time(15) do
-          expect(page).to have_content('An unexpected error occurred')
-        end
+
+        moves_order_back_to_payment
+        expect(page).to have_content(
+          "We are unable to authenticate your payment method. " \
+          "Please choose a different payment method and try again.",
+          wait: 15
+        )
+
+        fills_in_stripe_country('United States')
+        clears_stripe_form
 
         # This test script is using 3D Secure 2 authentication, which must be
         # completed for the payment to be successful.
         # Please refer to the Stripe documentation for more information:
         # https://stripe.com/docs/testing#three-ds-cards
-        clears_stripe_form
         fills_stripe_form(number: '4000000000003220')
         submits_payment
+        checks_terms_of_service
+        confirms_order
         authorizes_3d_secure_2_payment(authenticate: false)
-        using_wait_time(15) do
-          expect(page).to have_content('An unexpected error occurred')
-        end
+
+        moves_order_back_to_payment
+        expect(page).to have_content(
+          "We are unable to authenticate your payment method. " \
+          "Please choose a different payment method and try again.",
+          wait: 15
+        )
+      end
+
+      it 'processes the transaction with successful authentication' do
+        user = create(:user)
+
+        creates_payment_method
+        visits_payment_step(user: user)
+        chooses_new_stripe_payment
+        fills_in_stripe_country('United States')
+
+        # This 3D Secure card requires authentication for all transactions,
+        # regardless of its setup.
+        # Please refer to the Stripe documentation for more information:
+        # https://stripe.com/docs/testing#authentication-and-setup
+        fills_stripe_form(number: '4000002760003184')
+        submits_payment
+        checks_terms_of_service
+        confirms_order
+        authorizes_3d_secure_payment(authenticate: true)
+        expect(page).to have_content('Your order has been processed successfully')
+        payment_intent_is_created_with_required_capture
+
+        visits_payment_step(user: user)
+        chooses_new_stripe_payment
+        fills_in_stripe_country('United States')
+
+        # This test script is using 3D Secure 2 authentication, which must be
+        # completed for the payment to be successful.
+        # Please refer to the Stripe documentation for more information:
+        # https://stripe.com/docs/testing#three-ds-cards
+        fills_stripe_form(number: '4000000000003220')
+        submits_payment
+        checks_terms_of_service
+        confirms_order
+        authorizes_3d_secure_2_payment(authenticate: true)
+        expect(page).to have_content('Your order has been processed successfully')
+        payment_intent_is_created_with_required_capture
       end
     end
   end

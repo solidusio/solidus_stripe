@@ -52,12 +52,6 @@ module SolidusStripe
       false
     end
 
-    def intent_for_order(order)
-      # TODO: See if we can move the intent creation out of the view
-      SolidusStripe::PaymentIntent.retrieve_stripe_intent(payment_method: self, order: order) ||
-        SolidusStripe::PaymentIntent.create_stripe_intent(payment_method: self, order: order)
-    end
-
     # TODO: re-evaluate the need for this and think of ways to always go throught the intent classes.
     def self.intent_id_for_payment(payment)
       return unless payment
