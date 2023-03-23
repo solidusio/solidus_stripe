@@ -37,8 +37,10 @@ RSpec.describe SolidusStripe::Webhook::PaymentIntentSubscriber do
 
       described_class.new.complete_payment(event)
 
+      details = payment.log_entries.last.parsed_details
+      expect(details.success?).to be(true)
       expect(
-        payment.log_entries.last.parsed_details.message
+        details.message
       ).to eq "Capture was successful after payment_intent.succeeded webhook"
     end
 
@@ -96,8 +98,10 @@ RSpec.describe SolidusStripe::Webhook::PaymentIntentSubscriber do
 
       described_class.new.fail_payment(event)
 
+      details = payment.log_entries.last.parsed_details
+      expect(details.success?).to be(false)
       expect(
-        payment.log_entries.last.parsed_details.message
+        details.message
       ).to eq "Payment was marked as failed after payment_intent.failed webhook"
     end
 
