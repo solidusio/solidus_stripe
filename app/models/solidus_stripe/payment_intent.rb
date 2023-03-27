@@ -52,10 +52,7 @@ module SolidusStripe
             order.currency,
           ),
           currency: order.currency,
-
-          # The capture method should stay manual in order to
-          # avoid capturing the money before the order is completed.
-          capture_method: 'manual',
+          capture_method: payment_method.auto_capture? ? 'automatic' : 'manual',
           setup_future_usage: payment_method.preferred_setup_future_usage.presence,
           customer: stripe_customer_id,
           metadata: { solidus_order_number: order.number },
