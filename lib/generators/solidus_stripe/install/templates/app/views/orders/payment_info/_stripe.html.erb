@@ -1,0 +1,3 @@
+<% if stripe_payment_method = payment.source.stripe_payment_method %>
+  <%= render "checkouts/existing_payment/stripe/#{stripe_payment_method.type}", stripe_payment_method: stripe_payment_method %>
+<% end %>
