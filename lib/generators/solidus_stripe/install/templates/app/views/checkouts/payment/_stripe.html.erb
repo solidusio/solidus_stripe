@@ -13,26 +13,26 @@
 
 <div
   class="solidus-stripe-payment"
-  data-controller="solidus-stripe-intent"
-  data-solidus-stripe-intent-publishable-key-value="<%= payment_method.preferred_publishable_key %>"
-  data-solidus-stripe-intent-payment-element-options-value="<%= payment_element_options.to_json %>"
-  data-solidus-stripe-intent-radio-selector-value="#order_payments_attributes__payment_method_id_<%= payment_method.id %>"
-  data-solidus-stripe-intent-submit-selector-value="#checkout_form_payment [type='submit']"
-  data-action="submit@window->solidus-stripe-intent#handleSubmit"
+  data-controller="solidus-stripe-payment"
+  data-solidus-stripe-payment-publishable-key-value="<%= payment_method.preferred_publishable_key %>"
+  data-solidus-stripe-payment-payment-element-options-value="<%= payment_element_options.to_json %>"
+  data-solidus-stripe-payment-radio-selector-value="#order_payments_attributes__payment_method_id_<%= payment_method.id %>"
+  data-solidus-stripe-payment-submit-selector-value="#checkout_form_payment [type='submit']"
+  data-action="submit@window->solidus-stripe-payment#handleSubmit"
 >
   <input
     type="hidden"
     name="payment_source[<%= payment_method.id %>][stripe_payment_method_id]"
     value=""
-    data-solidus-stripe-intent-target="paymentMethodInput"
+    data-solidus-stripe-payment-target="paymentMethodInput"
   >
 
-  <div data-solidus-stripe-intent-target="paymentElement">
+  <div data-solidus-stripe-payment-target="paymentElement">
     <!-- Elements will create form elements here -->
     <em><%= t('solidus_stripe.loading') %></em>
   </div>
 
-  <div data-solidus-stripe-intent-target="message">
+  <div data-solidus-stripe-payment-target="message">
     <!-- Display error/notification messages to your customers here -->
   </div>
 </div>
