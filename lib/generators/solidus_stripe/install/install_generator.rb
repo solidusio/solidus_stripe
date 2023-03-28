@@ -78,6 +78,18 @@ module SolidusStripe
               template engine.root.join(path), path
             end
           end
+
+          storefront_layout_path = Rails.root.join("app/views/layouts/storefront.html.erb")
+
+          if storefront_layout_path.exist?
+            insert_into_file(
+              storefront_layout_path.to_s,
+              "\n    <script async src='https://js.stripe.com/v3/'></script>",
+              before: %r{\s*</head>},
+            )
+          end
+
+          run 'bin/importmap pin @stripe/stripe-js'
         end
       end
 
