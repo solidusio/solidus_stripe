@@ -29,38 +29,6 @@ module SolidusStripe
 
     attr_reader :client
 
-    # Authorizes a certain amount on the provided payment source.
-    #
-    # We create and confirm the Stripe payment intent in two steps. That's to
-    # guarantee that we associate a Solidus payment on the creation, and we can
-    # fetch it after the webhook event is published on confirmation.
-    #
-    # The Stripe payment intent id is copied over the Solidus payment
-    # `response_code` field.
-    def authorize(amount_in_cents, source, options = {})
-      check_given_amount_matches_payment_intent(amount_in_cents, options)
-
-      stripe_payment_intent = create_confirmed_stripe_payment_intent(
-        source: source,
-        payment: options[:originator],
-        stripe_payment_intent_options: {
-          capture_method: "manual"
-        }
-      )
-      build_payment_log(
-        success: true,
-        message: "PaymentIntent was confirmed successfully",
-        response_code: stripe_payment_intent.id,
-        data: stripe_payment_intent
-      )
-    rescue Stripe::StripeError => e
-      build_payment_log(
-        success: false,
-        message: e.message,
-        data: e.response
-      )
-    end
-
     # Captures a certain amount from a previously authorized transaction.
     #
     # @see https://stripe.com/docs/api/payment_intents/capture#capture_payment_intent
@@ -83,29 +51,6 @@ module SolidusStripe
         success: false,
         message: e.to_s,
         data: e.response,
-      )
-    end
-
-    # Authorizes and captures a certain amount on the provided payment source.
-    #
-    # See `#authorize` for how the confirmation step is performed.
-    #
-    # @todo add support for purchasing custom amounts
-    def purchase(amount_in_cents, source, options = {})
-      check_given_amount_matches_payment_intent(amount_in_cents, options)
-
-      stripe_payment_intent = create_confirmed_stripe_payment_intent(
-        source: source,
-        payment: options[:originator],
-        stripe_payment_intent_options: {
-          capture_method: "automatic"
-        }
-      )
-      build_payment_log(
-        success: true,
-        message: "PaymentIntent was confirmed and captured successfully",
-        response_code: stripe_payment_intent.id,
-        data: stripe_payment_intent,
       )
     end
 
@@ -170,27 +115,6 @@ module SolidusStripe
     end
 
     private
-
-    def create_confirmed_stripe_payment_intent(source:, payment:, stripe_payment_intent_options:)
-      stripe_payment_method = source.stripe_payment_method
-
-      SolidusStripe::PaymentIntent.create_stripe_intent(
-        payment_method: source.payment_method,
-        order: payment.order,
-        stripe_intent_options: stripe_payment_intent_options.merge(
-          payment_method: stripe_payment_method.id,
-          customer: stripe_payment_method.customer,
-          confirm: false
-        )
-      ).tap do
-        payment.update_column(:response_code, _1.id) # rubocop:disable Rails/SkipsModelValidations
-        confirm_stripe_payment_intent(_1.id)
-      end
-    end
-
-    def confirm_stripe_payment_intent(stripe_payment_intent_id)
-      request { Stripe::PaymentIntent.confirm(stripe_payment_intent_id) }
-    end
 
     def capture_stripe_payment_intent(stripe_payment_intent_id)
       request { Stripe::PaymentIntent.capture(stripe_payment_intent_id) }
