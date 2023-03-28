@@ -17,6 +17,7 @@ module SolidusStripe
         payment_intent.succeeded
         payment_intent.payment_failed
         payment_intent.canceled
+        charge.refunded
       ]].freeze
       private_constant :CORE_EVENTS
 

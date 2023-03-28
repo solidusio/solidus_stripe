@@ -80,7 +80,7 @@ module SolidusStripe::MoneyToStripeAmountConverter
   # @param currency [String]
   # @return [Integer]
   def solidus_decimal_to_subunit(amount, currency)
-    Money.from_amount(amount, currency).cents
+    Money.from_amount(amount, currency).fractional
   end
 
   # Transforms a subunit amount into a decimal amount

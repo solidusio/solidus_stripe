@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "stripe/webhook"
+require "solidus_stripe/seeds"
 
 module SolidusStripe
   class Configuration
@@ -15,9 +16,15 @@ module SolidusStripe
     #  its creation. Defaults to `Stripe::Webhook::DEFAULT_TOLERANCE`.
     attr_accessor :webhook_signature_tolerance
 
+    # @!attribute [rw] refund_reason_name
+    #   @return [String] `Spree::RefundReason#name` used for Stripe-generated
+    #     refunds. Defaults to {SolidusStripe::Seeds::DEFAULT_STRIPE_REFUND_REASON_NAME}.
+    attr_accessor :refund_reason_name
+
     def initialize
       @webhook_events = []
       @webhook_signature_tolerance = Stripe::Webhook::DEFAULT_TOLERANCE
+      @refund_reason_name = Seeds::DEFAULT_STRIPE_REFUND_REASON_NAME
     end
   end
 

@@ -38,5 +38,5 @@ unbundled bundle add solidus --github solidusio/solidus --branch "${SOLIDUS_BRAN
 unbundled bundle exec rake db:drop db:create
 unbundled bundle exec rails generate solidus:install --auto-accept --payment-method=none --no-seed --no-sample "$@"
 unbundled bundle add $extension_name --path ..
-unbundled bundle exec rails generate $extension_name:install --migrate --specs=all
+unbundled bundle exec rails generate $extension_name:install --migrate --load-seeds=false --specs=all
 

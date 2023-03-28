@@ -11,6 +11,12 @@ SolidusStripe.configure do |config|
   # Number of seconds while a webhook event is valid after its creation.
   # Defaults to the same value as Stripe's default.
   # config.webhook_signature_tolerance = 150
+  #
+  # Name of the `Spree::RefundReason` used for Stripe-generated refunds.
+  # Defaults to {SolidusStripe::DEFAULT_STRIPE_REFUND_REASON_NAME}. If you
+  # change it, make sure that the corresponding `Spree::RefundReason` exists in
+  # the database with that name.
+  # config.refund_reason_name = "Stripe refund"
 end
 
 if ENV['SOLIDUS_STRIPE_API_KEY']
