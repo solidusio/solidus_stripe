@@ -78,6 +78,8 @@ module SolidusStripe
               template engine.root.join(path), path
             end
           end
+
+          run 'bin/importmap pin @stripe/stripe-js'
         end
       end
 
