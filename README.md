@@ -7,10 +7,6 @@ Please use [`solidus_stripe` v4 on the corresponding branch](https://github.com/
 
 🚧 **WARNING: WORK IN PROGRESS** 🚧
 
-> ⚠️ **WARNING** ⚠️
->
-> Please note that at the moment, solidus_stripe only supports integration with a single Stripe account. This means it is not suitable for use in a multi-seller marketplace environment. We are working to add support for multiple Stripe accounts as soon as possible.
-
 # Solidus Stripe
 
 [![CircleCI](https://circleci.com/gh/solidusio/solidus_stripe.svg?style=shield)](https://circleci.com/gh/solidusio/solidus_stripe)
