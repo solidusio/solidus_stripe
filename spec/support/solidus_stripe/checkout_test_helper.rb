@@ -23,8 +23,12 @@ module SolidusStripe::CheckoutTestHelper
     # rubocop:enable RSpec/AnyInstance
   end
 
-  def creates_payment_method(setup_future_usage: 'off_session')
-    @payment_method = create(:stripe_payment_method, preferred_setup_future_usage: setup_future_usage)
+  def creates_payment_method(setup_future_usage: 'off_session', auto_capture: false)
+    @payment_method = create(
+      :stripe_payment_method,
+      preferred_setup_future_usage: setup_future_usage,
+      auto_capture: auto_capture
+    )
   end
 
   def payment_method
@@ -222,6 +226,15 @@ module SolidusStripe::CheckoutTestHelper
     expect(intent.status).to eq('requires_capture')
   end
 
+  def payment_intent_is_created_and_successfully_captured
+    order = Spree::Order.last
+    intent = SolidusStripe::PaymentIntent.where(
+      payment_method: payment_method,
+      order: order
+    ).last.stripe_intent
+    expect(intent.status).to eq('succeeded')
+  end
+
   def payment_intent_is_created_with_required_action
     order = Spree::Order.last
     intent = SolidusStripe::PaymentIntent.where(
@@ -295,7 +308,7 @@ module SolidusStripe::CheckoutTestHelper
     end
   end
 
-  def successfully_creates_a_payment_intent(user: nil)
+  def successfully_creates_a_payment_intent(user: nil, auto_capture: false)
     visits_payment_step(user: user)
     chooses_new_stripe_payment
     fills_stripe_form
@@ -303,6 +316,11 @@ module SolidusStripe::CheckoutTestHelper
     submits_payment
 
     completes_order
-    payment_intent_is_created_with_required_capture
+
+    if auto_capture
+      payment_intent_is_created_and_successfully_captured
+    else
+      payment_intent_is_created_with_required_capture
+    end
   end
 end
