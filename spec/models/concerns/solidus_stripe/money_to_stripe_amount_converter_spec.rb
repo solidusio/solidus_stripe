@@ -117,5 +117,17 @@ RSpec.describe SolidusStripe::MoneyToStripeAmountConverter do
       end
     end
   end
+
+  describe '.solidus_decimal_to_subunit' do
+    it 'returns the subunit amount as an integer' do
+      expect(described_class.solidus_decimal_to_subunit(100, 'USD')).to be(100_00)
+    end
+  end
+
+  describe '.solidus_subunit_to_decimal' do
+    it 'returns to the unit amount as a decimal' do
+      expect(described_class.solidus_subunit_to_decimal(100_00, 'USD')).to eq(BigDecimal("100"))
+    end
+  end
 end
 # rubocop:enable Style/NumericLiterals
