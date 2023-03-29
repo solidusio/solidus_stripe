@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'stripe'
+require "solidus_stripe/money_to_stripe_amount_converter"
 
 module SolidusStripe
   # @see https://stripe.com/docs/payments/accept-a-payment?platform=web&ui=checkout#auth-and-capture
