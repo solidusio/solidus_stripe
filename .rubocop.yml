@@ -46,3 +46,6 @@ Layout/LineLength:
 RSpec/FilePath:
   Exclude:
     - spec/requests/solidus_stripe/webhooks_controller/**/*
+
+Style/MultilineTernaryOperator:
+  Enabled: false
