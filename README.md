@@ -157,35 +157,19 @@ The most important difference is that on Stripe a failure is not a final state, 
 
 In order to map these concepts SolidusStripe will match states in a slightly unexpected way, as shown below.
 
-Reference: https://stripe.com/docs/payments/intents?intent=payment
+| Stripe PaymentIntent Status | Solidus Payment State |
+| --------------------------- | --------------------- |
+| requires_payment_method     | checkout              |
+| requires_action             | checkout              |
+| processing                  | checkout              |
+| requires_confirmation       | checkout              |
+| requires_capture            | pending               |
+| succeeded                   | completed             |
 
-![image](https://user-images.githubusercontent.com/1051/217322027-f49081f5-0795-49f4-994e-285a9de5347c.png)
+Reference:
 
-### ⚠️ Warning: Authorization happens before the order is completed
-
-This setup implies a payment is authorized after the payment information is submitted to Stripe, although the order
-still needs to be completed. That can become an issue if a customer abandons the checkout at the `confirm` step and
-no action is taken to free up the money on the backend.
-
-In order to mitigate this issue, we suggest adapting the frontend by merging the *confirm* and *payment* steps:
-
-1. embed the agreement to the terms of service
-2. add order summary to the payment step
-3. apply the following patch
-
-```patch
---- a/templates/app/controllers/checkouts_controller.rb
-+++ b/templates/app/controllers/checkouts_controller.rb
-@@ -48,6 +48,8 @@ def redirect_on_failure
-   end
-
-   def transition_forward
-+    @order.next if @order.has_checkout_step?("payment") && @order.payment?
-+
-     if @order.can_complete?
-       @order.complete
-     else
-```
+- https://stripe.com/docs/payments/intents?intent=payment
+- https://github.com/solidusio/solidus/blob/master/core/lib/spree/core/state_machines/payment.rb
 
 ## Development
 
