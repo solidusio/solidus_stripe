@@ -49,6 +49,7 @@ module SolidusStripe
 
       if successful
         order.complete!
+        order.user.wallet.add(payment.source) if order.user && stripe_intent.setup_future_usage.present?
       else
         order.payment_failed!
       end

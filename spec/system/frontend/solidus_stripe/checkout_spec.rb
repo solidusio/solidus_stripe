@@ -27,6 +27,39 @@ RSpec.describe 'SolidusStripe Checkout', :js do
     end
   end
 
+  context 'with a registered user' do
+    ['on_session', 'off_session'].each do |setup_future_usage|
+      context "when setup_future_usage is set with '#{setup_future_usage}'" do
+        before { creates_payment_method(setup_future_usage: setup_future_usage) }
+
+        it "successfully reuses a previously saved card from the user's wallet" do
+          user = create(:user)
+          successfully_creates_a_payment_intent(user: user)
+
+          visits_payment_step(user: user)
+          find_existing_payment_radio(user.wallet_payment_sources.first.id).choose
+          submits_payment
+          completes_order
+          payment_intent_is_created_with_required_capture
+          captures_last_valid_payment
+        end
+      end
+    end
+
+    context 'when setup_future_usage is not set' do
+      it 'requires the user to enter their payment information for each new transaction' do
+        creates_payment_method(setup_future_usage: '')
+        user = create(:user)
+
+        successfully_creates_a_payment_intent(user: user)
+
+        visits_payment_step(user: user)
+
+        expects_page_to_not_display_wallet_payment_sources
+      end
+    end
+  end
+
   context 'with declined cards' do
     it 'reject transactions with cards declined at intent creation or invalid fields and return an appropriate response' do # rubocop:disable Layout/LineLength
       creates_payment_method
@@ -96,7 +129,7 @@ RSpec.describe 'SolidusStripe Checkout', :js do
       it 'processes the transaction with successful authentication' do
         user = create(:user)
 
-        creates_payment_method
+        creates_payment_method(setup_future_usage: '')
         visits_payment_step(user: user)
         chooses_new_stripe_payment
         fills_in_stripe_country('United States')

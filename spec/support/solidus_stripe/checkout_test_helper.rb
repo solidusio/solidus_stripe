@@ -204,6 +204,10 @@ module SolidusStripe::CheckoutTestHelper
     expect(Spree::Payment.last.state).to eq('failed')
   end
 
+  def expects_page_to_not_display_wallet_payment_sources
+    expect(page).to have_no_selector("[name='order[wallet_payment_source_id]']")
+  end
+
   # Test methods
   #
   # These are methods that are used specifically for testing the Stripe
