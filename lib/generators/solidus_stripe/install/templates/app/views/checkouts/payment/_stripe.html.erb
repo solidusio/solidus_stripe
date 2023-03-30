@@ -6,6 +6,7 @@
   ),
   currency: current_order.currency.downcase,
   paymentMethodCreation: 'manual',
+  captureMethod: payment_method.auto_capture? ? 'automatic' : 'manual',
   # Fully customizable with appearance API.
   # https://stripe.com/docs/elements/appearance-api
   # appearance: {},
