@@ -8,6 +8,7 @@ module SolidusStripe
 
       handle :"stripe.payment_intent.succeeded", with: :complete_payment
       handle :"stripe.payment_intent.payment_failed", with: :fail_payment
+      handle :"stripe.payment_intent.canceled", with: :void_payment
 
       # Captures a payment.
       #
@@ -43,6 +44,26 @@ module SolidusStripe
             payment,
             success: false,
             message: "Payment was marked as failed after payment_intent.failed webhook"
+          )
+        end
+      end
+
+      # Voids a payment.
+      #
+      # Voids a Solidus payment associated to a Stripe payment intent, adding a
+      # log entry about the event.
+      #
+      # @param event [SolidusStripe::Webhook::Event]
+      def void_payment(event)
+        payment = extract_payment_from_event(event)
+        return if payment.void?
+
+        reason = event.data.object.cancellation_reason
+        payment.void!.tap do
+          SolidusStripe::LogEntries.payment_log(
+            payment,
+            success: true,
+            message: "Payment was voided after payment_intent.voided webhook (#{reason})"
           )
         end
       end
