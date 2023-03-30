@@ -57,9 +57,14 @@ module SolidusStripe
     end
 
     def stripe_intent
-      payment_method.gateway.request do
+      @stripe_intent ||= payment_method.gateway.request do
         Stripe::PaymentIntent.retrieve(stripe_intent_id)
       end
+    end
+
+    def reload(...)
+      @stripe_intent = nil
+      super
     end
 
     def create_stripe_intent(**stripe_intent_options)
