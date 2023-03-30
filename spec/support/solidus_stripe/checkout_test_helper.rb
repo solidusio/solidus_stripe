@@ -220,6 +220,13 @@ module SolidusStripe::CheckoutTestHelper
     expect(page).to have_no_selector("[name='order[wallet_payment_source_id]']")
   end
 
+  def expects_to_have_specific_authorized_amount_on_stripe(amount)
+    stripe_payment_intent = payment_method.gateway.request do
+      Stripe::PaymentIntent.retrieve(last_stripe_payment.response_code)
+    end
+    expect(stripe_payment_intent.amount).to eq(amount * 100)
+  end
+
   # Test methods
   #
   # These are methods that are used specifically for testing the Stripe
