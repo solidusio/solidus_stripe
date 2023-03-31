@@ -49,3 +49,7 @@ RSpec/FilePath:
 
 Style/MultilineTernaryOperator:
   Enabled: false
+
+Rails/SkipsModelValidations:
+  Exclude:
+    - spec/**/*

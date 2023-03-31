@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
+# Helpers to interoperate amounts between Solidus and Stripe.
+#
 # Solidus will provide a "fractional" amount, that is specific for each currency
-# following the configurationo defined in the Money gem.
+# following the configuration defined in the Money gem.
 #
 # Stripe uses the "smallest currency unit", (e.g., 100 cents to charge $1.00 or
 # 100 to charge ¥100, a zero-decimal currency).
@@ -70,6 +72,24 @@ module SolidusStripe::MoneyToStripeAmountConverter
     else
       (fractional / stripe_subunit_to_unit.to_d) * solidus_subunit_to_unit.to_d
     end
+  end
+
+  # Transforms a decimal amount into a subunit amount
+  #
+  # @param amount [BigDecimal]
+  # @param currency [String]
+  # @return [Integer]
+  def solidus_decimal_to_subunit(amount, currency)
+    Money.from_amount(amount, currency).fractional
+  end
+
+  # Transforms a subunit amount into a decimal amount
+  #
+  # @param amount [Integer]
+  # @param currency [String]
+  # @return [BigDecimal]
+  def solidus_subunit_to_decimal(amount, currency)
+    Money.new(amount, currency).to_d
   end
 
   private

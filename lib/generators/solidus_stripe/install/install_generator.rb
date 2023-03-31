@@ -9,6 +9,7 @@ module SolidusStripe
       class_option :starter_frontend, type: :boolean, default: true
 
       class_option :migrate, type: :boolean, default: true
+      class_option :load_seeds, type: :boolean, default: true
       class_option :watch, type: :boolean, default: false, hide: true
       class_option :sync, type: :boolean, default: false, hide: true
 
@@ -80,6 +81,18 @@ module SolidusStripe
           end
 
           run 'bin/importmap pin @stripe/stripe-js'
+        end
+      end
+
+      def load_seeds
+        if options[:migrate] && options[:load_seeds]
+          say_status :load, "seed data", :blue
+          append_file "db/seeds.rb", <<~RUBY
+            #{engine.name}.load_seed
+          RUBY
+          engine.load_seed
+        else
+          say_status :skip, "loading seed data", :blue
         end
       end
 

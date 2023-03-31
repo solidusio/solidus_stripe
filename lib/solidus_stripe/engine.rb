@@ -24,6 +24,7 @@ module SolidusStripe
           bus: Spree::Bus
         )
         SolidusStripe::Webhook::PaymentIntentSubscriber.new.subscribe_to(Spree::Bus)
+        SolidusStripe::Webhook::ChargeSubscriber.new.subscribe_to(Spree::Bus)
       end
     end
 
