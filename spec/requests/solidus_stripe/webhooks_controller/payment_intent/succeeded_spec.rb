@@ -2,10 +2,16 @@ require "solidus_stripe_spec_helper"
 
 RSpec.describe SolidusStripe::WebhooksController, type: %i[request webhook_request] do
   describe "POST /create payment_intent.succeeded" do
-    it "transitions the associated payment to completed" do
+    it "captures the associated payment" do
       payment_method = create(:stripe_payment_method)
-      stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123")
+      stripe_payment_intent = Stripe::PaymentIntent.construct_from(
+        id: "pi_123",
+        amount: 1000,
+        amount_received: 1000,
+        currency: "usd"
+      )
       payment = create(:payment,
+        amount: 10,
         payment_method: payment_method,
         response_code: stripe_payment_intent.id,
         state: "pending")
