@@ -36,8 +36,16 @@ module SolidusStripe::CheckoutTestHelper
     @payment_method ||= SolidusStripe::PaymentMethod.first!
   end
 
+  def current_order
+    @current_order ||= Spree::Order.last!
+  end
+
+  def last_stripe_payment
+    current_order.payments.reorder(id: :desc).find_by(source_type: "SolidusStripe::PaymentSource")
+  end
+
   def captures_last_valid_payment
-    payment = Spree::Payment.valid.last
+    payment = current_order.payments.valid.last
     payment.capture!
     expect(payment.payment_method.type).to eq('SolidusStripe::PaymentMethod')
     intent = payment.payment_method.gateway.request do
@@ -165,12 +173,12 @@ module SolidusStripe::CheckoutTestHelper
   # the checkout process.
 
   def visits_payment_step(user: nil)
-    order = Spree::TestingSupport::OrderWalkthrough.up_to(:delivery, user: user)
+    @current_order = Spree::TestingSupport::OrderWalkthrough.up_to(:delivery, user: user)
 
     if user
-      sign_in order.user
+      sign_in current_order.user
     else
-      assigns_guest_token order.guest_token
+      assigns_guest_token current_order.guest_token
     end
 
     visit '/checkout/payment'
@@ -201,15 +209,22 @@ module SolidusStripe::CheckoutTestHelper
 
   def moves_order_back_to_payment
     expect(page).to have_current_path('/checkout/payment')
-    expect(Spree::Order.last.state).to eq('payment')
+    expect(current_order.state).to eq('payment')
   end
 
   def fails_the_payment
-    expect(Spree::Payment.last.state).to eq('failed')
+    expect(last_stripe_payment.state).to eq('failed')
   end
 
   def expects_page_to_not_display_wallet_payment_sources
     expect(page).to have_no_selector("[name='order[wallet_payment_source_id]']")
+  end
+
+  def expects_to_have_specific_authorized_amount_on_stripe(amount)
+    stripe_payment_intent = payment_method.gateway.request do
+      Stripe::PaymentIntent.retrieve(last_stripe_payment.response_code)
+    end
+    expect(stripe_payment_intent.amount).to eq(amount * 100)
   end
 
   # Test methods
@@ -218,10 +233,9 @@ module SolidusStripe::CheckoutTestHelper
   # checkout process.
 
   def payment_intent_is_created_with_required_capture
-    order = Spree::Order.last
     intent = SolidusStripe::PaymentIntent.where(
       payment_method: payment_method,
-      order: order
+      order: current_order
     ).last.stripe_intent
     expect(intent.status).to eq('requires_capture')
   end
@@ -236,10 +250,9 @@ module SolidusStripe::CheckoutTestHelper
   end
 
   def payment_intent_is_created_with_required_action
-    order = Spree::Order.last
     intent = SolidusStripe::PaymentIntent.where(
       payment_method: payment_method,
-      order: order
+      order: current_order
     ).last.stripe_intent
     expect(intent.status).to eq('requires_action')
   end

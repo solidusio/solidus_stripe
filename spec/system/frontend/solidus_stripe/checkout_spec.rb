@@ -36,6 +36,18 @@ RSpec.describe 'SolidusStripe Checkout', :js do
   end
 
   context 'with a registered user' do
+    it 'successfully processes payment using available store credits' do
+      create(:store_credit_payment_method)
+      creates_payment_method
+      user = create(:user)
+      store_credit_amount = 5
+      create(:store_credit, user: user, amount: store_credit_amount)
+
+      successfully_creates_a_payment_intent(user: user)
+
+      expects_to_have_specific_authorized_amount_on_stripe(current_order.total - store_credit_amount)
+    end
+
     ['on_session', 'off_session'].each do |setup_future_usage|
       context "when setup_future_usage is set with '#{setup_future_usage}'" do
         before { creates_payment_method(setup_future_usage: setup_future_usage) }

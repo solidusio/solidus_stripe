@@ -80,7 +80,7 @@ module SolidusStripe
       payment_method.gateway.request do
         Stripe::PaymentIntent.create({
           amount: payment_method.gateway.to_stripe_amount(
-            order.display_total.money.fractional,
+            order.display_order_total_after_store_credit.money.fractional,
             order.currency,
           ),
           currency: order.currency,

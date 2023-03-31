@@ -1,7 +1,7 @@
 <% payment_element_options = {
   mode: 'payment',
   amount: SolidusStripe::MoneyToStripeAmountConverter.to_stripe_amount(
-    current_order.display_total.money.fractional,
+    current_order.display_order_total_after_store_credit.money.fractional,
     current_order.currency,
   ),
   currency: current_order.currency.downcase,
