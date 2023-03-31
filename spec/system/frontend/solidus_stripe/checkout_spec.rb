@@ -27,6 +27,14 @@ RSpec.describe 'SolidusStripe Checkout', :js do
     end
   end
 
+  context 'when auto-capture is enabled' do
+    it 'creates a payment intent and automatically processes payment' do
+      creates_payment_method(auto_capture: true)
+
+      successfully_creates_a_payment_intent(user: create(:user), auto_capture: true)
+    end
+  end
+
   context 'with a registered user' do
     ['on_session', 'off_session'].each do |setup_future_usage|
       context "when setup_future_usage is set with '#{setup_future_usage}'" do
