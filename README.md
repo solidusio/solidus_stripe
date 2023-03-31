@@ -1,15 +1,18 @@
-🚧 **WARNING: WORK IN PROGRESS** 🚧
+## 🚧 **WARNING** 🚧 Work In Progress
 
 You're looking at the source for `solidus_stripe` v5, which will only support the **starter frontend**
 but at the moment **it is not ready to be used**.
 
 Please use [`solidus_stripe` v4 on the corresponding branch](https://github.com/solidusio/solidus_stripe/tree/v4).
 
-🚧 **WARNING: WORK IN PROGRESS** 🚧
+## 🚧 **WARNING** 🚧 Supporting `solidus_frontend`
 
-> ⚠️ **WARNING** ⚠️
->
-> Please note that at the moment, solidus_stripe only supports integration with a single Stripe account. This means it is not suitable for use in a multi-seller marketplace environment. We are working to add support for multiple Stripe accounts as soon as possible.
+If you need support for `solidus_frontend` please add `< 5` as a version requirement in your gemfile:
+`gem 'solidus_stripe', '< 5'`
+or if your tracking the github version please switch to the `v4` branch:
+`gem 'solidus_stripe', git: 'https://github.com/solidusio/solidus_stripe.git', branch: 'v4'`
+
+---
 
 # Solidus Stripe
 
@@ -25,17 +28,6 @@ Add solidus_stripe to your Gemfile:
 ```ruby
 gem 'solidus_stripe'
 ```
-
-> ⚠️ **WARNING** ⚠️
->
-> If you need support for `solidus_frontend` please add `< 5` as a version requirement in your gemfile:
->
-> `gem 'solidus_stripe', '< 5'`
->
-> or if your tracking the github version please switch to the `v4` branch:
->
-> `gem 'solidus_stripe', git: 'https://github.com/solidusio/solidus_stripe.git', branch: 'v4'`
->
 
 Bundle your dependencies and run the installation generator:
 
@@ -165,35 +157,19 @@ The most important difference is that on Stripe a failure is not a final state, 
 
 In order to map these concepts SolidusStripe will match states in a slightly unexpected way, as shown below.
 
-Reference: https://stripe.com/docs/payments/intents?intent=payment
+| Stripe PaymentIntent Status | Solidus Payment State |
+| --------------------------- | --------------------- |
+| requires_payment_method     | checkout              |
+| requires_action             | checkout              |
+| processing                  | checkout              |
+| requires_confirmation       | checkout              |
+| requires_capture            | pending               |
+| succeeded                   | completed             |
 
-![image](https://user-images.githubusercontent.com/1051/217322027-f49081f5-0795-49f4-994e-285a9de5347c.png)
+Reference:
 
-### ⚠️ Warning: Authorization happens before the order is completed
-
-This setup implies a payment is authorized after the payment information is submitted to Stripe, although the order
-still needs to be completed. That can become an issue if a customer abandons the checkout at the `confirm` step and
-no action is taken to free up the money on the backend.
-
-In order to mitigate this issue, we suggest adapting the frontend by merging the *confirm* and *payment* steps:
-
-1. embed the agreement to the terms of service
-2. add order summary to the payment step
-3. apply the following patch
-
-```patch
---- a/templates/app/controllers/checkouts_controller.rb
-+++ b/templates/app/controllers/checkouts_controller.rb
-@@ -48,6 +48,8 @@ def redirect_on_failure
-   end
-
-   def transition_forward
-+    @order.next if @order.has_checkout_step?("payment") && @order.payment?
-+
-     if @order.can_complete?
-       @order.complete
-     else
-```
+- https://stripe.com/docs/payments/intents?intent=payment
+- https://github.com/solidusio/solidus/blob/master/core/lib/spree/core/state_machines/payment.rb
 
 ## Development
 

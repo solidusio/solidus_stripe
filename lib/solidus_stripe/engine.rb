@@ -12,6 +12,8 @@ module SolidusStripe
 
     initializer "solidus_stripe.add_payment_method", after: "spree.register.payment_methods" do |app|
       app.config.spree.payment_methods << 'SolidusStripe::PaymentMethod'
+
+      ::Spree::PermittedAttributes.source_attributes.prepend :stripe_payment_method_id
     end
 
     initializer "solidus_stripe.pub_sub", after: "spree.core.pub_sub" do |app|

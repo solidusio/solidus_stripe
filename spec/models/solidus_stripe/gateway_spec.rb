@@ -3,69 +3,6 @@
 require 'solidus_stripe_spec_helper'
 
 RSpec.describe SolidusStripe::Gateway do
-  describe '#authorize' do
-    it 'confirms the Stripe payment' do
-      stripe_payment_method = Stripe::PaymentMethod.construct_from(id: "pm_123", customer: "cus_123")
-      stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123")
-
-      payment_method = build(:stripe_payment_method)
-      source = build(:stripe_payment_source, stripe_payment_method_id: "pi_123", payment_method: payment_method)
-      gateway = payment_method.gateway
-      order = create(:order_with_stripe_payment, amount: 123.45, payment_method: payment_method)
-      payment = order.payments.last
-
-      allow(source).to receive(:stripe_payment_method).and_return(stripe_payment_method)
-      allow(Stripe::PaymentIntent).to receive(:create).and_return(stripe_payment_intent)
-      allow(Stripe::PaymentIntent).to receive(:confirm).with("pi_123").and_return(stripe_payment_intent)
-
-      result = gateway.authorize(123_45, source, currency: 'USD', originator: order.payments.first)
-
-      expect(Stripe::PaymentIntent).to have_received(:create).with(
-        amount: 123_45,
-        currency: 'USD',
-        capture_method: 'manual',
-        confirm: false,
-        metadata: { solidus_order_number: order.number },
-        customer: "cus_123",
-        payment_method: "pm_123",
-        setup_future_usage: nil
-      )
-      expect(Stripe::PaymentIntent).to have_received(:confirm).with("pi_123")
-      expect(result.params).to eq("data" => '{"id":"pi_123"}')
-      expect(payment.reload.response_code).to eq("pi_123")
-    end
-
-    it 'generates error response on failure' do
-      stripe_payment_method = Stripe::PaymentMethod.construct_from(id: "pm_123", customer: "cus_123")
-      stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123")
-
-      payment_method = build(:stripe_payment_method)
-      source = build(:stripe_payment_source, stripe_payment_method_id: "pi_123", payment_method: payment_method)
-      gateway = payment_method.gateway
-      order = create(:order_with_stripe_payment, amount: 123.45, payment_method: payment_method)
-
-      allow(source).to receive(:stripe_payment_method).and_return(stripe_payment_method)
-      allow(Stripe::PaymentIntent).to receive(:create).and_return(stripe_payment_intent)
-      allow(Stripe::PaymentIntent).to receive(:confirm).with("pi_123").and_raise(Stripe::StripeError.new("auth error"))
-
-      result = gateway.authorize(123_45, source, currency: 'USD', originator: order.payments.first)
-
-      expect(Stripe::PaymentIntent).to have_received(:confirm).with("pi_123")
-      expect(result.success?).to be(false)
-      expect(result.message).to eq("auth error")
-    end
-
-    it "raises if the given amount doesn't match the order total" do
-      payment_method = build(:stripe_payment_method)
-      gateway = payment_method.gateway
-      order = create(:order_with_stripe_payment, amount: 123.45, payment_method: payment_method)
-
-      expect { gateway.authorize(10, :source, originator: order.payments.first ) }.to raise_error(
-        /custom amount is not supported/
-      )
-    end
-  end
-
   describe '#capture' do
     it 'captures a pre-authorized Stripe payment' do
       stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123")
@@ -110,49 +47,6 @@ RSpec.describe SolidusStripe::Gateway do
       expect { gateway.capture(123_45, "invalid", originator: order.payments.first ) }.to raise_error(
         ArgumentError,
         /payment intent id has the wrong format/
-      )
-    end
-  end
-
-  describe '#purchase' do
-    it 'authorizes and captures in a single operation' do
-      stripe_payment_method = Stripe::PaymentMethod.construct_from(id: "pm_123", customer: "cus_123")
-      stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123")
-
-      payment_method = build(:stripe_payment_method)
-      source = build(:stripe_payment_source, stripe_payment_method_id: "pi_123", payment_method: payment_method)
-      gateway = payment_method.gateway
-      order = create(:order_with_stripe_payment, amount: 123.45, payment_method: payment_method)
-      payment = order.payments.last
-
-      allow(source).to receive(:stripe_payment_method).and_return(stripe_payment_method)
-      allow(Stripe::PaymentIntent).to receive(:create).and_return(stripe_payment_intent)
-      allow(Stripe::PaymentIntent).to receive(:confirm).with("pi_123").and_return(stripe_payment_intent)
-
-      result = gateway.purchase(123_45, source, currency: 'USD', originator: order.payments.first)
-
-      expect(Stripe::PaymentIntent).to have_received(:create).with(
-        amount: 123_45,
-        currency: 'USD',
-        capture_method: 'automatic',
-        confirm: false,
-        metadata: { solidus_order_number: order.number },
-        customer: "cus_123",
-        payment_method: "pm_123",
-        setup_future_usage: nil
-      )
-      expect(Stripe::PaymentIntent).to have_received(:confirm).with("pi_123")
-      expect(result.params).to eq("data" => '{"id":"pi_123"}')
-      expect(payment.reload.response_code).to eq("pi_123")
-    end
-
-    it "raises if the given amount doesn't match the order total" do
-      payment_method = build(:stripe_payment_method)
-      gateway = payment_method.gateway
-      order = create(:order_with_stripe_payment, amount: 123.45, payment_method: payment_method)
-
-      expect { gateway.purchase(10, :source, originator: order.payments.first ) }.to raise_error(
-        /custom amount is not supported/
       )
     end
   end

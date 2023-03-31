@@ -23,15 +23,8 @@ module SolidusStripe::CheckoutTestHelper
     # rubocop:enable RSpec/AnyInstance
   end
 
-  def creates_payment_method(
-    intents_flow: 'setup',
-    setup_future_usage: 'off_session',
-    skip_confirmation: false
-  )
-    @payment_method = create(:stripe_payment_method,
-      preferred_stripe_intents_flow: intents_flow,
-      preferred_setup_future_usage: setup_future_usage,
-      preferred_skip_confirmation_for_payment_intent: skip_confirmation)
+  def creates_payment_method(setup_future_usage: 'off_session')
+    @payment_method = create(:stripe_payment_method, preferred_setup_future_usage: setup_future_usage)
   end
 
   def payment_method
@@ -121,7 +114,7 @@ module SolidusStripe::CheckoutTestHelper
 
   def finds_stripe_iframe
     fieldset = find_payment_fieldset(payment_method.id)
-    expect(fieldset).to have_css('iframe') # trigger waiting if the frame is not yet there
+    expect(fieldset).to have_css('iframe', wait: 15) # trigger waiting if the frame is not yet there
     fieldset.find("iframe")
   end
 
@@ -132,11 +125,10 @@ module SolidusStripe::CheckoutTestHelper
   #
   # However, it's important to note that this process may require an additional step,
   # (currently not fully supported), which is indicated by the "next_action" property
-  # of the Stripe PaymentIntent or SetupIntent object.
+  # of the Stripe PaymentIntent object.
   #
   # More information on this property can be found in the Stripe API documentation:
   # PaymentIntent objects : https://stripe.com/docs/api/payment_intents/object#payment_intent_object-next_action
-  # SetupIntent objects   : https://stripe.com/docs/api/setup_intents/object#setup_intent_object-next_action
 
   def authorizes_3d_secure_payment(authenticate: true)
     finds_frame('body > div > iframe') do
@@ -199,12 +191,7 @@ module SolidusStripe::CheckoutTestHelper
 
   def completes_order
     checks_terms_of_service
-    if payment_method.skip_confirm_step?
-      submits_payment
-    else
-      confirms_order
-    end
-
+    confirms_order
     expect(page).to have_content('Your order has been processed successfully')
   end
 
@@ -217,19 +204,14 @@ module SolidusStripe::CheckoutTestHelper
     expect(Spree::Payment.last.state).to eq('failed')
   end
 
+  def expects_page_to_not_display_wallet_payment_sources
+    expect(page).to have_no_selector("[name='order[wallet_payment_source_id]']")
+  end
+
   # Test methods
   #
   # These are methods that are used specifically for testing the Stripe
   # checkout process.
-
-  def setup_intent_is_created_successfully
-    order = Spree::Order.last
-    intent = SolidusStripe::SetupIntent.retrieve_stripe_intent(
-      payment_method: payment_method,
-      order: order
-    )
-    expect(intent.status).to eq('succeeded')
-  end
 
   def payment_intent_is_created_with_required_capture
     order = Spree::Order.last
@@ -289,47 +271,28 @@ module SolidusStripe::CheckoutTestHelper
   end
 
   def declined_cards_at_intent_creation_are_notified
-    fills_in_stripe_country('United States')
-
     [
-      ['4000000000000002', 'Your card has been declined'],                   # Generic decline
-      ['4000000000009995', 'Your card has insufficient funds'],              # Insufficient funds decline
-      ['4000000000009987', 'Your card has been declined'],                   # Lost card decline
-      ['4000000000009979', 'Your card has been declined'],                   # Stolen card decline
-      ['4000000000000069', 'Your card has expired'],                         # Expired card decline
-      ['4000000000000127', "Your card's security code is incorrect"],        # Incorrect CVC decline
-      ['4000000000000119', 'An error occurred while processing your card']   # Processing error decline
+      # Decline codes
+      # https://stripe.com/docs/declines/codes
+      ['4000000000000002', 'Your card has been declined.'],                  # Generic decline
+      ['4000000000009995', 'Your card has insufficient funds.'],             # Insufficient funds decline
+      ['4000000000009987', 'Your card has been declined.'],                  # Lost card decline
+      ['4000000000009979', 'Your card has been declined.'],                  # Stolen card decline
+      ['4000000000000069', 'Your card has expired.'],                        # Expired card decline
+      ['4000000000000127', "Your card's security code is incorrect."],       # Incorrect CVC decline
+      ['4000000000000119', 'An error occurred while processing your card.'], # Processing error decline
+
+      # Fraudulent cards
+      # https://stripe.com/docs/testing#fraud-prevention
+      ['4100000000000019', 'Your card has been declined.'],                  # Always blocked
     ].each do |number, text|
-      clears_stripe_form
+      fills_in_stripe_country('United States')
       fills_stripe_form(number: number)
       submits_payment
-      using_wait_time(15) do
-        expect(page).to have_content(text)
-      end
+      checks_terms_of_service
+      confirms_order
+      expect(page).to have_content(text, wait: 15)
     end
-  end
-
-  def declined_cards_at_confirm_are_notified
-    fills_in_stripe_country('United States')
-
-    clears_stripe_form
-    fills_stripe_form(number: '4100000000000019')
-    submits_payment
-    checks_terms_of_service
-    confirms_order
-
-    expect(page).to have_content('Your card was declined')
-    moves_order_back_to_payment
-    fails_the_payment
-  end
-
-  def successfully_creates_a_setup_intent(user: nil)
-    visits_payment_step(user: user)
-    chooses_new_stripe_payment
-    fills_stripe_form
-    submits_payment
-    expect(page).to have_content('Payment succeeded!')
-    setup_intent_is_created_successfully
   end
 
   def successfully_creates_a_payment_intent(user: nil)
@@ -337,10 +300,7 @@ module SolidusStripe::CheckoutTestHelper
     chooses_new_stripe_payment
     fills_stripe_form
 
-    unless payment_method.skip_confirm_step?
-      submits_payment
-      expect(page).to have_content('Payment successfully authorized!')
-    end
+    submits_payment
 
     completes_order
     payment_intent_is_created_with_required_capture

@@ -5,16 +5,14 @@ en:
   solidus_stripe:
     loading: "Loading..."
 
-    intents:
-      after_confirmation:
-        intent_status: &intent_status
-          canceled: "Your payment has been canceled."
-          processing: "Your payment is processing."
-          requires_action: "Some action is needed on your payment before proceeding."
-          requires_capture: "Payment successfully authorized!"
-          requires_confirmation: "Please confirm the payment in order to proceed."
-          requires_payment_method: "Your payment was not successful, please try again."
-          succeeded: "Payment succeeded!"
+    intent_status: &intent_status
+      canceled: "Your payment has been canceled."
+      processing: "Your payment is processing."
+      requires_action: "Some action is needed on your payment before proceeding."
+      requires_capture: "Payment successfully authorized!"
+      requires_confirmation: "Please confirm the payment in order to proceed."
+      requires_payment_method: "Your payment was not successful, please try again."
+      succeeded: "Payment succeeded!"
 
   activerecord:
     models:

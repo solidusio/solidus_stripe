@@ -45,22 +45,6 @@ RSpec.describe SolidusStripe::PaymentMethod do
       end
     end
 
-    context 'when the order has a setup intent' do
-      it 'fetches the setup intent id' do
-        intent = create(:stripe_setup_intent)
-        payment = build(:payment, response_code: "pi_123", payment_method: intent.payment_method, order: intent.order)
-
-        expect(described_class.intent_id_for_payment(payment)).to eq("pi_123")
-      end
-
-      it 'fetches the setup intent id when the payment intent is not available' do
-        intent = create(:stripe_setup_intent, stripe_intent_id: 'seti_123')
-        payment = build(:payment, response_code: nil, payment_method: intent.payment_method, order: intent.order)
-
-        expect(described_class.intent_id_for_payment(payment)).to eq("seti_123")
-      end
-    end
-
     it 'returns nil without a payment' do
       expect(described_class.intent_id_for_payment(nil)).to eq(nil)
     end
@@ -78,20 +62,6 @@ RSpec.describe SolidusStripe::PaymentMethod do
         payment_method = build(:stripe_payment_method, preferred_test_mode: true)
 
         expect(payment_method.stripe_dashboard_url('pi_123')).to eq("https://dashboard.stripe.com/test/payments/pi_123")
-      end
-    end
-
-    context 'with a setup intent id' do
-      it 'generates a dashboard link' do
-        payment_method = build(:stripe_payment_method, preferred_test_mode: false)
-
-        expect(payment_method.stripe_dashboard_url('seti_123')).to eq("https://dashboard.stripe.com/setup_intents/seti_123")
-      end
-
-      it 'supports test mode' do
-        payment_method = build(:stripe_payment_method, preferred_test_mode: true)
-
-        expect(payment_method.stripe_dashboard_url('seti_123')).to eq("https://dashboard.stripe.com/test/setup_intents/seti_123")
       end
     end
 
