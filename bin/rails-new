@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+
+set -e
+
+app_name="$1"
+
+root_path="$PWD"
+app_path="${root_path}/${app_name}"
+ruby_version=`ruby -e'puts RUBY_VERSION'`
+rails_version=`bundle exec ruby -rrails/version -e'puts Rails.version'`
+solidus_version=`bundle exec ruby -rspree/core/version -e'puts Spree::VERSION'`
+cache_path="tmp/cache/rails-new/${app_name}-${rails_version}-${solidus_version}-${ruby_version}.zip"
+
+# Stay away from the bundler env of the containing extension.
+function unbundled {
+  echo "~~> Running: $@"
+  ruby -rbundler -e'Bundler.with_unbundled_env {system *ARGV}' -- env BUNDLE_SUPPRESS_INSTALL_USING_MESSAGES=true "$@"
+}
+
+# "sqlite" is set by the ORB extension instead of "sqlite3",
+# all other options are already in the format expected by `rails new`.
+test "$DB" = "sqlite" && export DB="sqlite3"
+
+rm -rf "$app_path"
+mkdir -p tmp/cache/rails-new
+
+if [ -f "${cache_path}" ]; then
+  echo "~~> Using cached rails ${app_name}"
+  unzip -q "${cache_path}" -d ./
+  cd "${app_path}"
+  unbundled bundle install
+  cd "${root_path}"
+else
+  echo "~~> Creating rails ${app_name}"
+  rails _${rails_version}_ new ${app_name} \
+    --database=${DB:-sqlite3} \
+    --skip-git \
+    --skip-rc
+
+  cd "$app_path"
+  unbundled bundle add listen --group development
+  unbundled bundle add solidus --github solidusio/solidus --branch "${BRANCH:-master}" --version '> 0.a'
+  unbundled bundle exec rake db:drop db:create
+  unbundled bundle exec rails generate solidus:install --auto-accept --payment-method=none
+  cd "${root_path}"
+
+  echo "~~> Creating rails ${app_name} cache"
+  rm -rf ${app_name}/tmp/solidus_starter_frontend*
+  zip -q -r "${cache_path}" ${app_name}
+fi
+
+if [ ! -d "${app_name}" ]; then
+  echo '~~> Creation of the ${app_name} rails application failed'
+  exit 1
+fi
