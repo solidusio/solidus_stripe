@@ -13,8 +13,8 @@
     data-controller="solidus-stripe-confirm"
     data-solidus-stripe-confirm-publishable-key-value="<%= payment.payment_method.preferred_publishable_key %>"
     data-solidus-stripe-confirm-client-secret-value="<%= stripe_intent.client_secret %>"
-    data-solidus-stripe-confirm-return-url-value="<%= solidus_stripe.after_confirmation_url(payment.payment_method) %>"
-    data-solidus-stripe-confirm-error-base-url-value="<%= solidus_stripe.after_confirmation_url(payment.payment_method, payment_intent: stripe_intent.id) %>"
+    data-solidus-stripe-confirm-return-url-value="<%= solidus_stripe.after_confirmation_url(payment.payment_method.slug) %>"
+    data-solidus-stripe-confirm-error-base-url-value="<%= solidus_stripe.after_confirmation_url(payment.payment_method.slug, payment_intent: stripe_intent.id) %>"
     data-action="submit@window->solidus-stripe-confirm#confirm"
   >
 <% end %>

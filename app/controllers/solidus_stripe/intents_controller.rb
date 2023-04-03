@@ -43,6 +43,8 @@ class SolidusStripe::IntentsController < Spree::BaseController
 
   def load_payment_method
     @payment_method = current_order(create_order_if_necessary: true)
-      .available_payment_methods.find(params[:payment_method_id])
+      .available_payment_methods
+      .merge(SolidusStripe::PaymentMethod.with_slug(params[:slug]))
+      .first!
   end
 end

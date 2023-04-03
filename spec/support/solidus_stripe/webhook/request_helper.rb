@@ -13,7 +13,7 @@ module SolidusStripe
       # @param slug [String] It allows to override the slug in the payment
       #   method to simulate an invalid request.
       def webhook_request(context, timestamp: context.timestamp)
-        post "/solidus_stripe/webhooks/#{context.slug}",
+        post "/solidus_stripe/#{context.slug}/webhooks",
           params: context.json,
           headers: { webhook_signature_header_key => webhook_signature_header(context, timestamp: timestamp) }
       end

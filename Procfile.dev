@@ -1,3 +1,3 @@
 web: env RUBY_DEBUG_OPEN=true bin/rails-sandbox server
 watch: bin/rails-sandbox g solidus_stripe:install --force --watch
-stripe: stripe listen --forward-to http://localhost:3000/solidus_stripe/webhooks/test --events charge.refunded,payment_intent.succeeded,payment_intent.payment_failed,payment_intent.canceled
+stripe: stripe listen --forward-to http://localhost:3000/solidus_stripe/test/webhooks --events charge.refunded,payment_intent.succeeded,payment_intent.payment_failed,payment_intent.canceled

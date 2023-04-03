@@ -8,7 +8,7 @@ RSpec.describe SolidusStripe::IntentsController, type: :request do
         order = create(:order_ready_to_complete)
         sign_in order.user
 
-        get "/solidus_stripe/#{payment_method.id}/after_confirmation"
+        get "/solidus_stripe/#{payment_method.slug}/after_confirmation"
 
         expect(response.status).to eq(422)
       end
@@ -20,7 +20,7 @@ RSpec.describe SolidusStripe::IntentsController, type: :request do
         order = create(:order)
         sign_in order.user
 
-        get "/solidus_stripe/#{payment_method.id}/after_confirmation?payment_intent=pi_123"
+        get "/solidus_stripe/#{payment_method.slug}/after_confirmation?payment_intent=pi_123"
 
         expect(response).to redirect_to('/checkout/cart')
       end

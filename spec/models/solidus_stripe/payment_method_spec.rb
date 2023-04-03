@@ -89,7 +89,7 @@ RSpec.describe SolidusStripe::PaymentMethod do
 
       payment_method.save!
 
-      expect(payment_method.webhook_endpoint.slug).to eq('test')
+      expect(payment_method.slug).to eq('test')
     end
 
     it 'generates a "live" slug for the first payment method in live mode' do
@@ -97,14 +97,14 @@ RSpec.describe SolidusStripe::PaymentMethod do
 
       payment_method.save!
 
-      expect(payment_method.webhook_endpoint.slug).to eq('live')
+      expect(payment_method.slug).to eq('live')
     end
 
     it 'generates a random hex string' do
       _existing_payment_method = create(:stripe_payment_method)
       payment_method = create(:stripe_payment_method)
 
-      expect(payment_method.webhook_endpoint.slug).to match(/^[0-9a-f]{32}$/)
+      expect(payment_method.slug).to match(/^[0-9a-f]{32}$/)
     end
 
     it 'generates a unique slug' do
