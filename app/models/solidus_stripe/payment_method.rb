@@ -45,6 +45,10 @@ module SolidusStripe
       false
     end
 
+    def self.with_slug(slug)
+      where(id: SlugEntry.where(slug: slug).select(:payment_method_id))
+    end
+
     # TODO: re-evaluate the need for this and think of ways to always go throught the intent classes.
     def self.intent_id_for_payment(payment)
       return unless payment

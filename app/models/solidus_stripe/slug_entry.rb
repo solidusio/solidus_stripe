@@ -16,14 +16,5 @@ module SolidusStripe
   # database changes and to avoid guessing about valid endpoint URLs.
   class SlugEntry < ::Spree::Base
     belongs_to :payment_method, class_name: 'SolidusStripe::PaymentMethod'
-
-    # Finds the payment method associated with the given slug.
-    #
-    # @param slug [String]
-    # @raise [ActiveRecord::RecordNotFound] if no payment method is found
-    # @return [SolidusStripe::PaymentMethod]
-    def self.payment_method(slug)
-      find_by!(slug: slug).payment_method
-    end
   end
 end

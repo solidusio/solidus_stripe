@@ -74,6 +74,15 @@ RSpec.describe SolidusStripe::PaymentMethod do
     end
   end
 
+  describe '.with_slug' do
+    it 'selects by slug' do
+      payment_method = create(:stripe_payment_method)
+
+      expect(described_class.with_slug(payment_method.slug)).to eq([payment_method])
+      expect(described_class.with_slug('bad-slug')).to eq([])
+    end
+  end
+
   describe '.assign_slug' do
     it 'generates a "test" slug for the first payment method in test mode' do
       payment_method = build(:stripe_payment_method)
