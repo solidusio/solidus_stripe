@@ -63,10 +63,12 @@ module SolidusStripe
       end
     end
 
-    private
-
     def assign_slug
-      create_slug_entry!(slug: SlugEntry.generate_slug)
+      # If there's only one payment method, we can use a default slug.
+      slug = preferred_test_mode ? 'test' : 'live' if self.class.count == 1
+      slug = SecureRandom.hex(16) while SlugEntry.exists?(slug: slug) || slug.nil?
+
+      create_slug_entry!(slug: slug)
     end
   end
 end

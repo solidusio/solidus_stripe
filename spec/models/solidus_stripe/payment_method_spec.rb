@@ -73,4 +73,38 @@ RSpec.describe SolidusStripe::PaymentMethod do
       expect(payment_method.stripe_dashboard_url(123)).to eq(nil)
     end
   end
+
+  describe '.assign_slug' do
+    it 'generates a "test" slug for the first payment method in test mode' do
+      payment_method = build(:stripe_payment_method)
+
+      payment_method.save!
+
+      expect(payment_method.webhook_endpoint.slug).to eq('test')
+    end
+
+    it 'generates a "live" slug for the first payment method in live mode' do
+      payment_method = build(:stripe_payment_method, preferred_test_mode: false)
+
+      payment_method.save!
+
+      expect(payment_method.webhook_endpoint.slug).to eq('live')
+    end
+
+    it 'generates a random hex string' do
+      _existing_payment_method = create(:stripe_payment_method)
+      payment_method = create(:stripe_payment_method)
+
+      expect(payment_method.webhook_endpoint.slug).to match(/^[0-9a-f]{32}$/)
+    end
+
+    it 'generates a unique slug' do
+      slug = SecureRandom.hex(16)
+
+      create(:stripe_slug_entry, slug: slug)
+      allow(SecureRandom).to receive(:hex).and_return(slug).and_call_original
+
+      expect(create(:stripe_payment_method).slug).not_to eq(slug)
+    end
+  end
 end

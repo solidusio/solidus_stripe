@@ -17,13 +17,6 @@ module SolidusStripe
   class SlugEntry < ::Spree::Base
     belongs_to :payment_method, class_name: 'SolidusStripe::PaymentMethod'
 
-    # @api private
-    def self.generate_slug
-      SecureRandom.hex(16).then do |slug|
-        exists?(slug: slug) ? generate_slug : slug
-      end
-    end
-
     # Finds the payment method associated with the given slug.
     #
     # @param slug [String]
