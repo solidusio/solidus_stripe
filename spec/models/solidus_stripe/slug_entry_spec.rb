@@ -2,7 +2,7 @@
 
 require 'solidus_stripe_spec_helper'
 
-RSpec.describe SolidusStripe::WebhookEndpoint do
+RSpec.describe SolidusStripe::SlugEntry do
   describe '.generate_slug' do
     it 'generates a random hex string' do
       expect(described_class.generate_slug).to match(/^[0-9a-f]{32}$/)
@@ -10,7 +10,7 @@ RSpec.describe SolidusStripe::WebhookEndpoint do
 
     it 'generates a unique slug' do
       slug = SecureRandom.hex(16)
-      create(:stripe_webhook_endpoint, slug: slug)
+      create(:stripe_slug_entry, slug: slug)
       allow(described_class).to receive(:generate_slug).and_return(slug).and_call_original
 
       expect(described_class.generate_slug).not_to eq(slug)

@@ -24,7 +24,7 @@ module SolidusStripe
       # @api private
       class << self
         def from_request(payload:, signature_header:, slug:, tolerance: default_tolerance)
-          payment_method = SolidusStripe::WebhookEndpoint.payment_method(slug)
+          payment_method = SolidusStripe::SlugEntry.payment_method(slug)
           stripe_event = Stripe::Webhook.construct_event(
             payload,
             signature_header,

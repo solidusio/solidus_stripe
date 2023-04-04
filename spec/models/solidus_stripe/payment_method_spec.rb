@@ -22,7 +22,7 @@ RSpec.describe SolidusStripe::PaymentMethod do
       it 'creates a webhook endpoint' do
         payment_method = create(:stripe_payment_method)
 
-        expect(payment_method.webhook_endpoint).to be_present
+        expect(payment_method.slug_entry).to be_present
       end
     end
   end

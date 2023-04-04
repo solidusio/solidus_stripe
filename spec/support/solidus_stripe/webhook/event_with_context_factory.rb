@@ -75,7 +75,7 @@ module SolidusStripe
       end
 
       def slug
-        @payment_method.webhook_endpoint_slug
+        @payment_method.slug
       end
     end
   end
