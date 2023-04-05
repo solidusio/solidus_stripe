@@ -14,18 +14,11 @@ module SolidusStripe
     validates :available_to_admin, inclusion: { in: [false] }
     validates :preferred_setup_future_usage, inclusion: { in: ['', 'on_session', 'off_session'] }
 
-    has_one :webhook_endpoint,
-      class_name: 'SolidusStripe::WebhookEndpoint',
-      inverse_of: :payment_method,
-      dependent: :destroy
+    has_one :slug_entry, class_name: 'SolidusStripe::SlugEntry', inverse_of: :payment_method, dependent: :destroy
 
-    after_create :assign_webhook_endpoint
+    after_create :assign_slug
 
-    # @!attribute [r] webhook_endpoint_slug
-    #   @return [String] The slug of the webhook endpoint for this payment method.
-    delegate :slug,
-      to: :webhook_endpoint,
-      prefix: true
+    delegate :slug, to: :slug_entry
 
     def partial_name
       "stripe"
@@ -52,6 +45,10 @@ module SolidusStripe
       false
     end
 
+    def self.with_slug(slug)
+      where(id: SlugEntry.where(slug: slug).select(:payment_method_id))
+    end
+
     # TODO: re-evaluate the need for this and think of ways to always go throught the intent classes.
     def self.intent_id_for_payment(payment)
       return unless payment
@@ -70,12 +67,12 @@ module SolidusStripe
       end
     end
 
-    private
+    def assign_slug
+      # If there's only one payment method, we can use a default slug.
+      slug = preferred_test_mode ? 'test' : 'live' if self.class.count == 1
+      slug = SecureRandom.hex(16) while SlugEntry.exists?(slug: slug) || slug.nil?
 
-    def assign_webhook_endpoint
-      create_webhook_endpoint!(
-        slug: WebhookEndpoint.generate_slug
-      )
+      create_slug_entry!(slug: slug)
     end
   end
 end

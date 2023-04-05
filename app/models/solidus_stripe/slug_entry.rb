@@ -14,24 +14,7 @@ module SolidusStripe
   #
   # We use a slug instead of the payment method ID to be resilient to
   # database changes and to avoid guessing about valid endpoint URLs.
-  class WebhookEndpoint < ::Spree::Base
-    belongs_to :payment_method,
-      class_name: 'SolidusStripe::PaymentMethod'
-
-    # @api private
-    def self.generate_slug
-      SecureRandom.hex(16).then do |slug|
-        exists?(slug: slug) ? generate_slug : slug
-      end
-    end
-
-    # Finds the payment method associated with the given slug.
-    #
-    # @param slug [String]
-    # @raise [ActiveRecord::RecordNotFound] if no payment method is found
-    # @return [SolidusStripe::PaymentMethod]
-    def self.payment_method(slug)
-      find_by!(slug: slug).payment_method
-    end
+  class SlugEntry < ::Spree::Base
+    belongs_to :payment_method, class_name: 'SolidusStripe::PaymentMethod'
   end
 end
