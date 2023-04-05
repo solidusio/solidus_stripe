@@ -1,46 +1,56 @@
 #!/usr/bin/env ruby
 
-app = ARGV.first || abort("Please provide the APP_NAME as the first argument")
+app = ARGV.shift || abort("Please provide the APP_NAME as the first argument")
 extension_name = "solidus_stripe"
 
-current_migrations = {}
-Dir['db/migrate/*.rb'].sort.reverse_each do |path|
+source_migrations = {}
+Dir['db/migrate/*.rb'].sort.each do |path|
   basename = File.basename(path, ".rb").sub(/^\d+_/, '')
-  current_migrations[basename] = path
+  source_migrations[basename] = path
 end
 
-Dir["#{app}/db/migrate/*.#{extension_name}.rb"].sort.reverse_each do |path|
-  timestamp, basename = File.basename(path, ".#{extension_name}.rb").split('_', 2)
-  contents = File.read(path)
-
-  if current_migrations[basename]
-    if contents != File.read(current_migrations[basename])
-      puts "rolling back #{basename}..."
-      Dir.chdir(app) { system("bin/rails db:migrate:down VERSION=#{timestamp}") }
-      puts "updating #{basename}..."
-      File.write(path, File.read(current_migrations[basename]))
-    else
-      puts "ignoring #{basename}..."
-    end
-    current_migrations.delete(basename)
-  else
-    puts "rolling back #{basename}..."
-    Dir.chdir(app) { system("bin/rails db:migrate:down VERSION=#{timestamp}") }
-    puts "removing #{basename}..."
-    File.unlink path
-  end
+app_migrations = {}
+Dir["#{app}/db/migrate/*.#{extension_name}.rb"].sort.each do |path|
+  _timestamp, basename = File.basename(path, ".#{extension_name}.rb").split('_', 2)
+  app_migrations[basename] = path
 end
 
-# Install missing migrations
+migrate_app = -> do
+  puts "migrating #{app}..."
+  Dir.chdir(app) { system("bin/rails db:migrate RAILS_ENV=test") }
+end
+
 base_time = Time.now.utc.to_i
-current_migrations.reverse_each.with_index do |(basename, path), index|
+install_migration = ->(basename) do
+  path = source_migrations[basename]
+  base_time += 1
   puts "installing #{basename}..."
-  timestamp = Time.at(base_time + index).strftime("%F%T").delete('-:') # rubocop:disable Rails/TimeZone
+  timestamp = Time.at(base_time).strftime("%F%T").delete('-:') # rubocop:disable Rails/TimeZone
   contents = File.read(path)
 
   File.write("#{app}/db/migrate/#{timestamp}_#{basename}.#{extension_name}.rb", contents)
 end
 
-if current_migrations.any?
-  Dir.chdir(app) { system("bin/rails db:migrate") }
+reinstall_migrations = -> do
+  app_migrations.each_value { |path| File.delete(path) }
+  Dir["#{app}/db/*{.sqlite3,schema.rb}"].each { File.delete(_1) }
+  source_migrations.each_key(&install_migration)
+  migrate_app.call
+end
+
+exit reinstall_migrations.call if ARGV.shift == "--force"
+
+app_migrations.each_key do |basename|
+  source_content = File.read(source_migrations[basename]) if source_migrations[basename]
+  app_content = File.read(app_migrations[basename])
+
+  next if source_content == app_content
+
+  reinstall_migrations.call
+  exit
+end
+
+if (missing_migrations = source_migrations.keys - app_migrations.keys).any?
+  missing_migrations.each(&install_migration)
+  migrate_app.call
 end

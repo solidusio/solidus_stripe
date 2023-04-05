@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 system(
-  "bin/rails dummy-app generate solidus_stripe:install --force --migrate --specs=all --sync",
+  "bin/rails dummy-app generate solidus_stripe:install --force --migrate --specs=all --sync --no-load-seeds",
   out: "tmp/rspec-sync.log",
   err: :out,
 ) or abort(File.read("tmp/rspec-sync.log"))
