@@ -20,6 +20,15 @@ module SolidusStripe
 
     delegate :slug, to: :slug_entry
 
+    # @return [Spree::RefundReason] the reason used for refunds
+    #   generated from Stripe.
+    # @see SolidusStripe::Configuration.refund_reason_name
+    def self.refund_reason
+      Spree::RefundReason.find_by!(
+        name: SolidusStripe.configuration.refund_reason_name
+      )
+    end
+
     def partial_name
       "stripe"
     end

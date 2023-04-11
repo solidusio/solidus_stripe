@@ -43,7 +43,7 @@ module SolidusStripe
           payment: payment,
           amount: amount,
           transaction_id: payment_intent_id,
-          reason: default_refund_reason
+          reason: SolidusStripe::PaymentMethod.refund_reason
         ).tap do
           SolidusStripe::LogEntries.payment_log(
             payment,
@@ -54,12 +54,6 @@ module SolidusStripe
       end
 
       private
-
-      def default_refund_reason
-        Spree::RefundReason.find_by!(
-          name: SolidusStripe.configuration.refund_reason_name
-        )
-      end
 
       def refund_amount(new_stripe_total, currency, payment)
         last_total = payment.refunds.sum(:amount)
