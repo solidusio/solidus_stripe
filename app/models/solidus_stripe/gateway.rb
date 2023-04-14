@@ -2,6 +2,7 @@
 
 require 'stripe'
 require "solidus_stripe/money_to_stripe_amount_converter"
+require "solidus_stripe/refunds_synchronizer"
 
 module SolidusStripe
   # @see https://stripe.com/docs/payments/accept-a-payment?platform=web&ui=checkout#auth-and-capture
@@ -78,6 +79,11 @@ module SolidusStripe
     end
 
     # Refunds the provided amount on a previously captured transaction.
+    #
+    # Notice we're adding `solidus_skip_sync: 'true'` to the metadata to avoid a
+    # duplicated refund after the generated webhook event. See
+    # {RefundsSynchronizer}.
+    #
     # TODO: check this method params twice.
     def credit(amount_in_cents, payment_intent_id, options = {})
       check_payment_intent_id(payment_intent_id)
@@ -89,13 +95,16 @@ module SolidusStripe
         Stripe::Refund.create(
           amount: to_stripe_amount(amount_in_cents, currency),
           payment_intent: payment_intent_id,
+          metadata: {
+            RefundsSynchronizer::SKIP_SYNC_METADATA_KEY => RefundsSynchronizer::SKIP_SYNC_METADATA_VALUE
+          }
         )
       end
 
       build_payment_log(
         success: true,
         message: "PaymentIntent was refunded successfully",
-        response_code: payment_intent_id,
+        response_code: stripe_refund.id,
         data: stripe_refund,
       )
     end

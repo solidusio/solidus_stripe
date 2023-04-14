@@ -88,7 +88,7 @@ RSpec.describe SolidusStripe::Gateway do
     it 'refunds when provided an originator payment' do
       gateway = build(:stripe_payment_method).gateway
       payment = instance_double(Spree::Payment, response_code: 'pi_123', currency: "USD")
-      refund = instance_double(Stripe::Refund, to_json: '{foo: "re_123"}')
+      refund = Stripe::Refund.construct_from(id: "re_123")
       allow(Stripe::Refund).to receive(:create).and_return(refund)
 
       result = gateway.credit(123_45, 'pi_123', currency: 'USD', originator: instance_double(
@@ -99,8 +99,9 @@ RSpec.describe SolidusStripe::Gateway do
       expect(Stripe::Refund).to have_received(:create).with(
         payment_intent: 'pi_123',
         amount: 123_45,
+        metadata: { solidus_skip_sync: 'true' }
       )
-      expect(result.params).to eq("data" => '{foo: "re_123"}')
+      expect(result.params).to eq("data" => '{"id":"re_123"}')
     end
 
     it "raises if no payment_intent_id is given" do

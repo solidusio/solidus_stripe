@@ -73,6 +73,11 @@ RSpec.describe SolidusStripe::Webhook::PaymentIntentSubscriber do
           payment_method: payment_method,
           response_code: stripe_payment_intent.id,
           state: "pending")
+        allow(Stripe::Refund).to receive(:list).with(payment_intent: stripe_payment_intent.id).and_return(
+          Stripe::ListObject.construct_from(
+            data: [{ id: "re_123", amount: 700, currency: "usd", metadata: {} }]
+          )
+        )
         event = SolidusStripe::Webhook::EventWithContextFactory.from_object(
           payment_method: payment_method,
           object: stripe_payment_intent,
@@ -84,7 +89,7 @@ RSpec.describe SolidusStripe::Webhook::PaymentIntentSubscriber do
         expect(payment.reload.state).to eq "completed"
       end
 
-      it "creates a refund for the unreceived amount" do
+      it "synchronizes refunds" do
         SolidusStripe::Seeds.refund_reasons
         payment_method = create(:stripe_payment_method)
         stripe_payment_intent = Stripe::PaymentIntent.construct_from(
@@ -98,6 +103,11 @@ RSpec.describe SolidusStripe::Webhook::PaymentIntentSubscriber do
           payment_method: payment_method,
           response_code: stripe_payment_intent.id,
           state: "pending")
+        allow(Stripe::Refund).to receive(:list).with(payment_intent: stripe_payment_intent.id).and_return(
+          Stripe::ListObject.construct_from(
+            data: [{ id: "re_123", amount: 200, currency: "usd", metadata: {} }]
+          )
+        )
         event = SolidusStripe::Webhook::EventWithContextFactory.from_object(
           payment_method: payment_method,
           object: stripe_payment_intent,
@@ -106,9 +116,7 @@ RSpec.describe SolidusStripe::Webhook::PaymentIntentSubscriber do
 
         described_class.new.capture_payment(event)
 
-        expect(payment.reload.refunds.count).to eq(1)
-        refund = payment.refunds.last
-        expect(refund.amount).to eq(3)
+        expect(payment.refunds.count).to be(1)
       end
 
       it "adds a log entry for the captured payment" do
@@ -125,6 +133,11 @@ RSpec.describe SolidusStripe::Webhook::PaymentIntentSubscriber do
           payment_method: payment_method,
           response_code: stripe_payment_intent.id,
           state: "pending")
+        allow(Stripe::Refund).to receive(:list).with(payment_intent: stripe_payment_intent.id).and_return(
+          Stripe::ListObject.construct_from(
+            data: [{ id: "re_123", amount: 700, currency: "usd", metadata: {} }]
+          )
+        )
         event = SolidusStripe::Webhook::EventWithContextFactory.from_object(
           payment_method: payment_method,
           object: stripe_payment_intent,
@@ -137,34 +150,6 @@ RSpec.describe SolidusStripe::Webhook::PaymentIntentSubscriber do
         expect(
           log_entries
         ).to include([true, "Capture was successful after payment_intent.succeeded webhook"])
-      end
-
-      it "adds a log entry for the created refund" do
-        SolidusStripe::Seeds.refund_reasons
-        payment_method = create(:stripe_payment_method)
-        stripe_payment_intent = Stripe::PaymentIntent.construct_from(
-          id: "pi_123",
-          amount: 1000,
-          amount_received: 700,
-          currency: "usd"
-        )
-        payment = create(:payment,
-          amount: 10,
-          payment_method: payment_method,
-          response_code: stripe_payment_intent.id,
-          state: "pending")
-        event = SolidusStripe::Webhook::EventWithContextFactory.from_object(
-          payment_method: payment_method,
-          object: stripe_payment_intent,
-          type: "payment_intent.succeeded"
-        ).solidus_stripe_object
-
-        described_class.new.capture_payment(event)
-
-        log_entries = payment.log_entries.map { [_1.parsed_details.success?, _1.parsed_details.message] }
-        expect(
-          log_entries
-        ).to include([true, "Payment was refunded after payment_intent.succeeded webhook ($3.00)"])
       end
     end
 
