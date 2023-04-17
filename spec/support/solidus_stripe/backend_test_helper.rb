@@ -1,13 +1,25 @@
 # frozen_string_literal: true
 
 module SolidusStripe::BackendTestHelper
+  def create_payment_method(setup_future_usage: 'off_session', auto_capture: false)
+    @payment_method = create(
+      :stripe_payment_method,
+      preferred_setup_future_usage: setup_future_usage,
+      auto_capture: auto_capture
+    )
+  end
+
   def payment_method
     # Memoize the payment method id to avoid fetching it multiple times
-    @payment_method ||= create(:stripe_payment_method)
+    @payment_method ||= SolidusStripe::PaymentMethod.first || create_payment_method
   end
 
   def order
     @order ||= create(:completed_order_with_totals, line_items_price: 50)
+  end
+
+  def last_valid_payment
+    order.payments.valid.last
   end
 
   # Stripe-related helper methods for creating and fetching Stripe objects
@@ -79,6 +91,27 @@ module SolidusStripe::BackendTestHelper
     payment = create_authorized_payment(card_number: card_number)
     payment.capture!
     payment
+  end
+
+  def create_valid_payment_source
+    stripe_payment_method = create_stripe_payment_method('4242424242424242')
+    SolidusStripe::PaymentSource.create!(
+      stripe_payment_method_id: stripe_payment_method.id,
+      payment_method_id: payment_method.id
+    )
+  end
+
+  def create_order_with_existing_payment_source
+    payment_source = create_valid_payment_source
+    @order = create(:order_with_line_items, line_items_price: 50)
+    order.user.wallet.add(payment_source)
+  end
+
+  def complete_order_with_existing_payment_source
+    visit_payments_page
+    click_on "Continue"
+    click_on "Confirm"
+    click_on "Complete Order"
   end
 
   def refund_payment

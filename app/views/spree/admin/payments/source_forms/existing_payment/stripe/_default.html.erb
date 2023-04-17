@@ -1,0 +1,7 @@
+<% logger.error(
+  %{Can't find a partial for payments with type #{payment_type} } +
+  %{please add a partial named "#{partial_base}/_#{payment_type}.html.erb".}
+) %>
+
+<%= stripe_payment_method.type.humanize %>
+(<%= time_ago_in_words Time.at(stripe_payment_method.created) %>)

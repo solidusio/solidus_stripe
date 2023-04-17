@@ -91,6 +91,18 @@ RSpec.describe 'SolidusStripe Orders Payments', :js do
       expects_page_to_display_successfully_canceled_order_payment(payment)
       expects_payment_to_be_voided_on_stripe(payment)
     end
+
+    it 'creates new authorized payment and captures it with existing source successfully' do
+      create_payment_method
+      create_order_with_existing_payment_source
+      complete_order_with_existing_payment_source
+      visit_payments_page
+      capture_payment
+      payment = last_valid_payment
+
+      expects_page_to_display_successfully_captured_payment(payment)
+      expects_payment_to_have_correct_capture_amount_on_stripe(payment, payment.amount)
+    end
   end
 
   context 'with failed payment operations' do

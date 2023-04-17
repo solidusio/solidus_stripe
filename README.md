@@ -91,6 +91,14 @@ the following partial should be added:
 IBAN: **** **** **** **** **** <%= sepa_debit.last4 %>
 ```
 
+### Showing reusable sources in the admin interface
+
+Refer to the previous section for information on how to set up a new payment method type.
+However, it's important to note that if you have to display a wallet source connected to a
+Stripe Payment Method other than "card" on the admin interface, you must include the partial in:
+
+`app/views/spree/admin/payments/source_forms/existing_payment/stripe/`
+
 ### Custom webhooks
 
 You can also use [Stripe webhooks](https://stripe.com/docs/webhooks) to trigger

@@ -1,0 +1,29 @@
+<fieldset>
+  <legend><%= payment_method.name %></legend>
+
+  <% previous_sources = payment_method.previous_sources(@order) %>
+
+  <ul>
+    <% previous_sources.each do |payment_source| %>
+      <% default = payment_source == previous_sources.first %>
+      <% stripe_payment_method = payment_source.stripe_payment_method %>
+
+      <li>
+        <label>
+          <%= radio_button_tag(
+            :card,
+            payment_source.id,
+            default
+          ) %>
+          <%= stripe_payment_method.type.humanize %>
+        </label>
+        <fieldset>
+          <%= render(
+            "spree/admin/payments/source_forms/existing_payment/#{payment_method.partial_name}",
+            stripe_payment_method: stripe_payment_method,
+          ) %>
+        </fieldset>
+      </li>
+    <% end %>
+  </ul>
+</fieldset>
