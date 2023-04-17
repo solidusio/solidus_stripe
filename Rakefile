@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
-require 'solidus_dev_support/rake_tasks'
-SolidusDevSupport::RakeTasks.install
+require 'bundler/gem_tasks'
 
 task :default do
   require 'bundler'
