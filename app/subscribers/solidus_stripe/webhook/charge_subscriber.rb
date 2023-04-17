@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "solidus_stripe/money_to_stripe_amount_converter"
+require "solidus_stripe/refunds_synchronizer"
 
 module SolidusStripe
   module Webhook
@@ -9,59 +9,19 @@ module SolidusStripe
       include Omnes::Subscriber
       include MoneyToStripeAmountConverter
 
-      handle :"stripe.charge.refunded", with: :refund_payment
+      handle :"stripe.charge.refunded", with: :sync_refunds
 
-      # Refunds a payment.
-      #
-      # Creates a `Spree::Refund` for the payment associated with the
-      # webhook event.
-      #
-      # The event's `amount_refunded` field on Stripe contains the total amount
-      # refunded for the payment, including previous ones. We need to check that
-      # against the last total refunded amount on the payment to get the actual
-      # amount refunded by the current event.
-      #
-      # The `Spree::RefundReason` with `SolidusStripe::Config.refund_reason_name`
-      # as name is used as the created refund's reason.
-      #
-      # Notice that, at this point, we have no way to distinguish between
-      # multiple occurrences of the same event.
+      # Syncs Stripe refunds with Solidus refunds.
       #
       # @param event [SolidusStripe::Webhook::Event]
-      def refund_payment(event)
-        event.data.object.to_hash => {
-          amount_refunded: new_stripe_total,
-          payment_intent: payment_intent_id,
-          currency:
-        }
-        payment = Spree::Payment.find_by!(response_code: payment_intent_id)
+      # @see SolidusStripe::RefundsSynchronizer
+      def sync_refunds(event)
+        payment_method = event.spree_payment_method
+        payment_intent_id = event.data.object.payment_intent
 
-        return if payment.fully_refunded?
-
-        amount = refund_amount(new_stripe_total, currency, payment)
-        Spree::Refund.create!(
-          payment: payment,
-          amount: amount,
-          transaction_id: payment_intent_id,
-          reason: SolidusStripe::PaymentMethod.refund_reason
-        ).tap do
-          SolidusStripe::LogEntries.payment_log(
-            payment,
-            success: true,
-            message: "Payment was refunded after charge.refunded webhook (#{_1.money})"
-          )
-        end
-      end
-
-      private
-
-      def refund_amount(new_stripe_total, currency, payment)
-        last_total = payment.refunds.sum(:amount)
-
-        new_stripe_total
-          .then { to_solidus_amount(_1, currency) }
-          .then { _1 - solidus_decimal_to_subunit(last_total, currency) }
-          .then { solidus_subunit_to_decimal(_1, currency) }
+        RefundsSynchronizer
+          .new(payment_method)
+          .call(payment_intent_id)
       end
     end
   end

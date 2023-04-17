@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "solidus_stripe/money_to_stripe_amount_converter"
+require "solidus_stripe/refunds_synchronizer"
 
 module SolidusStripe
   module Webhook
@@ -18,10 +18,10 @@ module SolidusStripe
       # Marks a Solidus payment associated to a Stripe payment intent as
       # completed, adding a log entry about the event.
       #
-      # In the case of a partial capture, a refund is created for the
-      # remaining amount and a log entry is added.
+      # In the case of a partial capture, it also synchronizes the refunds.
       #
       # @param event [SolidusStripe::Webhook::Event]
+      # @see SolidusStripe::RefundsSynchronizer
       def capture_payment(event)
         payment = extract_payment_from_event(event)
         return if payment.completed?
@@ -34,10 +34,8 @@ module SolidusStripe
         if stripe_amount == stripe_amount_received
           complete_payment(payment)
         else
-          payment.transaction do
-            complete_payment(payment)
-            refund_payment(payment, stripe_amount, stripe_amount_received, currency)
-          end
+          complete_payment(payment)
+          sync_refunds(event)
         end
       end
 
@@ -97,26 +95,13 @@ module SolidusStripe
         end
       end
 
-      def refund_payment(payment, stripe_amount, stripe_amount_received, currency)
-        refunded_amount = decimal_amount(stripe_amount - stripe_amount_received, currency)
-        Spree::Refund.create!(
-          payment: payment,
-          amount: refunded_amount,
-          transaction_id: payment.response_code,
-          reason: SolidusStripe::PaymentMethod.refund_reason
-        ).tap do
-          SolidusStripe::LogEntries.payment_log(
-            payment,
-            success: true,
-            message: "Payment was refunded after payment_intent.succeeded webhook (#{_1.money})"
-          )
-        end
-      end
+      def sync_refunds(event)
+        payment_method = event.spree_payment_method
+        payment_intent_id = event.data.object.id
 
-      def decimal_amount(stripe_amount, currency)
-        stripe_amount
-          .then { to_solidus_amount(_1, currency) }
-          .then { solidus_subunit_to_decimal(_1, currency) }
+        RefundsSynchronizer
+          .new(payment_method)
+          .call(payment_intent_id)
       end
     end
   end
