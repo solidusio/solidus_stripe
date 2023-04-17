@@ -73,6 +73,34 @@ RSpec.describe SolidusStripe::PaymentMethod do
     end
   end
 
+  describe '.previous_sources' do
+    it 'finds no sources associated with the order' do
+      payment_method = create(:stripe_payment_method)
+      order = create(:order, user: nil)
+
+      expect(payment_method.previous_sources(order)).to be_empty
+    end
+
+    it 'finds no sources associated with the user' do
+      payment_method = create(:stripe_payment_method)
+      user = create(:user)
+      order = create(:order, user: user)
+
+      expect(payment_method.previous_sources(order)).to be_empty
+    end
+
+    it 'finds sources associated with the user' do
+      payment_source = create(:stripe_payment_source)
+      payment_method = payment_source.payment_method
+      user = create(:user)
+      order = create(:order, user: user.reload)
+
+      user.wallet.add(payment_source)
+
+      expect(payment_method.previous_sources(order)).to eq [payment_source]
+    end
+  end
+
   describe '.assign_slug' do
     it 'generates a "test" slug for the first payment method in test mode' do
       payment_method = build(:stripe_payment_method)
