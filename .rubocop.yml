@@ -1,55 +1,97 @@
-require:
-  - solidus_dev_support/rubocop
+require: ["rubocop-rspec", "rubocop-rails", "rubocop-performance"]
 
 AllCops:
   NewCops: disable
   TargetRubyVersion: '3.0'
   Exclude:
+    - vendor/**/*
     - sandbox/**/*
     - dummy-app/**/*
     - spec/dummy/**/*
-    - vendor/bundle/**/*
 
-# Avoiding the nested namespaces can avoid some
-# ambiguities, forcing full references.
-# Also saves horizontal space.
-Style/ClassAndModuleChildren:
-  Enabled: false
-
-# Gain space by indenting from the start of the line,
-# instead of the end of the method name.
-Layout/MultilineMethodCallIndentation:
-  EnforcedStyle: indented
-
-# More is more.
-RSpec/MultipleExpectations:
-  Enabled: false
-
-# This was suggesting to use the dangling comma instead,
-# which is super cryptic 🙈.
-Style/TrailingUnderscoreVariable:
-  Enabled: false
-
-# System specs aren't describing any specific class/module.
-RSpec/DescribeClass:
-  Exclude:
-    - spec/system/**/*
-
-Rails/NotNullColumn:
-  Exclude:
-    - db/migrate/20230310152615_add_payment_method_reference_to_stripe_intents.rb
-
-Layout/LineLength:
-  Exclude:
-    - db/migrate/**/*
-
-RSpec/FilePath:
-  Exclude:
-    - spec/requests/solidus_stripe/webhooks_controller/**/*
-
-Style/MultilineTernaryOperator:
-  Enabled: false
-
-Rails/SkipsModelValidations:
-  Exclude:
-    - spec/**/*
+Layout/ArgumentAlignment: {EnforcedStyle: with_fixed_indentation}
+Layout/DotPosition: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#layoutdotposition"}
+Layout/EmptyLinesAroundAttributeAccessor: {Enabled: true}
+Layout/FirstArgumentIndentation: {EnforcedStyle: "consistent"}
+Layout/FirstArrayElementIndentation: {EnforcedStyle: "consistent"}
+Layout/LineLength: {Enabled: true, Max: 120, Exclude: [ "db/migrate/**/*" ]}
+Layout/MultilineMethodCallIndentation: {EnforcedStyle: indented} # Gain space by indenting from the start of the line, instead of the end of the method name.
+Layout/MultilineOperationIndentation: {Enabled: false}
+Layout/SpaceAroundMethodCallOperator: {Enabled: true}
+Layout/SpaceBeforeBlockBraces: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#layoutspacebeforeblockbraces"}
+Layout/SpaceInsideParens: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#layoutspaceinsideparens"}
+Lint/AmbiguousRegexpLiteral: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#lintambiguousregexpliteral"}
+Lint/AssignmentInCondition: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#lintassignmentincondition"}
+Lint/DeprecatedOpenSSLConstant: {Enabled: true}
+Lint/MixedRegexpCaptureTypes: {Enabled: true}
+Lint/RaiseException: {Enabled: true}
+Lint/StructNewOverride: {Enabled: true}
+Metrics/AbcSize: {Enabled: false}
+Metrics/BlockLength: {Enabled: false}
+Metrics/BlockNesting: {Enabled: false}
+Metrics/ClassLength: {Enabled: false}
+Metrics/CyclomaticComplexity: {Enabled: false}
+Metrics/MethodLength: {Enabled: false}
+Metrics/ModuleLength: {Enabled: false}
+Metrics/ParameterLists: {Enabled: false}
+Metrics/PerceivedComplexity: {Enabled: false}
+Performance/AncestorsInclude: {Enabled: true}
+Performance/BigDecimalWithNumericArgument: {Enabled: true}
+Performance/RedundantSortBlock: {Enabled: true}
+Performance/RedundantStringChars: {Enabled: true}
+Performance/ReverseFirst: {Enabled: true}
+Performance/SortReverse: {Enabled: true}
+Performance/Squeeze: {Enabled: true}
+Performance/StringInclude: {Enabled: true}
+Rails/NotNullColumn: {Exclude: ["db/migrate/20230310152615_add_payment_method_reference_to_stripe_intents.rb"]}
+Rails/SkipsModelValidations: {Exclude: ["spec/**/*"]}
+RSpec/DescribeClass: {Exclude: ["spec/features/**/*", "spec/system/**/*", "spec/system/**/*"]} # Feature/System specs are not describing any class or module.
+RSpec/ExampleLength: {Enabled: false}
+RSpec/FilePath: {Exclude: ["spec/requests/solidus_stripe/webhooks_controller/**/*"]}
+RSpec/MultipleExpectations: {Enabled: false} # More is more.
+Style/AccessorGrouping: {Enabled: true}
+Style/Alias: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#stylealias"}
+Style/AsciiComments: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#styleasciicomments"}
+Style/BeginBlock: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#stylebeginblock"}
+Style/BisectedAttrAccessor: {Enabled: true}
+Style/BlockDelimiters: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#styleblockdelimiters"}
+Style/ClassAndModuleChildren: {Enabled: false} # Avoiding the nested namespaces can avoid some ambiguities, forcing full references. Also saves horizontal space.
+Style/CommentAnnotation: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#stylecommentannotation"}
+Style/Documentation: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#styledocumentation"}
+Style/DoubleNegation: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#styledoublenegation"}
+Style/EndBlock: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#styleendblock"}
+Style/ExponentialNotation: {Enabled: true}
+Style/FormatString: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#styleformatstring"}
+Style/FrozenStringLiteralComment: {Exclude: ["spec/**/*", "db/migrate/**/*", "bin/**/*"]}
+Style/HashEachMethods: {Enabled: true}
+Style/HashTransformKeys: {Enabled: true}
+Style/HashTransformValues: {Enabled: true}
+Style/IfUnlessModifier: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#styleifunlessmodifier"}
+Style/Lambda: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#stylelambda"}
+Style/ModuleFunction: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#stylemodulefunction"}
+Style/MultilineBlockChain: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#stylemultilineblockchain"}
+Style/MultilineTernaryOperator: {Enabled: false}
+Style/NegatedIf: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#stylenegatedif"}
+Style/NegatedWhile: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#stylenegatedwhile"}
+Style/NumericPredicate: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#stylenumericpredicate"}
+Style/ParallelAssignment: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#styleparallelassignment"}
+Style/PercentLiteralDelimiters: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#stylepercentliteraldelimiters"}
+Style/PerlBackrefs: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#styleperlbackrefs"}
+Style/RedundantAssignment: {Enabled: true}
+Style/RedundantFetchBlock: {Enabled: true}
+Style/RedundantRegexpCharacterClass: {Enabled: true}
+Style/RedundantRegexpEscape: {Enabled: true}
+Style/Semicolon: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#stylesemicolon"}
+Style/SignalException: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#stylesignalexception"}
+Style/SingleLineBlockParams: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#stylesinglelineblockparams"}
+Style/SingleLineMethods: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#stylesinglelinemethods"}
+Style/SlicingWithRange: {Enabled: true}
+Style/SpecialGlobalVars: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#stylespecialglobalvars"}
+Style/StringLiterals: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#stylestringliterals"}
+Style/SymbolArray: {Enabled: false, StyleGuide: "http://relaxed.ruby.style/#stylesymbolarray"}
+Style/TrailingCommaInArguments: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#styletrailingcommainarguments"}
+Style/TrailingCommaInArrayLiteral: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#styletrailingcommainarrayliteral"}
+Style/TrailingCommaInHashLiteral: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#styletrailingcommainhashliteral"}
+Style/TrailingUnderscoreVariable: {Enabled: false} # This was suggesting to use the dangling comma instead, which is super cryptic 🙈.
+Style/WhileUntilModifier: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#stylewhileuntilmodifier"}
+Style/WordArray: {Enabled: false, StyleGuide: "https://relaxed.ruby.style/#stylewordarray"}
