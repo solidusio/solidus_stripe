@@ -7,16 +7,6 @@ RSpec.describe SolidusStripe::PaymentMethod do
     expect(create(:stripe_payment_method)).to be_valid
   end
 
-  it "doesn't allow available_to_admin" do
-    record = described_class.new(available_to_admin: true)
-
-    record.valid?
-
-    expect(
-      record.errors.added?(:available_to_admin, :inclusion, value: true)
-    ).to be(true)
-  end
-
   describe 'Callbacks' do
     describe 'after_create' do
       it 'creates a webhook endpoint' do

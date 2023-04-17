@@ -4,7 +4,6 @@ FactoryBot.define do
   factory :stripe_payment_method, class: 'SolidusStripe::PaymentMethod' do
     type { "SolidusStripe::PaymentMethod" }
     name { "Stripe Payment Method" }
-    available_to_admin { false }
     preferences {
       {
         api_key: ENV['SOLIDUS_STRIPE_API_KEY'] ||

@@ -11,7 +11,6 @@ module SolidusStripe
     # @see https://stripe.com/docs/webhooks/signatures
     preference :webhook_endpoint_signing_secret, :string
 
-    validates :available_to_admin, inclusion: { in: [false] }
     validates :preferred_setup_future_usage, inclusion: { in: ['', 'on_session', 'off_session'] }
 
     has_one :slug_entry, class_name: 'SolidusStripe::SlugEntry', inverse_of: :payment_method, dependent: :destroy
