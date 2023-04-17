@@ -5,12 +5,12 @@ module SolidusStripe
     belongs_to :order, class_name: 'Spree::Order'
     belongs_to :payment_method, class_name: 'SolidusStripe::PaymentMethod'
 
-    def self.prepare_for_payment(payment)
+    def self.prepare_for_payment(payment, **stripe_intent_options)
       # Find or create the intent for the payment.
       intent =
-        find_by(payment_method: payment.payment_method, order: payment.order) ||
+        retrieve_last_usable_intent(payment) ||
           new(payment_method: payment.payment_method, order: payment.order)
-            .tap { _1.update!(stripe_intent_id: _1.create_stripe_intent.id) }
+            .tap { _1.update!(stripe_intent_id: _1.create_stripe_intent(**stripe_intent_options).id) }
 
       # Update the intent with the previously acquired payment method.
       intent.payment_method.gateway.request {
@@ -21,6 +21,15 @@ module SolidusStripe
       payment.update!(response_code: intent.stripe_intent.id)
 
       intent
+    end
+
+    def self.retrieve_last_usable_intent(payment)
+      intent = where(payment_method: payment.payment_method, order: payment.order).last
+      intent if intent&.usable?
+    end
+
+    def usable?
+      stripe_intent_id && stripe_intent.status == 'requires_payment_method'
     end
 
     def process_payment
