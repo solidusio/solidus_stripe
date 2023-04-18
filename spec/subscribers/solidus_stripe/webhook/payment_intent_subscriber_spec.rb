@@ -277,7 +277,7 @@ RSpec.describe SolidusStripe::Webhook::PaymentIntentSubscriber do
 
     it "does nothing if the payment is already voided" do
       payment_method = create(:stripe_payment_method)
-      stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123")
+      stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123", cancellation_reason: "duplicate")
       payment = create(:payment,
         payment_method: payment_method,
         response_code: stripe_payment_intent.id,

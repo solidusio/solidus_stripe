@@ -24,19 +24,11 @@ module SolidusStripe
       # @see SolidusStripe::RefundsSynchronizer
       def capture_payment(event)
         payment = extract_payment_from_event(event)
-        return if payment.completed?
+        payment.with_lock do
+          break false if payment.completed?
 
-        event.data.object.to_hash => {
-          amount: stripe_amount,
-          amount_received: stripe_amount_received,
-          currency:
-        }
-        if stripe_amount == stripe_amount_received
           complete_payment(payment)
-        else
-          complete_payment(payment)
-          sync_refunds(event)
-        end
+        end && sync_refunds(event)
       end
 
       # Fails a payment.
@@ -47,14 +39,17 @@ module SolidusStripe
       # @param event [SolidusStripe::Webhook::Event]
       def fail_payment(event)
         payment = extract_payment_from_event(event)
-        return if payment.failed?
 
-        payment.failure!.tap do
-          SolidusStripe::LogEntries.payment_log(
-            payment,
-            success: false,
-            message: "Payment was marked as failed after payment_intent.failed webhook"
-          )
+        payment.with_lock do
+          break if payment.failed?
+
+          payment.failure!.tap do
+            SolidusStripe::LogEntries.payment_log(
+              payment,
+              success: false,
+              message: "Payment was marked as failed after payment_intent.failed webhook"
+            )
+          end
         end
       end
 
@@ -66,15 +61,18 @@ module SolidusStripe
       # @param event [SolidusStripe::Webhook::Event]
       def void_payment(event)
         payment = extract_payment_from_event(event)
-        return if payment.void?
-
         reason = event.data.object.cancellation_reason
-        payment.void!.tap do
-          SolidusStripe::LogEntries.payment_log(
-            payment,
-            success: true,
-            message: "Payment was voided after payment_intent.voided webhook (#{reason})"
-          )
+
+        payment.with_lock do
+          break if payment.void?
+
+          payment.void!.tap do
+            SolidusStripe::LogEntries.payment_log(
+              payment,
+              success: true,
+              message: "Payment was voided after payment_intent.voided webhook (#{reason})"
+            )
+          end
         end
       end
 
@@ -96,9 +94,15 @@ module SolidusStripe
       end
 
       def sync_refunds(event)
-        payment_method = event.spree_payment_method
-        payment_intent_id = event.data.object.id
+        event.data.object.to_hash => {
+          id: payment_intent_id,
+          amount: stripe_amount,
+          amount_received: stripe_amount_received,
+          currency:
+        }
+        return if stripe_amount == stripe_amount_received
 
+        payment_method = event.spree_payment_method
         RefundsSynchronizer
           .new(payment_method)
           .call(payment_intent_id)
