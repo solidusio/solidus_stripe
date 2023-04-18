@@ -4,7 +4,6 @@ FactoryBot.define do
   factory :stripe_payment_method, class: 'SolidusStripe::PaymentMethod' do
     type { "SolidusStripe::PaymentMethod" }
     name { "Stripe Payment Method" }
-    available_to_admin { false }
     preferences {
       {
         api_key: ENV['SOLIDUS_STRIPE_API_KEY'] ||
@@ -139,12 +138,19 @@ FactoryBot.define do
     transient do
       amount { 10 }
       payment_method { build(:stripe_payment_method) }
+      stripe_payment_method_id { "pm_#{SecureRandom.uuid.delete('-')}" }
     end
 
     line_items { [build(:line_item, price: amount)] }
 
     after(:create) do |order, evaluator|
-      build(:payment, amount: evaluator.amount, order: order, payment_method: evaluator.payment_method)
+      build(
+        :stripe_payment,
+        amount: evaluator.amount,
+        order: order,
+        payment_method: evaluator.payment_method,
+        stripe_payment_method_id: evaluator.stripe_payment_method_id
+      )
       order.recalculate
     end
   end

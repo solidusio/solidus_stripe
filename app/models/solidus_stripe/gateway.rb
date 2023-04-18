@@ -31,6 +31,44 @@ module SolidusStripe
 
     attr_reader :client
 
+    # Authorizes a certain amount on the provided payment source.
+    #
+    # We create and confirm the Stripe payment intent in two steps. That's to
+    # guarantee that we associate a Solidus payment on the creation, and we can
+    # fetch it after the webhook event is published on confirmation.
+    #
+    # The Stripe payment intent id is copied over the Solidus payment
+    # `response_code` field.
+    def authorize(amount_in_cents, _source, options = {})
+      check_given_amount_matches_payment_intent(amount_in_cents, options)
+
+      stripe_payment_intent_options = {
+        amount: to_stripe_amount(amount_in_cents, options[:originator].currency),
+        confirm: false,
+        capture_method: "manual",
+      }
+
+      stripe_payment_intent = SolidusStripe::PaymentIntent.prepare_for_payment(
+        options[:originator],
+        **stripe_payment_intent_options,
+      )
+
+      confirm_stripe_payment_intent(stripe_payment_intent.stripe_intent_id)
+
+      build_payment_log(
+        success: true,
+        message: "PaymentIntent was confirmed successfully",
+        response_code: stripe_payment_intent.stripe_intent_id,
+        data: stripe_payment_intent.stripe_intent
+      )
+    rescue Stripe::StripeError => e
+      build_payment_log(
+        success: false,
+        message: e.message,
+        data: e.response
+      )
+    end
+
     # Captures a certain amount from a previously authorized transaction.
     #
     # @see https://stripe.com/docs/api/payment_intents/capture#capture_payment_intent
@@ -49,6 +87,41 @@ module SolidusStripe
         data: payment_intent,
       )
     rescue Stripe::InvalidRequestError => e
+      build_payment_log(
+        success: false,
+        message: e.to_s,
+        data: e.response,
+      )
+    end
+
+    # Authorizes and captures a certain amount on the provided payment source.
+    #
+    # See `#authorize` for how the confirmation step is performed.
+    #
+    # @todo add support for purchasing custom amounts
+    def purchase(amount_in_cents, _source, options = {})
+      check_given_amount_matches_payment_intent(amount_in_cents, options)
+
+      stripe_payment_intent_options = {
+        amount: to_stripe_amount(amount_in_cents, options[:originator].currency),
+        confirm: false,
+        capture_method: "automatic",
+      }
+
+      stripe_payment_intent = SolidusStripe::PaymentIntent.prepare_for_payment(
+        options[:originator],
+        **stripe_payment_intent_options,
+      )
+
+      confirm_stripe_payment_intent(stripe_payment_intent.stripe_intent_id)
+
+      build_payment_log(
+        success: true,
+        message: "PaymentIntent was confirmed and captured successfully",
+        response_code: stripe_payment_intent.stripe_intent_id,
+        data: stripe_payment_intent.stripe_intent,
+      )
+    rescue Stripe::StripeError => e
       build_payment_log(
         success: false,
         message: e.to_s,
@@ -125,6 +198,10 @@ module SolidusStripe
     end
 
     private
+
+    def confirm_stripe_payment_intent(stripe_payment_intent_id)
+      request { Stripe::PaymentIntent.confirm(stripe_payment_intent_id) }
+    end
 
     def capture_stripe_payment_intent(stripe_payment_intent_id)
       request { Stripe::PaymentIntent.capture(stripe_payment_intent_id) }

@@ -7,16 +7,6 @@ RSpec.describe SolidusStripe::PaymentMethod do
     expect(create(:stripe_payment_method)).to be_valid
   end
 
-  it "doesn't allow available_to_admin" do
-    record = described_class.new(available_to_admin: true)
-
-    record.valid?
-
-    expect(
-      record.errors.added?(:available_to_admin, :inclusion, value: true)
-    ).to be(true)
-  end
-
   describe 'Callbacks' do
     describe 'after_create' do
       it 'creates a webhook endpoint' do
@@ -80,6 +70,34 @@ RSpec.describe SolidusStripe::PaymentMethod do
 
       expect(described_class.with_slug(payment_method.slug)).to eq([payment_method])
       expect(described_class.with_slug('bad-slug')).to eq([])
+    end
+  end
+
+  describe '.previous_sources' do
+    it 'finds no sources associated with the order' do
+      payment_method = create(:stripe_payment_method)
+      order = create(:order, user: nil)
+
+      expect(payment_method.previous_sources(order)).to be_empty
+    end
+
+    it 'finds no sources associated with the user' do
+      payment_method = create(:stripe_payment_method)
+      user = create(:user)
+      order = create(:order, user: user)
+
+      expect(payment_method.previous_sources(order)).to be_empty
+    end
+
+    it 'finds sources associated with the user' do
+      payment_source = create(:stripe_payment_source)
+      payment_method = payment_source.payment_method
+      user = create(:user)
+      order = create(:order, user: user.reload)
+
+      user.wallet.add(payment_source)
+
+      expect(payment_method.previous_sources(order)).to eq [payment_source]
     end
   end
 

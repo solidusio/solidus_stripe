@@ -20,5 +20,5 @@ unbundled bundle exec rails generate $extension_name:install --migrate --specs=a
 if [[ -n "$SOLIDUS_STRIPE_API_KEY" ]]; then
   echo "~~> Creating the stripe payment method using env credentials..."
   unbundled bundle exec rails runner \
-    'p SolidusStripe::PaymentMethod.create!(name: "SolidusStripe", available_to_admin: false, preference_source: "solidus_stripe_env_credentials", position: -1)'
+    'p SolidusStripe::PaymentMethod.create!(name: "SolidusStripe", preference_source: "solidus_stripe_env_credentials", position: -1)'
 fi

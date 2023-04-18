@@ -11,7 +11,6 @@ module SolidusStripe
     # @see https://stripe.com/docs/webhooks/signatures
     preference :webhook_endpoint_signing_secret, :string
 
-    validates :available_to_admin, inclusion: { in: [false] }
     validates :preferred_setup_future_usage, inclusion: { in: ['', 'on_session', 'off_session'] }
 
     has_one :slug_entry, class_name: 'SolidusStripe::SlugEntry', inverse_of: :payment_method, dependent: :destroy
@@ -82,6 +81,26 @@ module SolidusStripe
       slug = SecureRandom.hex(16) while SlugEntry.exists?(slug: slug) || slug.nil?
 
       create_slug_entry!(slug: slug)
+    end
+
+    # The method that should be used is "Spree::PaymentMethod#reusable_sources".
+    # However, in the dedicated partial source form, the reusable_sources are
+    # assigned to "previous_cards":
+    # https://github.com/solidusio/solidus/blob/e9debb976e2228bb0b7a8eff4894e0556fc15cc8/backend/app/views/spree/admin/payments/_form.html.erb#L31
+    # This name is inaccurate and too specific because, in our case, a
+    # payment-source/stripe-payment-method have many different possible types:
+    # https://stripe.com/docs/api/payment_methods/object#payment_method_object-type
+    #
+    # For more details:
+    # https://github.com/solidusio/solidus/issues/5014
+    #
+    # @todo Start using the correct method to get a user's previous sources
+    def previous_sources(order)
+      if order.user_id
+        order.user.wallet.wallet_payment_sources.map(&:payment_source)
+      else
+        []
+      end
     end
   end
 end
