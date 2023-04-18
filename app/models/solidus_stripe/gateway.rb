@@ -79,7 +79,7 @@ module SolidusStripe
       check_given_amount_matches_payment_intent(amount_in_cents, options)
       check_payment_intent_id(payment_intent_id)
 
-      payment_intent = capture_stripe_payment_intent(payment_intent_id)
+      payment_intent = capture_stripe_payment_intent(payment_intent_id, amount_in_cents)
       build_payment_log(
         success: true,
         message: "PaymentIntent was confirmed successfully",
@@ -203,8 +203,8 @@ module SolidusStripe
       request { Stripe::PaymentIntent.confirm(stripe_payment_intent_id) }
     end
 
-    def capture_stripe_payment_intent(stripe_payment_intent_id)
-      request { Stripe::PaymentIntent.capture(stripe_payment_intent_id) }
+    def capture_stripe_payment_intent(stripe_payment_intent_id, amount)
+      request { Stripe::PaymentIntent.capture(stripe_payment_intent_id, amount: amount) }
     end
 
     def check_given_amount_matches_payment_intent(amount_in_cents, options)

@@ -92,7 +92,7 @@ RSpec.describe SolidusStripe::Gateway do
 
       result = gateway.capture(123_45, "pi_123", originator: payment)
 
-      expect(Stripe::PaymentIntent).to have_received(:capture).with('pi_123')
+      expect(Stripe::PaymentIntent).to have_received(:capture).with('pi_123', { amount: 12_345 })
       expect(result.params).to eq("data" => '{"id":"pi_123"}')
     end
 
