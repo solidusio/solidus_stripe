@@ -134,7 +134,7 @@ FactoryBot.define do
     }
   end
 
-  factory :order_with_stripe_payment, parent: :order do
+  factory :solidus_stripe_order, parent: :order do
     transient do
       amount { 10 }
       payment_method { build(:solidus_stripe_payment_method) }

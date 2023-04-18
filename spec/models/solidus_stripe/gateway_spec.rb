@@ -11,7 +11,7 @@ RSpec.describe SolidusStripe::Gateway do
 
       payment_method = build(:solidus_stripe_payment_method)
       gateway = payment_method.gateway
-      order = create(:order_with_stripe_payment,
+      order = create(:solidus_stripe_order,
         amount: 123.45,
         payment_method: payment_method,
         stripe_payment_method_id: stripe_payment_method.id)
@@ -50,7 +50,7 @@ RSpec.describe SolidusStripe::Gateway do
 
       payment_method = build(:solidus_stripe_payment_method)
       gateway = payment_method.gateway
-      order = create(:order_with_stripe_payment,
+      order = create(:solidus_stripe_order,
         amount: 123.45,
         payment_method: payment_method,
         stripe_payment_method_id: stripe_payment_method.id)
@@ -73,7 +73,7 @@ RSpec.describe SolidusStripe::Gateway do
     it "raises if the given amount doesn't match the order total" do
       payment_method = build(:solidus_stripe_payment_method)
       gateway = payment_method.gateway
-      order = create(:order_with_stripe_payment, amount: 123.45, payment_method: payment_method)
+      order = create(:solidus_stripe_order, amount: 123.45, payment_method: payment_method)
 
       expect { gateway.authorize(10, :source, originator: order.payments.first ) }.to raise_error(
         /custom amount is not supported/
@@ -99,7 +99,7 @@ RSpec.describe SolidusStripe::Gateway do
     it "raises if the given amount doesn't match the order total" do
       payment_method = build(:solidus_stripe_payment_method)
       gateway = payment_method.gateway
-      order = create(:order_with_stripe_payment, amount: 123.45, payment_method: payment_method)
+      order = create(:solidus_stripe_order, amount: 123.45, payment_method: payment_method)
 
       expect { gateway.capture(10, :payment_intent_id, originator: order.payments.first ) }.to raise_error(
         /custom amount is not supported/
@@ -109,7 +109,7 @@ RSpec.describe SolidusStripe::Gateway do
     it "raises if no payment_intent_id is given" do
       payment_method = build(:solidus_stripe_payment_method)
       gateway = payment_method.gateway
-      order = create(:order_with_stripe_payment, amount: 123.45, payment_method: payment_method)
+      order = create(:solidus_stripe_order, amount: 123.45, payment_method: payment_method)
 
       expect { gateway.capture(123_45, nil, originator: order.payments.first ) }.to raise_error(
         ArgumentError,
@@ -120,7 +120,7 @@ RSpec.describe SolidusStripe::Gateway do
     it "raises if payment_intent_id is not valid" do
       payment_method = build(:solidus_stripe_payment_method)
       gateway = payment_method.gateway
-      order = create(:order_with_stripe_payment, amount: 123.45, payment_method: payment_method)
+      order = create(:solidus_stripe_order, amount: 123.45, payment_method: payment_method)
 
       expect { gateway.capture(123_45, "invalid", originator: order.payments.first ) }.to raise_error(
         ArgumentError,
@@ -170,7 +170,7 @@ RSpec.describe SolidusStripe::Gateway do
 
       payment_method = build(:solidus_stripe_payment_method)
       gateway = payment_method.gateway
-      order = create(:order_with_stripe_payment,
+      order = create(:solidus_stripe_order,
         amount: 123.45,
         payment_method: payment_method,
         stripe_payment_method_id: stripe_payment_method.id)
@@ -209,7 +209,7 @@ RSpec.describe SolidusStripe::Gateway do
 
       payment_method = build(:solidus_stripe_payment_method)
       gateway = payment_method.gateway
-      order = create(:order_with_stripe_payment,
+      order = create(:solidus_stripe_order,
         amount: 123.45,
         payment_method: payment_method,
         stripe_payment_method_id: stripe_payment_method.id)
@@ -232,7 +232,7 @@ RSpec.describe SolidusStripe::Gateway do
     it "raises if the given amount doesn't match the order total" do
       payment_method = build(:solidus_stripe_payment_method)
       gateway = payment_method.gateway
-      order = create(:order_with_stripe_payment, amount: 123.45, payment_method: payment_method)
+      order = create(:solidus_stripe_order, amount: 123.45, payment_method: payment_method)
 
       expect { gateway.purchase(10, :source, originator: order.payments.first ) }.to raise_error(
         /custom amount is not supported/
