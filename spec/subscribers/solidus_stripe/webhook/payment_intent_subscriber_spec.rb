@@ -6,7 +6,7 @@ RSpec.describe SolidusStripe::Webhook::PaymentIntentSubscriber do
   describe "#capture_payment" do
     context "when a full capture is performed" do
       it "completes a pending payment" do
-        payment_method = create(:stripe_payment_method)
+        payment_method = create(:solidus_stripe_payment_method)
         stripe_payment_intent = Stripe::PaymentIntent.construct_from(
           id: "pi_123",
           amount: 1000,
@@ -30,7 +30,7 @@ RSpec.describe SolidusStripe::Webhook::PaymentIntentSubscriber do
       end
 
       it "adds a log entry to the payment" do
-        payment_method = create(:stripe_payment_method)
+        payment_method = create(:solidus_stripe_payment_method)
         stripe_payment_intent = Stripe::PaymentIntent.construct_from(
           id: "pi_123",
           amount: 1000,
@@ -61,7 +61,7 @@ RSpec.describe SolidusStripe::Webhook::PaymentIntentSubscriber do
     context "when a partial capture is performed" do
       it "completes a pending payment" do
         SolidusStripe::Seeds.refund_reasons
-        payment_method = create(:stripe_payment_method)
+        payment_method = create(:solidus_stripe_payment_method)
         stripe_payment_intent = Stripe::PaymentIntent.construct_from(
           id: "pi_123",
           amount: 1000,
@@ -91,7 +91,7 @@ RSpec.describe SolidusStripe::Webhook::PaymentIntentSubscriber do
 
       it "synchronizes refunds" do
         SolidusStripe::Seeds.refund_reasons
-        payment_method = create(:stripe_payment_method)
+        payment_method = create(:solidus_stripe_payment_method)
         stripe_payment_intent = Stripe::PaymentIntent.construct_from(
           id: "pi_123",
           amount: 1000,
@@ -121,7 +121,7 @@ RSpec.describe SolidusStripe::Webhook::PaymentIntentSubscriber do
 
       it "adds a log entry for the captured payment" do
         SolidusStripe::Seeds.refund_reasons
-        payment_method = create(:stripe_payment_method)
+        payment_method = create(:solidus_stripe_payment_method)
         stripe_payment_intent = Stripe::PaymentIntent.construct_from(
           id: "pi_123",
           amount: 1000,
@@ -154,7 +154,7 @@ RSpec.describe SolidusStripe::Webhook::PaymentIntentSubscriber do
     end
 
     it "does nothing if the payment is already completed" do
-      payment_method = create(:stripe_payment_method)
+      payment_method = create(:solidus_stripe_payment_method)
       stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123")
       payment = create(:payment,
         payment_method: payment_method,
@@ -175,7 +175,7 @@ RSpec.describe SolidusStripe::Webhook::PaymentIntentSubscriber do
 
   describe "#fail_payment" do
     it "fails a pending payment" do
-      payment_method = create(:stripe_payment_method)
+      payment_method = create(:solidus_stripe_payment_method)
       stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123")
       payment = create(:payment,
         payment_method: payment_method,
@@ -193,7 +193,7 @@ RSpec.describe SolidusStripe::Webhook::PaymentIntentSubscriber do
     end
 
     it "adds a log entry to the payment" do
-      payment_method = create(:stripe_payment_method)
+      payment_method = create(:solidus_stripe_payment_method)
       stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123")
       payment = create(:payment,
         payment_method: payment_method,
@@ -215,7 +215,7 @@ RSpec.describe SolidusStripe::Webhook::PaymentIntentSubscriber do
     end
 
     it "does nothing if the payment is already failed" do
-      payment_method = create(:stripe_payment_method)
+      payment_method = create(:solidus_stripe_payment_method)
       stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123")
       payment = create(:payment,
         payment_method: payment_method,
@@ -236,7 +236,7 @@ RSpec.describe SolidusStripe::Webhook::PaymentIntentSubscriber do
 
   describe "#void_payment" do
     it "voids a pending payment" do
-      payment_method = create(:stripe_payment_method)
+      payment_method = create(:solidus_stripe_payment_method)
       stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123", cancellation_reason: "duplicate")
       payment = create(:payment,
         payment_method: payment_method,
@@ -254,7 +254,7 @@ RSpec.describe SolidusStripe::Webhook::PaymentIntentSubscriber do
     end
 
     it "adds a log entry to the payment" do
-      payment_method = create(:stripe_payment_method)
+      payment_method = create(:solidus_stripe_payment_method)
       stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123", cancellation_reason: "duplicate")
       payment = create(:payment,
         payment_method: payment_method,
@@ -276,7 +276,7 @@ RSpec.describe SolidusStripe::Webhook::PaymentIntentSubscriber do
     end
 
     it "does nothing if the payment is already voided" do
-      payment_method = create(:stripe_payment_method)
+      payment_method = create(:solidus_stripe_payment_method)
       stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123", cancellation_reason: "duplicate")
       payment = create(:payment,
         payment_method: payment_method,

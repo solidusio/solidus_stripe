@@ -4,7 +4,7 @@ RSpec.describe SolidusStripe::WebhooksController, type: %i[request webhook_reque
   describe "POST /create charge.refunded" do
     it "synchronizes refunds" do
       SolidusStripe::Seeds.refund_reasons
-      payment_method = create(:stripe_payment_method)
+      payment_method = create(:solidus_stripe_payment_method)
       stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123")
       payment = create(:payment,
         amount: 10,

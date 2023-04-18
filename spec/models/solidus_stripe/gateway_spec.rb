@@ -9,7 +9,7 @@ RSpec.describe SolidusStripe::Gateway do
       stripe_customer = Stripe::Customer.construct_from(id: 'cus_123')
       stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123")
 
-      payment_method = build(:stripe_payment_method)
+      payment_method = build(:solidus_stripe_payment_method)
       gateway = payment_method.gateway
       order = create(:order_with_stripe_payment,
         amount: 123.45,
@@ -48,7 +48,7 @@ RSpec.describe SolidusStripe::Gateway do
       stripe_payment_method = Stripe::PaymentMethod.construct_from(id: "pm_123")
       stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123")
 
-      payment_method = build(:stripe_payment_method)
+      payment_method = build(:solidus_stripe_payment_method)
       gateway = payment_method.gateway
       order = create(:order_with_stripe_payment,
         amount: 123.45,
@@ -71,7 +71,7 @@ RSpec.describe SolidusStripe::Gateway do
     end
 
     it "raises if the given amount doesn't match the order total" do
-      payment_method = build(:stripe_payment_method)
+      payment_method = build(:solidus_stripe_payment_method)
       gateway = payment_method.gateway
       order = create(:order_with_stripe_payment, amount: 123.45, payment_method: payment_method)
 
@@ -85,7 +85,7 @@ RSpec.describe SolidusStripe::Gateway do
     it 'captures a pre-authorized Stripe payment' do
       stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123")
 
-      gateway = build(:stripe_payment_method).gateway
+      gateway = build(:solidus_stripe_payment_method).gateway
       payment = build(:payment, response_code: "pi_123", amount: 123.45)
 
       allow(Stripe::PaymentIntent).to receive(:capture).and_return(stripe_payment_intent)
@@ -97,7 +97,7 @@ RSpec.describe SolidusStripe::Gateway do
     end
 
     it "raises if the given amount doesn't match the order total" do
-      payment_method = build(:stripe_payment_method)
+      payment_method = build(:solidus_stripe_payment_method)
       gateway = payment_method.gateway
       order = create(:order_with_stripe_payment, amount: 123.45, payment_method: payment_method)
 
@@ -107,7 +107,7 @@ RSpec.describe SolidusStripe::Gateway do
     end
 
     it "raises if no payment_intent_id is given" do
-      payment_method = build(:stripe_payment_method)
+      payment_method = build(:solidus_stripe_payment_method)
       gateway = payment_method.gateway
       order = create(:order_with_stripe_payment, amount: 123.45, payment_method: payment_method)
 
@@ -118,7 +118,7 @@ RSpec.describe SolidusStripe::Gateway do
     end
 
     it "raises if payment_intent_id is not valid" do
-      payment_method = build(:stripe_payment_method)
+      payment_method = build(:solidus_stripe_payment_method)
       gateway = payment_method.gateway
       order = create(:order_with_stripe_payment, amount: 123.45, payment_method: payment_method)
 
@@ -131,7 +131,7 @@ RSpec.describe SolidusStripe::Gateway do
 
   describe '#void' do
     it 'voids a payment that hasn not been captured yet' do
-      gateway = build(:stripe_payment_method).gateway
+      gateway = build(:solidus_stripe_payment_method).gateway
       stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123")
       allow(Stripe::PaymentIntent).to receive(:cancel).and_return(stripe_payment_intent)
 
@@ -142,7 +142,7 @@ RSpec.describe SolidusStripe::Gateway do
     end
 
     it "raises if no payment_intent_id is given" do
-      payment_method = build(:stripe_payment_method)
+      payment_method = build(:solidus_stripe_payment_method)
       gateway = payment_method.gateway
 
       expect { gateway.void(nil) }.to raise_error(
@@ -152,7 +152,7 @@ RSpec.describe SolidusStripe::Gateway do
     end
 
     it "raises if payment_intent_id is not valid" do
-      payment_method = build(:stripe_payment_method)
+      payment_method = build(:solidus_stripe_payment_method)
       gateway = payment_method.gateway
 
       expect { gateway.void("invalid") }.to raise_error(
@@ -168,7 +168,7 @@ RSpec.describe SolidusStripe::Gateway do
       stripe_customer = Stripe::Customer.construct_from(id: 'cus_123')
       stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123")
 
-      payment_method = build(:stripe_payment_method)
+      payment_method = build(:solidus_stripe_payment_method)
       gateway = payment_method.gateway
       order = create(:order_with_stripe_payment,
         amount: 123.45,
@@ -207,7 +207,7 @@ RSpec.describe SolidusStripe::Gateway do
       stripe_payment_method = Stripe::PaymentMethod.construct_from(id: "pm_123")
       stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123")
 
-      payment_method = build(:stripe_payment_method)
+      payment_method = build(:solidus_stripe_payment_method)
       gateway = payment_method.gateway
       order = create(:order_with_stripe_payment,
         amount: 123.45,
@@ -230,7 +230,7 @@ RSpec.describe SolidusStripe::Gateway do
     end
 
     it "raises if the given amount doesn't match the order total" do
-      payment_method = build(:stripe_payment_method)
+      payment_method = build(:solidus_stripe_payment_method)
       gateway = payment_method.gateway
       order = create(:order_with_stripe_payment, amount: 123.45, payment_method: payment_method)
 
@@ -242,7 +242,7 @@ RSpec.describe SolidusStripe::Gateway do
 
   describe '#credit' do
     it 'refunds when provided an originator payment' do
-      gateway = build(:stripe_payment_method).gateway
+      gateway = build(:solidus_stripe_payment_method).gateway
       payment = instance_double(Spree::Payment, response_code: 'pi_123', currency: "USD")
       refund = Stripe::Refund.construct_from(id: "re_123")
       allow(Stripe::Refund).to receive(:create).and_return(refund)
@@ -261,7 +261,7 @@ RSpec.describe SolidusStripe::Gateway do
     end
 
     it "raises if no payment_intent_id is given" do
-      payment_method = build(:stripe_payment_method)
+      payment_method = build(:solidus_stripe_payment_method)
       gateway = payment_method.gateway
 
       expect { gateway.credit(:amount, nil) }.to raise_error(
@@ -271,7 +271,7 @@ RSpec.describe SolidusStripe::Gateway do
     end
 
     it "raises if payment_intent_id is not valid" do
-      payment_method = build(:stripe_payment_method)
+      payment_method = build(:solidus_stripe_payment_method)
       gateway = payment_method.gateway
 
       expect { gateway.credit(:amount, "invalid") }.to raise_error(

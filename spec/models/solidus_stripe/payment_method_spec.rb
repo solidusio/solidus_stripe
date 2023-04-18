@@ -4,13 +4,13 @@ require 'solidus_stripe_spec_helper'
 
 RSpec.describe SolidusStripe::PaymentMethod do
   it 'has a working factory' do
-    expect(create(:stripe_payment_method)).to be_valid
+    expect(create(:solidus_stripe_payment_method)).to be_valid
   end
 
   describe 'Callbacks' do
     describe 'after_create' do
       it 'creates a webhook endpoint' do
-        payment_method = create(:stripe_payment_method)
+        payment_method = create(:solidus_stripe_payment_method)
 
         expect(payment_method.slug_entry).to be_present
       end
@@ -28,7 +28,7 @@ RSpec.describe SolidusStripe::PaymentMethod do
 
     context 'when the order has a payment intent' do
       it 'fetches the payment intent id' do
-        intent = create(:stripe_payment_intent, stripe_intent_id: 'pi_123')
+        intent = create(:solidus_stripe_payment_intent, stripe_intent_id: 'pi_123')
         payment = build(:payment, response_code: nil, payment_method: intent.payment_method, order: intent.order)
 
         expect(described_class.intent_id_for_payment(payment)).to eq("pi_123")
@@ -43,20 +43,20 @@ RSpec.describe SolidusStripe::PaymentMethod do
   describe '#stripe_dashboard_url' do
     context 'with a payment intent id' do
       it 'generates a dashboard link' do
-        payment_method = build(:stripe_payment_method, preferred_test_mode: false)
+        payment_method = build(:solidus_stripe_payment_method, preferred_test_mode: false)
 
         expect(payment_method.stripe_dashboard_url('pi_123')).to eq("https://dashboard.stripe.com/payments/pi_123")
       end
 
       it 'supports test mode' do
-        payment_method = build(:stripe_payment_method, preferred_test_mode: true)
+        payment_method = build(:solidus_stripe_payment_method, preferred_test_mode: true)
 
         expect(payment_method.stripe_dashboard_url('pi_123')).to eq("https://dashboard.stripe.com/test/payments/pi_123")
       end
     end
 
     it 'returns nil with anything else' do
-      payment_method = build(:stripe_payment_method)
+      payment_method = build(:solidus_stripe_payment_method)
 
       expect(payment_method.stripe_dashboard_url(Object.new)).to eq(nil)
       expect(payment_method.stripe_dashboard_url('')).to eq(nil)
@@ -66,7 +66,7 @@ RSpec.describe SolidusStripe::PaymentMethod do
 
   describe '.with_slug' do
     it 'selects by slug' do
-      payment_method = create(:stripe_payment_method)
+      payment_method = create(:solidus_stripe_payment_method)
 
       expect(described_class.with_slug(payment_method.slug)).to eq([payment_method])
       expect(described_class.with_slug('bad-slug')).to eq([])
@@ -75,14 +75,14 @@ RSpec.describe SolidusStripe::PaymentMethod do
 
   describe '.previous_sources' do
     it 'finds no sources associated with the order' do
-      payment_method = create(:stripe_payment_method)
+      payment_method = create(:solidus_stripe_payment_method)
       order = create(:order, user: nil)
 
       expect(payment_method.previous_sources(order)).to be_empty
     end
 
     it 'finds no sources associated with the user' do
-      payment_method = create(:stripe_payment_method)
+      payment_method = create(:solidus_stripe_payment_method)
       user = create(:user)
       order = create(:order, user: user)
 
@@ -90,7 +90,7 @@ RSpec.describe SolidusStripe::PaymentMethod do
     end
 
     it 'finds sources associated with the user' do
-      payment_source = create(:stripe_payment_source)
+      payment_source = create(:solidus_stripe_payment_source)
       payment_method = payment_source.payment_method
       user = create(:user)
       order = create(:order, user: user.reload)
@@ -103,7 +103,7 @@ RSpec.describe SolidusStripe::PaymentMethod do
 
   describe '.assign_slug' do
     it 'generates a "test" slug for the first payment method in test mode' do
-      payment_method = build(:stripe_payment_method)
+      payment_method = build(:solidus_stripe_payment_method)
 
       payment_method.save!
 
@@ -111,7 +111,7 @@ RSpec.describe SolidusStripe::PaymentMethod do
     end
 
     it 'generates a "live" slug for the first payment method in live mode' do
-      payment_method = build(:stripe_payment_method, preferred_test_mode: false)
+      payment_method = build(:solidus_stripe_payment_method, preferred_test_mode: false)
 
       payment_method.save!
 
@@ -119,8 +119,8 @@ RSpec.describe SolidusStripe::PaymentMethod do
     end
 
     it 'generates a random hex string' do
-      _existing_payment_method = create(:stripe_payment_method)
-      payment_method = create(:stripe_payment_method)
+      _existing_payment_method = create(:solidus_stripe_payment_method)
+      payment_method = create(:solidus_stripe_payment_method)
 
       expect(payment_method.slug).to match(/^[0-9a-f]{32}$/)
     end
@@ -128,10 +128,10 @@ RSpec.describe SolidusStripe::PaymentMethod do
     it 'generates a unique slug' do
       slug = SecureRandom.hex(16)
 
-      create(:stripe_slug_entry, slug: slug)
+      create(:solidus_stripe_slug_entry, slug: slug)
       allow(SecureRandom).to receive(:hex).and_return(slug).and_call_original
 
-      expect(create(:stripe_payment_method).slug).not_to eq(slug)
+      expect(create(:solidus_stripe_payment_method).slug).not_to eq(slug)
     end
   end
 end

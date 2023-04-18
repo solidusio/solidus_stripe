@@ -4,7 +4,7 @@ RSpec.describe SolidusStripe::IntentsController, type: :request do
   describe "GET /after_confirmation" do
     context 'when not provided a payment intent' do
       it 'responds with unprocessable entity' do
-        payment_method = create(:stripe_payment_method)
+        payment_method = create(:solidus_stripe_payment_method)
         order = create(:order_ready_to_complete)
         sign_in order.user
 
@@ -16,7 +16,7 @@ RSpec.describe SolidusStripe::IntentsController, type: :request do
 
     context 'when the order is not at "confirm"' do
       it 'redirects to the current order step' do
-        payment_method = create(:stripe_payment_method)
+        payment_method = create(:solidus_stripe_payment_method)
         order = create(:order)
         sign_in order.user
 

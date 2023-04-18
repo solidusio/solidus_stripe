@@ -3,7 +3,7 @@
 module SolidusStripe::BackendTestHelper
   def create_payment_method(setup_future_usage: 'off_session', auto_capture: false)
     @payment_method = create(
-      :stripe_payment_method,
+      :solidus_stripe_payment_method,
       preferred_setup_future_usage: setup_future_usage,
       auto_capture: auto_capture
     )
@@ -79,7 +79,7 @@ module SolidusStripe::BackendTestHelper
     stripe_payment_method = create_stripe_payment_method(opts[:card_number] || '4242424242424242')
     payment_intent = create_stripe_payment_intent(stripe_payment_method.id)
 
-    create(:stripe_payment,
+    create(:solidus_stripe_payment,
       :authorized,
       order: order,
       response_code: payment_intent.id,

@@ -27,7 +27,7 @@ RSpec.describe SolidusStripe::Webhook::Event do
     let(:context) do
       SolidusStripe::Webhook::EventWithContextFactory.from_data(
         data: SolidusStripe::Webhook::DataFixtures.charge_succeeded,
-        payment_method: create(:stripe_payment_method)
+        payment_method: create(:solidus_stripe_payment_method)
       )
     end
 
@@ -88,7 +88,7 @@ RSpec.describe SolidusStripe::Webhook::Event do
     let(:context) do
       SolidusStripe::Webhook::EventWithContextFactory.new(
         data: SolidusStripe::Webhook::DataFixtures.charge_succeeded,
-        payment_method: create(:stripe_payment_method)
+        payment_method: create(:solidus_stripe_payment_method)
       )
     end
 
@@ -115,7 +115,7 @@ RSpec.describe SolidusStripe::Webhook::Event do
     let(:context) do
       SolidusStripe::Webhook::EventWithContextFactory.new(
         data: SolidusStripe::Webhook::DataFixtures.charge_succeeded,
-        payment_method: create(:stripe_payment_method)
+        payment_method: create(:solidus_stripe_payment_method)
       )
     end
 

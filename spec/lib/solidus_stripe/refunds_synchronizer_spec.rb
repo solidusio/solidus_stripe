@@ -14,7 +14,7 @@ RSpec.describe SolidusStripe::RefundsSynchronizer do
   end
 
   describe "#call" do
-    let(:payment_method) { create(:stripe_payment_method) }
+    let(:payment_method) { create(:solidus_stripe_payment_method) }
 
     it "creates missing refunds on Solidus" do
       SolidusStripe::Seeds.refund_reasons
