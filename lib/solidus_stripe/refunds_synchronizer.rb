@@ -64,18 +64,18 @@ module SolidusStripe
       end
     end
 
-    def stripe_refund_needs_sync?(refund)
-      originated_outside_solidus = refund.metadata[SKIP_SYNC_METADATA_KEY] != SKIP_SYNC_METADATA_VALUE
-      not_already_synced = Spree::Refund.find_by(transaction_id: refund.id).nil?
+    def stripe_refund_needs_sync?(stripe_refund)
+      originated_outside_solidus = stripe_refund.metadata[SKIP_SYNC_METADATA_KEY] != SKIP_SYNC_METADATA_VALUE
+      not_already_synced = Spree::Refund.find_by(transaction_id: stripe_refund.id).nil?
 
       originated_outside_solidus && not_already_synced
     end
 
-    def create_refund(payment, refund)
+    def create_refund(payment, stripe_refund)
       Spree::Refund.create!(
         payment: payment,
-        amount: refund_decimal_amount(refund),
-        transaction_id: refund.id,
+        amount: refund_decimal_amount(stripe_refund),
+        transaction_id: stripe_refund.id,
         reason: SolidusStripe::PaymentMethod.refund_reason
       ).tap(&method(:log_refund).curry[payment])
     end
@@ -88,9 +88,9 @@ module SolidusStripe
       )
     end
 
-    def refund_decimal_amount(refund)
-      to_solidus_amount(refund.amount, refund.currency)
-        .then { |amount| solidus_subunit_to_decimal(amount, refund.currency) }
+    def refund_decimal_amount(stripe_refund)
+      to_solidus_amount(stripe_refund.amount, stripe_refund.currency)
+        .then { |amount| solidus_subunit_to_decimal(amount, stripe_refund.currency) }
     end
   end
 end

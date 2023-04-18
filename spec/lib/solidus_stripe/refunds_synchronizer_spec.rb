@@ -5,7 +5,7 @@ require "solidus_stripe/refunds_synchronizer"
 require "solidus_stripe/seeds"
 
 RSpec.describe SolidusStripe::RefundsSynchronizer do
-  def mock_refund_list(payment_intent_id, refunds)
+  def mock_stripe_refund_list(payment_intent_id, refunds)
     allow(Stripe::Refund).to receive(:list).with(payment_intent: payment_intent_id).and_return(
       Stripe::ListObject.construct_from(
         data: refunds
@@ -20,7 +20,7 @@ RSpec.describe SolidusStripe::RefundsSynchronizer do
       SolidusStripe::Seeds.refund_reasons
       payment_intent_id = "pi_123"
       payment = create(:payment, response_code: payment_intent_id, amount: 10, payment_method: payment_method)
-      mock_refund_list(payment_intent_id, [
+      mock_stripe_refund_list(payment_intent_id, [
         {
           id: "re_123",
           amount: 1000,
@@ -38,7 +38,7 @@ RSpec.describe SolidusStripe::RefundsSynchronizer do
       SolidusStripe::Seeds.refund_reasons
       payment_intent_id = "pi_123"
       payment = create(:payment, response_code: payment_intent_id, amount: 10, payment_method: payment_method)
-      mock_refund_list(payment_intent_id, [
+      mock_stripe_refund_list(payment_intent_id, [
         {
           id: "re_123",
           amount: 1000,
@@ -57,7 +57,7 @@ RSpec.describe SolidusStripe::RefundsSynchronizer do
       SolidusStripe::Seeds.refund_reasons
       payment_intent_id = "pi_123"
       payment = create(:payment, response_code: payment_intent_id, amount: 10, payment_method: payment_method)
-      mock_refund_list(payment_intent_id, [
+      mock_stripe_refund_list(payment_intent_id, [
         {
           id: "re_123",
           amount: 1000,
@@ -76,7 +76,7 @@ RSpec.describe SolidusStripe::RefundsSynchronizer do
       SolidusStripe::Seeds.refund_reasons
       payment_intent_id = "pi_123"
       payment = create(:payment, response_code: payment_intent_id, amount: 10, payment_method: payment_method)
-      mock_refund_list(payment_intent_id, [
+      mock_stripe_refund_list(payment_intent_id, [
         {
           id: "re_123",
           amount: 1000,
@@ -94,7 +94,7 @@ RSpec.describe SolidusStripe::RefundsSynchronizer do
     it "skips the creation of Solidus refunds with transaction_id matching some stripe refund id" do
       payment_intent_id = "pi_123"
       payment = create(:payment, response_code: payment_intent_id, amount: 10, payment_method: payment_method)
-      mock_refund_list(payment_intent_id, [
+      mock_stripe_refund_list(payment_intent_id, [
         {
           id: "re_123",
           amount: 1000,
@@ -112,7 +112,7 @@ RSpec.describe SolidusStripe::RefundsSynchronizer do
     it "skips the creation of Solidus refunds when specified in their metadata" do
       payment_intent_id = "pi_123"
       payment = create(:payment, response_code: payment_intent_id, amount: 10, payment_method: payment_method)
-      mock_refund_list(payment_intent_id, [
+      mock_stripe_refund_list(payment_intent_id, [
         {
           id: "re_123",
           amount: 1000,
@@ -132,7 +132,7 @@ RSpec.describe SolidusStripe::RefundsSynchronizer do
       SolidusStripe::Seeds.refund_reasons
       payment_intent_id = "pi_123"
       payment = create(:payment, response_code: payment_intent_id, amount: 10, payment_method: payment_method)
-      mock_refund_list(payment_intent_id, [
+      mock_stripe_refund_list(payment_intent_id, [
         {
           id: "re_123",
           amount: 500,
@@ -156,7 +156,7 @@ RSpec.describe SolidusStripe::RefundsSynchronizer do
       SolidusStripe::Seeds.refund_reasons
       payment_intent_id = "pi_123"
       payment = create(:payment, response_code: payment_intent_id, amount: 10, payment_method: payment_method)
-      mock_refund_list(payment_intent_id, [
+      mock_stripe_refund_list(payment_intent_id, [
         {
           id: "re_123",
           amount: 500,
@@ -181,7 +181,7 @@ RSpec.describe SolidusStripe::RefundsSynchronizer do
       SolidusStripe::Seeds.refund_reasons
       payment_intent_id = "pi_123"
       payment = create(:payment, response_code: payment_intent_id, amount: 10, payment_method: payment_method)
-      mock_refund_list(payment_intent_id, [
+      mock_stripe_refund_list(payment_intent_id, [
         {
           id: "re_123",
           amount: 1000,
@@ -199,7 +199,7 @@ RSpec.describe SolidusStripe::RefundsSynchronizer do
       SolidusStripe::Seeds.refund_reasons
       payment_intent_id = "pi_123"
       payment = create(:payment, response_code: payment_intent_id, amount: 10, payment_method: payment_method)
-      mock_refund_list(payment_intent_id, [
+      mock_stripe_refund_list(payment_intent_id, [
         {
           id: "re_123",
           amount: 1000,
@@ -219,7 +219,7 @@ RSpec.describe SolidusStripe::RefundsSynchronizer do
       SolidusStripe::Seeds.refund_reasons
       payment_intent_id = "pi_123"
       payment = create(:payment, response_code: payment_intent_id, amount: 10, payment_method: payment_method)
-      mock_refund_list(payment_intent_id, [
+      mock_stripe_refund_list(payment_intent_id, [
         {
           id: "re_123",
           amount: 500,

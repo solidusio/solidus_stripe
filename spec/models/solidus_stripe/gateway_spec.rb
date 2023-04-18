@@ -244,8 +244,8 @@ RSpec.describe SolidusStripe::Gateway do
     it 'refunds when provided an originator payment' do
       gateway = build(:solidus_stripe_payment_method).gateway
       payment = instance_double(Spree::Payment, response_code: 'pi_123', currency: "USD")
-      refund = Stripe::Refund.construct_from(id: "re_123")
-      allow(Stripe::Refund).to receive(:create).and_return(refund)
+      stripe_refund = Stripe::Refund.construct_from(id: "re_123")
+      allow(Stripe::Refund).to receive(:create).and_return(stripe_refund)
 
       result = gateway.credit(123_45, 'pi_123', currency: 'USD', originator: instance_double(
         Spree::Refund,
