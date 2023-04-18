@@ -29,7 +29,16 @@ module SolidusStripe
     end
 
     def usable?
-      stripe_intent_id && stripe_intent.status == 'requires_payment_method'
+      stripe_intent_id &&
+      stripe_intent.status == 'requires_payment_method'
+      stripe_intent.amount == stripe_order_amount
+    end
+
+    def stripe_order_amount
+      payment_method.gateway.to_stripe_amount(
+        order.display_order_total_after_store_credit.money.fractional,
+        order.currency,
+      )
     end
 
     def process_payment
@@ -88,10 +97,7 @@ module SolidusStripe
 
       payment_method.gateway.request do
         Stripe::PaymentIntent.create({
-          amount: payment_method.gateway.to_stripe_amount(
-            order.display_order_total_after_store_credit.money.fractional,
-            order.currency,
-          ),
+          amount: stripe_order_amount,
           currency: order.currency,
           capture_method: payment_method.auto_capture? ? 'automatic' : 'manual',
           setup_future_usage: payment_method.preferred_setup_future_usage.presence,
