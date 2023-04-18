@@ -22,7 +22,7 @@ RSpec.describe 'SolidusStripe Orders Payments', :js do
       expects_page_to_display_log_messages(["PaymentIntent was confirmed and captured successfully"])
     end
 
-    it 'captures an authorized payment successfully' do
+    it 'successfully captures an authorized payment' do
       payment = create_authorized_payment
       visit_payments_page
 
@@ -30,6 +30,18 @@ RSpec.describe 'SolidusStripe Orders Payments', :js do
 
       expects_page_to_display_successfully_captured_payment(payment)
       expects_payment_to_have_correct_capture_amount_on_stripe(payment, payment.amount)
+    end
+
+    it 'successfully captures a partial amount of an authorized payment' do
+      payment = create_authorized_payment
+      partial_capture_amount = payment.amount - 10
+
+      visit_payments_page
+
+      capture_partial_payment_amount(payment, partial_capture_amount)
+
+      expects_page_to_display_successfully_captured_payment(payment)
+      expects_payment_to_have_correct_capture_amount_on_stripe(payment, partial_capture_amount)
     end
 
     it 'voids a payment from an order' do

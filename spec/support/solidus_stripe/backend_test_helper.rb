@@ -132,6 +132,18 @@ module SolidusStripe::BackendTestHelper
     end
   end
 
+  def capture_partial_payment_amount(payment, amount)
+    within_row(1) do
+      click_icon(:edit)
+      fill_in('amount', with: amount)
+      click_icon(:ok)
+      expect(page).to have_selector('td.amount span', text: amount.to_money.format)
+      expect(payment.reload.amount).to eq(amount)
+    end
+
+    capture_payment
+  end
+
   def void_payment
     click_icon(:void)
   end
@@ -205,6 +217,6 @@ module SolidusStripe::BackendTestHelper
 
   def expects_payment_to_have_correct_capture_amount_on_stripe(payment, amount)
     stripe_payment_intent = fetch_stripe_payment_intent(payment)
-    expect(stripe_payment_intent.amount_received).to eq(amount * 100)
+    expect(stripe_payment_intent.amount_received).to eq(amount.to_money.fractional)
   end
 end
