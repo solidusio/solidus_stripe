@@ -16,7 +16,7 @@ module SolidusStripe
       # @param event [SolidusStripe::Webhook::Event]
       # @see SolidusStripe::RefundsSynchronizer
       def sync_refunds(event)
-        payment_method = event.spree_payment_method
+        payment_method = event.payment_method
         payment_intent_id = event.data.object.payment_intent
 
         RefundsSynchronizer

@@ -31,7 +31,7 @@ module SolidusStripe
             payment_method.preferred_webhook_endpoint_signing_secret,
             tolerance: tolerance
           )
-          new(stripe_event: stripe_event, spree_payment_method: payment_method)
+          new(stripe_event: stripe_event, payment_method: payment_method)
         rescue ActiveRecord::RecordNotFound, Stripe::SignatureVerificationError, JSON::ParserError
           nil
         end
@@ -53,12 +53,12 @@ module SolidusStripe
       attr_reader :omnes_event_name
 
       # @attr_reader [SolidusStripe::PaymentMethod]
-      attr_reader :spree_payment_method
+      attr_reader :payment_method
 
       # @api private
-      def initialize(stripe_event:, spree_payment_method:)
+      def initialize(stripe_event:, payment_method:)
         @stripe_event = stripe_event
-        @spree_payment_method = spree_payment_method
+        @payment_method = payment_method
         @omnes_event_name = :"#{PREFIX}#{stripe_event.type}"
       end
 
@@ -72,7 +72,7 @@ module SolidusStripe
       def payload
         {
           "stripe_event" => @stripe_event.as_json,
-          "spree_payment_method_id" => @spree_payment_method.id
+          "payment_method_id" => @payment_method.id
         }
       end
 

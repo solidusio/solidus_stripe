@@ -102,7 +102,7 @@ module SolidusStripe
         }
         return if stripe_amount == stripe_amount_received
 
-        payment_method = event.spree_payment_method
+        payment_method = event.payment_method
         RefundsSynchronizer
           .new(payment_method)
           .call(payment_intent_id)
