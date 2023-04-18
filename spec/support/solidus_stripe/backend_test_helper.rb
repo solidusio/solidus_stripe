@@ -77,12 +77,12 @@ module SolidusStripe::BackendTestHelper
 
   def create_authorized_payment(opts = {})
     stripe_payment_method = create_stripe_payment_method(opts[:card_number] || '4242424242424242')
-    payment_intent = create_stripe_payment_intent(stripe_payment_method.id)
+    stripe_payment_intent = create_stripe_payment_intent(stripe_payment_method.id)
 
     create(:solidus_stripe_payment,
       :authorized,
       order: order,
-      response_code: payment_intent.id,
+      response_code: stripe_payment_intent.id,
       stripe_payment_method_id: stripe_payment_method.id,
       payment_method: payment_method)
   end

@@ -17,11 +17,11 @@ module SolidusStripe
       # @see SolidusStripe::RefundsSynchronizer
       def sync_refunds(event)
         payment_method = event.payment_method
-        payment_intent_id = event.data.object.payment_intent
+        stripe_payment_intent_id = event.data.object.payment_intent
 
         RefundsSynchronizer
           .new(payment_method)
-          .call(payment_intent_id)
+          .call(stripe_payment_intent_id)
       end
     end
   end

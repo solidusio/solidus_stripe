@@ -75,16 +75,16 @@ module SolidusStripe
     # @see https://stripe.com/docs/payments/capture-later
     #
     # @todo add support for capturing custom amounts
-    def capture(amount_in_cents, payment_intent_id, options = {})
+    def capture(amount_in_cents, stripe_payment_intent_id, options = {})
       check_given_amount_matches_payment_intent(amount_in_cents, options)
-      check_payment_intent_id(payment_intent_id)
+      check_stripe_payment_intent_id(stripe_payment_intent_id)
 
-      payment_intent = capture_stripe_payment_intent(payment_intent_id, amount_in_cents)
+      stripe_payment_intent = capture_stripe_payment_intent(stripe_payment_intent_id, amount_in_cents)
       build_payment_log(
         success: true,
         message: "PaymentIntent was confirmed successfully",
-        response_code: payment_intent.id,
-        data: payment_intent,
+        response_code: stripe_payment_intent.id,
+        data: stripe_payment_intent,
       )
     rescue Stripe::InvalidRequestError => e
       build_payment_log(
@@ -130,18 +130,18 @@ module SolidusStripe
     end
 
     # Voids a previously authorized transaction, releasing the funds that are on hold.
-    def void(payment_intent_id, _options = {})
-      check_payment_intent_id(payment_intent_id)
+    def void(stripe_payment_intent_id, _options = {})
+      check_stripe_payment_intent_id(stripe_payment_intent_id)
 
-      payment_intent = request do
-        Stripe::PaymentIntent.cancel(payment_intent_id)
+      stripe_payment_intent = request do
+        Stripe::PaymentIntent.cancel(stripe_payment_intent_id)
       end
 
       build_payment_log(
         success: true,
         message: "PaymentIntent was canceled successfully",
-        response_code: payment_intent_id,
-        data: payment_intent,
+        response_code: stripe_payment_intent_id,
+        data: stripe_payment_intent,
       )
     rescue Stripe::InvalidRequestError => e
       build_payment_log(
@@ -158,8 +158,8 @@ module SolidusStripe
     # {RefundsSynchronizer}.
     #
     # TODO: check this method params twice.
-    def credit(amount_in_cents, payment_intent_id, options = {})
-      check_payment_intent_id(payment_intent_id)
+    def credit(amount_in_cents, stripe_payment_intent_id, options = {})
+      check_stripe_payment_intent_id(stripe_payment_intent_id)
 
       payment = options[:originator].payment
       currency = payment.currency
@@ -167,7 +167,7 @@ module SolidusStripe
       stripe_refund = request do
         Stripe::Refund.create(
           amount: to_stripe_amount(amount_in_cents, currency),
-          payment_intent: payment_intent_id,
+          payment_intent: stripe_payment_intent_id,
           metadata: {
             RefundsSynchronizer::SKIP_SYNC_METADATA_KEY => RefundsSynchronizer::SKIP_SYNC_METADATA_VALUE
           }
@@ -218,12 +218,12 @@ module SolidusStripe
         "tried #{amount_in_cents} but can only accept #{payment.display_amount.cents}."
     end
 
-    def check_payment_intent_id(payment_intent_id)
-      unless payment_intent_id
-        raise ArgumentError, "missing payment_intent_id"
+    def check_stripe_payment_intent_id(stripe_payment_intent_id)
+      unless stripe_payment_intent_id
+        raise ArgumentError, "missing stripe_payment_intent_id"
       end
 
-      return if payment_intent_id.start_with?('pi_')
+      return if stripe_payment_intent_id.start_with?('pi_')
 
       raise ArgumentError, "the payment intent id has the wrong format"
     end

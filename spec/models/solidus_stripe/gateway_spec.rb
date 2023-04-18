@@ -113,11 +113,11 @@ RSpec.describe SolidusStripe::Gateway do
 
       expect { gateway.capture(123_45, nil, originator: order.payments.first ) }.to raise_error(
         ArgumentError,
-        /missing payment_intent_id/
+        /missing stripe_payment_intent_id/
       )
     end
 
-    it "raises if payment_intent_id is not valid" do
+    it "raises if stripe_payment_intent_id is not valid" do
       payment_method = build(:solidus_stripe_payment_method)
       gateway = payment_method.gateway
       order = create(:solidus_stripe_order, amount: 123.45, payment_method: payment_method)
@@ -141,17 +141,17 @@ RSpec.describe SolidusStripe::Gateway do
       expect(result.params).to eq("data" => '{"id":"pi_123"}')
     end
 
-    it "raises if no payment_intent_id is given" do
+    it "raises if no stripe_payment_intent_id is given" do
       payment_method = build(:solidus_stripe_payment_method)
       gateway = payment_method.gateway
 
       expect { gateway.void(nil) }.to raise_error(
         ArgumentError,
-        /missing payment_intent_id/
+        /missing stripe_payment_intent_id/
       )
     end
 
-    it "raises if payment_intent_id is not valid" do
+    it "raises if stripe_payment_intent_id is not valid" do
       payment_method = build(:solidus_stripe_payment_method)
       gateway = payment_method.gateway
 
@@ -260,17 +260,17 @@ RSpec.describe SolidusStripe::Gateway do
       expect(result.params).to eq("data" => '{"id":"re_123"}')
     end
 
-    it "raises if no payment_intent_id is given" do
+    it "raises if no stripe_payment_intent_id is given" do
       payment_method = build(:solidus_stripe_payment_method)
       gateway = payment_method.gateway
 
       expect { gateway.credit(:amount, nil) }.to raise_error(
         ArgumentError,
-        /missing payment_intent_id/
+        /missing stripe_payment_intent_id/
       )
     end
 
-    it "raises if payment_intent_id is not valid" do
+    it "raises if stripe_payment_intent_id is not valid" do
       payment_method = build(:solidus_stripe_payment_method)
       gateway = payment_method.gateway
 

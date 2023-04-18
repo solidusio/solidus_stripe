@@ -3,14 +3,14 @@ require "solidus_stripe_spec_helper"
 RSpec.describe SolidusStripe::WebhooksController, type: [:request, :webhook_request] do
   describe "POST /create" do
     let(:payment_method) { create(:solidus_stripe_payment_method) }
-    let(:payment_intent) {
+    let(:stripe_payment_intent) {
       payment_method.gateway.request {
         Stripe::PaymentIntent.create(amount: 100, currency: 'usd')
       }
     }
     let(:context) do
       SolidusStripe::Webhook::EventWithContextFactory.from_object(
-        object: payment_intent,
+        object: stripe_payment_intent,
         type: "payment_intent.created",
         payment_method: payment_method
       )

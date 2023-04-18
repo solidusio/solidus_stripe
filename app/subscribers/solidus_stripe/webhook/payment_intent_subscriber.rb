@@ -79,8 +79,8 @@ module SolidusStripe
       private
 
       def extract_payment_from_event(event)
-        payment_intent_id = event.data.object.id
-        Spree::Payment.find_by!(response_code: payment_intent_id)
+        stripe_payment_intent_id = event.data.object.id
+        Spree::Payment.find_by!(response_code: stripe_payment_intent_id)
       end
 
       def complete_payment(payment)
@@ -95,7 +95,7 @@ module SolidusStripe
 
       def sync_refunds(event)
         event.data.object.to_hash => {
-          id: payment_intent_id,
+          id: stripe_payment_intent_id,
           amount: stripe_amount,
           amount_received: stripe_amount_received,
           currency:
@@ -105,7 +105,7 @@ module SolidusStripe
         payment_method = event.payment_method
         RefundsSynchronizer
           .new(payment_method)
-          .call(payment_intent_id)
+          .call(stripe_payment_intent_id)
       end
     end
   end

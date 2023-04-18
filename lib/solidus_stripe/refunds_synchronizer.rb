@@ -45,11 +45,11 @@ module SolidusStripe
       @payment_method = payment_method
     end
 
-    # @param payment_intent_id [String]
-    def call(payment_intent_id)
-      payment = Spree::Payment.find_by!(response_code: payment_intent_id)
+    # @param stripe_payment_intent_id [String]
+    def call(stripe_payment_intent_id)
+      payment = Spree::Payment.find_by!(response_code: stripe_payment_intent_id)
 
-      stripe_refunds(payment_intent_id)
+      stripe_refunds(stripe_payment_intent_id)
         .select(&method(:stripe_refund_needs_sync?))
         .map(
           &method(:create_refund).curry[payment]
@@ -58,9 +58,9 @@ module SolidusStripe
 
     private
 
-    def stripe_refunds(payment_intent_id)
+    def stripe_refunds(stripe_payment_intent_id)
       @payment_method.gateway.request do
-        Stripe::Refund.list(payment_intent: payment_intent_id).data
+        Stripe::Refund.list(payment_intent: stripe_payment_intent_id).data
       end
     end
 
