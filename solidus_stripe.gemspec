@@ -15,7 +15,7 @@ Gem::Specification.new do |spec|
 
   spec.metadata['homepage_uri'] = spec.homepage
   spec.metadata['source_code_uri'] = 'https://github.com/solidusio/solidus_stripe'
-  spec.metadata['changelog_uri'] = 'https://github.com/solidusio/solidus_stripe/blob/master/CHANGELOG.md'
+  spec.metadata['changelog_uri'] = 'https://github.com/solidusio/solidus_stripe/releases'
 
   spec.required_ruby_version = Gem::Requirement.new('>= 3.0')
 
@@ -35,7 +35,10 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'stripe', '~> 8.0'
 
   spec.add_development_dependency 'redcarpet' # used by yard
-  spec.add_development_dependency 'solidus_dev_support', '~> 2.5'
+  spec.add_development_dependency 'rubocop', '~> 1.0'
+  spec.add_development_dependency 'rubocop-performance', '~> 1.5'
+  spec.add_development_dependency 'rubocop-rails', '~> 2.3'
+  spec.add_development_dependency 'rubocop-rspec', '~> 2.0'
   spec.add_development_dependency 'yard'
 
   spec.post_install_message = <<~TXT
