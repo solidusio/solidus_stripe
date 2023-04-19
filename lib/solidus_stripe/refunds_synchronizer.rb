@@ -45,11 +45,11 @@ module SolidusStripe
       @payment_method = payment_method
     end
 
-    # @param payment_intent_id [String]
-    def call(payment_intent_id)
-      payment = Spree::Payment.find_by!(response_code: payment_intent_id)
+    # @param stripe_payment_intent_id [String]
+    def call(stripe_payment_intent_id)
+      payment = Spree::Payment.find_by!(response_code: stripe_payment_intent_id)
 
-      stripe_refunds(payment_intent_id)
+      stripe_refunds(stripe_payment_intent_id)
         .select(&method(:stripe_refund_needs_sync?))
         .map(
           &method(:create_refund).curry[payment]
@@ -58,24 +58,24 @@ module SolidusStripe
 
     private
 
-    def stripe_refunds(payment_intent_id)
+    def stripe_refunds(stripe_payment_intent_id)
       @payment_method.gateway.request do
-        Stripe::Refund.list(payment_intent: payment_intent_id).data
+        Stripe::Refund.list(payment_intent: stripe_payment_intent_id).data
       end
     end
 
-    def stripe_refund_needs_sync?(refund)
-      originated_outside_solidus = refund.metadata[SKIP_SYNC_METADATA_KEY] != SKIP_SYNC_METADATA_VALUE
-      not_already_synced = Spree::Refund.find_by(transaction_id: refund.id).nil?
+    def stripe_refund_needs_sync?(stripe_refund)
+      originated_outside_solidus = stripe_refund.metadata[SKIP_SYNC_METADATA_KEY] != SKIP_SYNC_METADATA_VALUE
+      not_already_synced = Spree::Refund.find_by(transaction_id: stripe_refund.id).nil?
 
       originated_outside_solidus && not_already_synced
     end
 
-    def create_refund(payment, refund)
+    def create_refund(payment, stripe_refund)
       Spree::Refund.create!(
         payment: payment,
-        amount: refund_decimal_amount(refund),
-        transaction_id: refund.id,
+        amount: refund_decimal_amount(stripe_refund),
+        transaction_id: stripe_refund.id,
         reason: SolidusStripe::PaymentMethod.refund_reason
       ).tap(&method(:log_refund).curry[payment])
     end
@@ -88,9 +88,9 @@ module SolidusStripe
       )
     end
 
-    def refund_decimal_amount(refund)
-      to_solidus_amount(refund.amount, refund.currency)
-        .then { |amount| solidus_subunit_to_decimal(amount, refund.currency) }
+    def refund_decimal_amount(stripe_refund)
+      to_solidus_amount(stripe_refund.amount, stripe_refund.currency)
+        .then { |amount| solidus_subunit_to_decimal(amount, stripe_refund.currency) }
     end
   end
 end

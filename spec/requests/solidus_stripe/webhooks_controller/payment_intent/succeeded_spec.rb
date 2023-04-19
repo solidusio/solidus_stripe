@@ -3,7 +3,7 @@ require "solidus_stripe_spec_helper"
 RSpec.describe SolidusStripe::WebhooksController, type: %i[request webhook_request] do
   describe "POST /create payment_intent.succeeded" do
     it "captures the associated payment" do
-      payment_method = create(:stripe_payment_method)
+      payment_method = create(:solidus_stripe_payment_method)
       stripe_payment_intent = Stripe::PaymentIntent.construct_from(
         id: "pi_123",
         amount: 1000,

@@ -5,7 +5,7 @@ require 'solidus_stripe_spec_helper'
 RSpec.describe SolidusStripe::PaymentIntent do
   describe "#reload" do
     it "reloads the stripe intent" do
-      intent = create(:stripe_payment_intent)
+      intent = create(:solidus_stripe_payment_intent)
       allow(Stripe::PaymentIntent).to receive(:retrieve) do
         Stripe::PaymentIntent.construct_from(id: intent.stripe_intent_id)
       end

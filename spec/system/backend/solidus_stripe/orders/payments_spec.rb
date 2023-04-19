@@ -15,7 +15,7 @@ RSpec.describe 'SolidusStripe Orders Payments', :js do
     end
 
     it 'displays log entries for a payment' do
-      payment = create(:stripe_payment, :captured, order: order, payment_method: payment_method)
+      payment = create(:solidus_stripe_payment, :captured, order: order, payment_method: payment_method)
 
       visit_payment_page(payment)
 

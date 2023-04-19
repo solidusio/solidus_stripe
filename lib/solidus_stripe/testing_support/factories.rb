@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 FactoryBot.define do
-  factory :stripe_payment_method, class: 'SolidusStripe::PaymentMethod' do
+  factory :solidus_stripe_payment_method, class: 'SolidusStripe::PaymentMethod' do
     type { "SolidusStripe::PaymentMethod" }
     name { "Stripe Payment Method" }
     preferences {
@@ -16,13 +16,13 @@ FactoryBot.define do
     }
   end
 
-  factory :stripe_payment_source, class: 'SolidusStripe::PaymentSource' do
-    association :payment_method, factory: :stripe_payment_method
+  factory :solidus_stripe_payment_source, class: 'SolidusStripe::PaymentSource' do
+    association :payment_method, factory: :solidus_stripe_payment_method
     stripe_payment_method_id { "pm_#{SecureRandom.uuid.delete('-')}" }
   end
 
-  factory :stripe_payment, parent: :payment do
-    association :payment_method, factory: :stripe_payment_method
+  factory :solidus_stripe_payment, parent: :payment do
+    association :payment_method, factory: :solidus_stripe_payment_method
     amount { order.outstanding_balance }
     response_code { "pi_#{SecureRandom.uuid.delete('-')}" }
     state { 'checkout' }
@@ -33,7 +33,7 @@ FactoryBot.define do
 
     source {
       create(
-        :stripe_payment_source,
+        :solidus_stripe_payment_source,
         payment_method: payment_method,
         stripe_payment_method_id: stripe_payment_method_id
       )
@@ -44,7 +44,7 @@ FactoryBot.define do
 
       after(:create) do |payment, _evaluator|
         create(
-          :stripe_payment_log_entry,
+          :solidus_stripe_payment_log_entry,
           :authorize,
           source: payment
         )
@@ -56,7 +56,7 @@ FactoryBot.define do
 
       after(:create) do |payment, _evaluator|
         create(
-          :stripe_payment_log_entry,
+          :solidus_stripe_payment_log_entry,
           :autocapture,
           source: payment
         )
@@ -64,19 +64,19 @@ FactoryBot.define do
     end
   end
 
-  factory :stripe_payment_intent, class: 'SolidusStripe::PaymentIntent' do
+  factory :solidus_stripe_payment_intent, class: 'SolidusStripe::PaymentIntent' do
     association :order
-    association :payment_method, factory: :stripe_payment_method
+    association :payment_method, factory: :solidus_stripe_payment_method
     stripe_intent_id { "pm_#{SecureRandom.uuid.delete('-')}" }
   end
 
-  factory :stripe_slug_entry, class: 'SolidusStripe::SlugEntry' do
-    association :payment_method, factory: :stripe_payment_method
+  factory :solidus_stripe_slug_entry, class: 'SolidusStripe::SlugEntry' do
+    association :payment_method, factory: :solidus_stripe_payment_method
     slug { SecureRandom.hex(16) }
   end
 
-  factory :stripe_customer, class: 'SolidusStripe::Customer' do
-    association :payment_method, factory: :stripe_payment_method
+  factory :solidus_stripe_customer, class: 'SolidusStripe::Customer' do
+    association :payment_method, factory: :solidus_stripe_payment_method
     association :source, factory: :user
     stripe_id { "cus_#{SecureRandom.uuid.delete('-')}" }
 
@@ -85,7 +85,7 @@ FactoryBot.define do
     end
   end
 
-  factory :stripe_payment_log_entry, class: 'Spree::LogEntry' do
+  factory :solidus_stripe_payment_log_entry, class: 'Spree::LogEntry' do
     transient do
       success { true }
       message { nil }
@@ -134,10 +134,10 @@ FactoryBot.define do
     }
   end
 
-  factory :order_with_stripe_payment, parent: :order do
+  factory :solidus_stripe_order, parent: :order do
     transient do
       amount { 10 }
-      payment_method { build(:stripe_payment_method) }
+      payment_method { build(:solidus_stripe_payment_method) }
       stripe_payment_method_id { "pm_#{SecureRandom.uuid.delete('-')}" }
     end
 
@@ -145,7 +145,7 @@ FactoryBot.define do
 
     after(:create) do |order, evaluator|
       build(
-        :stripe_payment,
+        :solidus_stripe_payment,
         amount: evaluator.amount,
         order: order,
         payment_method: evaluator.payment_method,

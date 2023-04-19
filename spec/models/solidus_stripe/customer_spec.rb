@@ -8,7 +8,7 @@ RSpec.describe SolidusStripe::Customer, type: :model do
       it 'returns the customer_id' do
         user = create(:user)
         order = create(:order, user: user)
-        customer = create(:stripe_customer, stripe_id: 'cus_123', source: user)
+        customer = create(:solidus_stripe_customer, stripe_id: 'cus_123', source: user)
 
         expect(customer.source).to be_a(Spree::User)
         expect(
@@ -21,7 +21,7 @@ RSpec.describe SolidusStripe::Customer, type: :model do
       it 'creates the customer from a user' do
         user = create(:user, email: 'registered@example.com')
         order = create(:order, user: user)
-        payment_method = create(:stripe_payment_method)
+        payment_method = create(:solidus_stripe_payment_method)
 
         stripe_customer = Stripe::Customer.construct_from(id: 'cus_123')
         allow(Stripe::Customer).to receive(:create).with(email: 'registered@example.com').and_return(stripe_customer)
@@ -32,7 +32,7 @@ RSpec.describe SolidusStripe::Customer, type: :model do
       end
 
       it 'creates the customer from a guest order' do
-        payment_method = create(:stripe_payment_method)
+        payment_method = create(:solidus_stripe_payment_method)
         order = create(:order, user: nil, email: 'guest@example.com')
 
         stripe_customer = Stripe::Customer.construct_from(id: 'cus_123')

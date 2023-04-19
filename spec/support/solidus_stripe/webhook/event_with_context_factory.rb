@@ -59,7 +59,7 @@ module SolidusStripe
 
       def solidus_stripe_object
         @solidus_stripe_object = SolidusStripe::Webhook::Event.new(stripe_event: stripe_object,
-          spree_payment_method: @payment_method)
+          payment_method: @payment_method)
       end
 
       def json

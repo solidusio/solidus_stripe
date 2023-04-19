@@ -25,7 +25,7 @@ module SolidusStripe::CheckoutTestHelper
 
   def create_payment_method(setup_future_usage: 'off_session', auto_capture: false)
     @payment_method = create(
-      :stripe_payment_method,
+      :solidus_stripe_payment_method,
       preferred_setup_future_usage: setup_future_usage,
       auto_capture: auto_capture
     )
