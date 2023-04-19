@@ -18,6 +18,7 @@ or if your tracking the github version please switch to the `v4` branch:
 
 [![CircleCI](https://circleci.com/gh/solidusio/solidus_stripe.svg?style=shield)](https://circleci.com/gh/solidusio/solidus_stripe)
 [![codecov](https://codecov.io/gh/solidusio/solidus_stripe/branch/master/graph/badge.svg)](https://codecov.io/gh/solidusio/solidus_stripe)
+[![yardoc](https://img.shields.io/badge/docs-rubydoc.info-informational)](https://rubydoc.info/gems/solidus_stripe)
 
 <!-- Explain what your extension does. -->
 
