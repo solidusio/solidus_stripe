@@ -54,10 +54,8 @@ module SolidusStripe
       payment = @payment_method.payments.find_by!(response_code: stripe_payment_intent_id)
 
       stripe_refunds(stripe_payment_intent_id)
-        .select(&method(:stripe_refund_needs_sync?))
-        .map(
-          &method(:create_refund).curry[payment]
-        )
+        .select { stripe_refund_needs_sync?(_1) }
+        .map { create_refund(payment, _1) }
     end
 
     private
@@ -81,7 +79,7 @@ module SolidusStripe
         amount: refund_decimal_amount(stripe_refund),
         transaction_id: stripe_refund.id,
         reason: SolidusStripe::PaymentMethod.refund_reason
-      ).tap(&method(:log_refund).curry[payment])
+      ).tap { log_refund(payment, _1) }
     end
 
     def log_refund(payment, refund)
