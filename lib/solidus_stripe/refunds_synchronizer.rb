@@ -47,7 +47,7 @@ module SolidusStripe
 
     # @param stripe_payment_intent_id [String]
     def call(stripe_payment_intent_id)
-      payment = Spree::Payment.find_by!(response_code: stripe_payment_intent_id)
+      payment = @payment_method.payments.find_by!(response_code: stripe_payment_intent_id)
 
       stripe_refunds(stripe_payment_intent_id)
         .select(&method(:stripe_refund_needs_sync?))
