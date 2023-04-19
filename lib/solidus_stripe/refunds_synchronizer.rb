@@ -32,13 +32,17 @@ module SolidusStripe
   class RefundsSynchronizer
     include MoneyToStripeAmountConverter
 
-    # Metadata key used to mark refunds that shouldn't be synced back to Solidus.
-    # @return [Symbol]
     SKIP_SYNC_METADATA_KEY = :solidus_skip_sync
+    private_constant :SKIP_SYNC_METADATA_KEY
 
-    # Metadata value used to mark refunds that shouldn't be synced back to Solidus.
-    # @return [String]
     SKIP_SYNC_METADATA_VALUE = 'true'
+    private_constant :SKIP_SYNC_METADATA_VALUE
+
+    # Metadata used to mark Stripe refunds that shouldn't be synced back to Solidus.
+    # @return [Hash]
+    def self.skip_sync_metadata
+      { SKIP_SYNC_METADATA_KEY => SKIP_SYNC_METADATA_VALUE }
+    end
 
     # @param payment_method [SolidusStripe::PaymentMethod]
     def initialize(payment_method)
