@@ -168,9 +168,7 @@ module SolidusStripe
         Stripe::Refund.create(
           amount: to_stripe_amount(amount_in_cents, currency),
           payment_intent: stripe_payment_intent_id,
-          metadata: {
-            RefundsSynchronizer::SKIP_SYNC_METADATA_KEY => RefundsSynchronizer::SKIP_SYNC_METADATA_VALUE
-          }
+          metadata: RefundsSynchronizer.skip_sync_metadata
         )
       end
 

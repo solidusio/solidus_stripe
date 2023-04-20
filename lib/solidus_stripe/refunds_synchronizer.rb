@@ -32,13 +32,17 @@ module SolidusStripe
   class RefundsSynchronizer
     include MoneyToStripeAmountConverter
 
-    # Metadata key used to mark refunds that shouldn't be synced back to Solidus.
-    # @return [Symbol]
     SKIP_SYNC_METADATA_KEY = :solidus_skip_sync
+    private_constant :SKIP_SYNC_METADATA_KEY
 
-    # Metadata value used to mark refunds that shouldn't be synced back to Solidus.
-    # @return [String]
     SKIP_SYNC_METADATA_VALUE = 'true'
+    private_constant :SKIP_SYNC_METADATA_VALUE
+
+    # Metadata used to mark Stripe refunds that shouldn't be synced back to Solidus.
+    # @return [Hash]
+    def self.skip_sync_metadata
+      { SKIP_SYNC_METADATA_KEY => SKIP_SYNC_METADATA_VALUE }
+    end
 
     # @param payment_method [SolidusStripe::PaymentMethod]
     def initialize(payment_method)
@@ -47,13 +51,11 @@ module SolidusStripe
 
     # @param stripe_payment_intent_id [String]
     def call(stripe_payment_intent_id)
-      payment = Spree::Payment.find_by!(response_code: stripe_payment_intent_id)
+      payment = @payment_method.payments.find_by!(response_code: stripe_payment_intent_id)
 
       stripe_refunds(stripe_payment_intent_id)
-        .select(&method(:stripe_refund_needs_sync?))
-        .map(
-          &method(:create_refund).curry[payment]
-        )
+        .select { stripe_refund_needs_sync?(_1) }
+        .map { create_refund(payment, _1) }
     end
 
     private
@@ -77,7 +79,7 @@ module SolidusStripe
         amount: refund_decimal_amount(stripe_refund),
         transaction_id: stripe_refund.id,
         reason: SolidusStripe::PaymentMethod.refund_reason
-      ).tap(&method(:log_refund).curry[payment])
+      ).tap { log_refund(payment, _1) }
     end
 
     def log_refund(payment, refund)
