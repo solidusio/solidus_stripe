@@ -52,7 +52,7 @@ For the above example, and if you mounted the `SolidusStripe::Engine` routes on
 the default scope, the webhook endpoint would look like:
 
 ```
-/solidus_stripe/webhooks/365a8435cd11300e87de864c149516e0
+/solidus_stripe/365a8435cd11300e87de864c149516e0/webhooks
 ```
 
 Besides, you also need to configure the webhook signing secret for that payment
