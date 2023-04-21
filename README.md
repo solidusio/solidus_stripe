@@ -17,7 +17,7 @@ or if your tracking the github version please switch to the `v4` branch:
 # Solidus Stripe
 
 [![CircleCI](https://circleci.com/gh/solidusio/solidus_stripe.svg?style=shield)](https://circleci.com/gh/solidusio/solidus_stripe)
-[![codecov](https://codecov.io/gh/solidusio/solidus_stripe/branch/master/graph/badge.svg)](https://codecov.io/gh/solidusio/solidus_stripe)
+[![codecov](https://codecov.io/gh/solidusio/solidus_stripe/branch/main/graph/badge.svg)](https://codecov.io/gh/solidusio/solidus_stripe)
 [![yardoc](https://img.shields.io/badge/docs-rubydoc.info-informational)](https://rubydoc.info/gems/solidus_stripe)
 
 <!-- Explain what your extension does. -->
@@ -63,7 +63,7 @@ preference on the payment method.
 Before going to production, you'll need to [register the webhook endpoint with
 Stripe](https://stripe.com/docs/webhooks/go-live), and make sure to subscribe
 to the events listed in [the `SolidusStripe::Webhook::Event::CORE`
-constant](https://github.com/solidusio/solidus_stripe/blob/master/lib/solidus_stripe/webhook/event.rb).
+constant](https://github.com/solidusio/solidus_stripe/blob/main/lib/solidus_stripe/webhook/event.rb).
 
 On development, you can
 [test webhooks by using Stripe CLI](https://stripe.com/docs/webhooks/test).
