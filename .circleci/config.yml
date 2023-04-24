@@ -62,7 +62,7 @@ jobs:
             bin/dummy-app
           environment:
             FRONTEND: starter
-            SOLIDUS_BRANCH: master
+            SOLIDUS_BRANCH: main
       - save_cache:
           key: solidus-stripe-gems-v1-{{ checksum "/tmp/.tool-versions" }}
           paths:
