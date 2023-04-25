@@ -1,8 +1,30 @@
 # Changelog
 
-## [Unreleased](https://github.com/solidusio/solidus_stripe/tree/HEAD)
+## [v3.2.2](https://github.com/solidusio/solidus_stripe/tree/v3.2.2)
 
-[Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v3.0.0...HEAD)
+[Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v3.2.1...v3.2.2)
+
+This release updates a pre-existing migration. If you're migrating from
+`solidus_gateway`'s Stripe payment method to `solidus_stripe` and ran migrations
+before this release, you may have orphaned `Spree::Preference` records related
+to the legacy `solidus_gateway` Stripe payment methods. You probably fixed this
+manually or created brand new payment method records to use in production. You
+can effectively ignore this patch release.
+
+If you're installing v4 of this extension for the first time, the migration will
+now run as intended.
+
+**Fixed bugs:**
+
+- Fixed legacy migration for migrating `Spree::Preference` data from `solidus_gateway` to `solidus_stripe` [\#298](https://github.com/solidusio/solidus_stripe/pull/298) ([benjaminwil](https://github.com/benjaminwil))
+
+## [v3.2.1](https://github.com/solidusio/solidus_stripe/tree/v3.2.1)
+
+[Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v3.2.0...v3.2.1)
+
+## [v3.2.0](https://github.com/solidusio/solidus_stripe/tree/v3.2.0)
+
+[Full Changelog](https://github.com/solidusio/solidus_stripe/compare/v3.0.0...v3.2.0)
 
 **Fixed bugs:**
 
