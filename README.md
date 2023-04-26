@@ -1,10 +1,3 @@
-## 🚧 **WARNING** 🚧 Work In Progress
-
-You're looking at the source for `solidus_stripe` v5, which will only support the **starter frontend**
-but at the moment **it is not ready to be used**.
-
-Please use [`solidus_stripe` v4 on the corresponding branch](https://github.com/solidusio/solidus_stripe/tree/v4).
-
 ## 🚧 **WARNING** 🚧 Supporting `solidus_frontend`
 
 If you need support for `solidus_frontend` please add `< 5` as a version requirement in your gemfile:
