@@ -1,12 +1,3 @@
-## 🚧 **WARNING** 🚧 Supporting `solidus_frontend`
-
-If you need support for `solidus_frontend` please add `< 5` as a version requirement in your gemfile:
-`gem 'solidus_stripe', '< 5'`
-or if your tracking the github version please switch to the `v4` branch:
-`gem 'solidus_stripe', git: 'https://github.com/solidusio/solidus_stripe.git', branch: 'v4'`
-
----
-
 # Solidus Stripe
 
 [![CircleCI](https://circleci.com/gh/solidusio/solidus_stripe.svg?style=shield)](https://circleci.com/gh/solidusio/solidus_stripe)
@@ -62,6 +53,10 @@ While for development [you should use the stripe CLI to forward the webhooks to 
 # Please refer to `stripe listen --help` for more options
 stripe listen --forward-to http://localhost:3000/solidus_stripe/test/webhooks
 ```
+
+### Supporting `solidus_frontend`
+
+If you need support for `solidus_frontend` please refer to the [README of solidus_stripe v4](https://github.com/solidusio/solidus_stripe/tree/v4#readme).
 
 ## Usage
 
