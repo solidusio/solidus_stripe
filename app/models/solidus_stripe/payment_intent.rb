@@ -59,6 +59,8 @@ module SolidusStripe
       payment.started_processing!
 
       case stripe_intent.status
+      when 'processing'
+        successful = true
       when 'requires_capture'
         payment.pend! unless payment.pending?
         successful = true
