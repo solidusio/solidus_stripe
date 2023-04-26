@@ -9,6 +9,11 @@
 
 <div>
   <label>
-    <%= render "#{partial_base}/#{payment_type}", stripe_payment_method: stripe_payment_method %>
+    <%= render(
+      "#{partial_base}/#{payment_type}",
+      stripe_payment_method: stripe_payment_method,
+      partial_base: partial_base,
+      payment_type: payment_type
+    ) %>
   </label>
 </div>
