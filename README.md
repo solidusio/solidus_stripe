@@ -17,49 +17,51 @@ or if your tracking the github version please switch to the `v4` branch:
 
 ## Installation
 
-Add solidus_stripe to your Gemfile:
-
-```ruby
-gem 'solidus_stripe'
-```
-
-Bundle your dependencies and run the installation generator:
+Add solidus_stripe to your bundle and run the installation generator:
 
 ```shell
+bundle add solidus_stripe
 bin/rails generate solidus_stripe:install
 ```
 
-### Webhooks
+Then set the following environment variables both locally and in production in order
+to setup the `solidus_stripe_env_credentials` static preference as defined in the initializer:
 
-This library makes use of some [Stripe webhooks](https://stripe.com/docs/webhooks).
-
-Every Solidus Stripe payment method you create will get a slug assigned. You
-need to append it to a generic webhook endpoint to get the URL for that payment
-method. For example:
-
-```ruby
-SolidusStripe::PaymentMethod.last.slug
-# "365a8435cd11300e87de864c149516e0"
+```shell
+SOLIDUS_STRIPE_API_KEY                # will prefill the `api_key` preference
+SOLIDUS_STRIPE_PUBLISHABLE_KEY        # will prefill the `publishable_key` preference
+SOLIDUS_STRIPE_WEBHOOK_SIGNING_SECRET # will prefill the `webhook_signing_secret` preference
 ```
 
-For the above example, and if you mounted the `SolidusStripe::Engine` routes on
-the default scope, the webhook endpoint would look like:
+Once those are available you can create a new Stripe payment method in the /admin interface
+and select the `solidus_stripe_env_credentials` static preference.
 
-```
-/solidus_stripe/webhooks/365a8435cd11300e87de864c149516e0
-```
+⚠️ Be sure to set the enviroment variables to the values for test mode in your development environment.
 
-Besides, you also need to configure the webhook signing secret for that payment
-method. You can do that through the `webhook_endpoint_signing_secret`
-preference on the payment method.
+### Webhooks setup
+
+The webhooks URLs are automatically generated based on the enviroment, 
+by default it will be scoped to `live` in production and `test` everywhere else.
+
+#### Production enviroment
 
 Before going to production, you'll need to [register the webhook endpoint with
 Stripe](https://stripe.com/docs/webhooks/go-live), and make sure to subscribe
 to the events listed in [the `SolidusStripe::Webhook::Event::CORE`
 constant](https://github.com/solidusio/solidus_stripe/blob/main/lib/solidus_stripe/webhook/event.rb).
 
-On development, you can
-[test webhooks by using Stripe CLI](https://stripe.com/docs/webhooks/test).
+So in your Stripe dashboard you'll need to set the webhook URL to:
+
+    https://store.example.com/solidus_stripe/live/webhooks
+
+#### Non-production enviroments
+
+While for development [you should use the stripe CLI to forward the webhooks to your local server](https://stripe.com/docs/webhooks/test#webhook-test-cli):
+
+```shell
+# Please refer to `stripe listen --help` for more options
+stripe listen --forward-to http://localhost:3000/solidus_stripe/test/webhooks
+```
 
 ## Usage
 
@@ -93,13 +95,23 @@ Stripe Payment Method other than "card" on the admin interface, you must include
 
 `app/views/spree/admin/payments/source_forms/existing_payment/stripe/`
 
-### Custom webhooks
+### Customizing Webhooks
 
-You can also use [Stripe webhooks](https://stripe.com/docs/webhooks) to trigger
-custom actions in your application.
+Solidus Stripe comes with support for a few [webhook events](https://stripe.com/docs/webhooks), to which there's a default handler. You can customize the behavior of those handlers by or add to their behavior by replacing or adding subscribers in the internal Solidus event bus.
 
-First, you need to register the event you want to listen to, both [in
-Stripe](https://stripe.com/docs/webhooks/go-live) and in your application:
+Each event will have the original Stripe name, prefixed by `stripe.`. For example, the `payment_intent.succeeded` event will be published as `stripe.payment_intent.succeeded`.
+
+Here's the list of events that are supported by default:
+
+        payment_intent.succeeded
+        payment_intent.payment_failed
+        payment_intent.canceled
+        charge.refunded
+
+#### Adding a new event handler
+
+In order to add a new handler you need to register the event you want to listen to, 
+both [in Stripe](https://stripe.com/docs/webhooks/go-live) and in your application:
 
 ```ruby
 # config/initializers/solidus_stripe.rb
@@ -111,7 +123,7 @@ end
 That will register a new `:"stripe.charge.succeeded"` event in the [Solidus
 bus](https://guides.solidus.io/customization/subscribing-to-events). The
 Solidus event will be published whenever a matching incoming webhook event is
-received. You can subscribe to it as regular:
+received. You can subscribe to it [as usual](https://guides.solidus.io/customization/subscribing-to-events):
 
 ```ruby
 # app/subscribers/update_account_balance_subscriber.rb
@@ -121,7 +133,13 @@ class UpdateAccountBalanceSubscriber
   handle :"stripe.charge.succeeded", with: :call
 
   def call(event)
-    # ...
+    # Please refere to the Stripe gem and API documentation for more details on the
+    # structure of the event object. All methods called on `event` will be forwarded
+    # to the Stripe event object:
+    # - https://www.rubydoc.info/gems/stripe/Stripe/Event
+    # - https://stripe.com/docs/webhooks/stripe-events
+
+    Rails.logger.info "Charge succeeded: #{event.data.to_json}"
   end
 end
 
@@ -138,6 +156,8 @@ Solidus Stripe payment method. It will delegate all unknown methods to the
 underlying stripe event object. It can also be used in async [
 adapters](https://github.com/nebulab/omnes#adapters), which is recommended as
 otherwise the response to Stripe will be delayed until subscribers are done.
+
+#### Configuring the webhook signature tolerance
 
 You can also configure the signature verification tolerance in seconds (it
 defaults to the [same value as Stripe
