@@ -62,6 +62,14 @@ If you need support for `solidus_frontend` please refer to the [README of solidu
 
 If you're using a custom frontend you'll need to adjust the code copied to your application by the installation generator. Given frontend choices can vary wildly, we can't provide a one-size-fits-all solution, but we are providing this simple integration with `solidus_starter_frontend` as a reference implementation. The amount of code is intentionally kept to a minimum, so you can easily adapt it to your needs.
 
+## Caveats
+
+### Authorization and capture and checkout finalization
+
+Stripe supports two different flows for payments: [authorization and capture](https://stripe.com/docs/payments/capture-later) and immediate payment. 
+
+Both flows are supported by this extension, but you should be aware that they will happen before the order finalization, just before the final confirmation. At that moment if the payment method of choice will require additional authentication (e.g. 3D Secure) the extra authentication will be shown to the user.
+
 ### Upgrading from v4
 
 This extension is a complete rewrite of the previous version, and it's not generally compatible with v4.
@@ -208,6 +216,10 @@ Reference:
 
 - https://stripe.com/docs/payments/intents?intent=payment
 - https://github.com/solidusio/solidus/blob/master/core/lib/spree/core/state_machines/payment.rb
+
+### Deferred payment confirmation
+
+This extensions is using the [two-step payment confirmation](https://stripe.com/docs/payments/build-a-two-step-confirmation) flow. This means that at the payment step the payment form will just collect the basic payment information (e.g. credit card details) and any additional confirmation is deferred to the confirmation step.
 
 ## Development
 
