@@ -58,6 +58,10 @@ stripe listen --forward-to http://localhost:3000/solidus_stripe/test/webhooks
 
 If you need support for `solidus_frontend` please refer to the [README of solidus_stripe v4](https://github.com/solidusio/solidus_stripe/tree/v4#readme).
 
+### Installing on a custom frontend
+
+If you're using a custom frontend you'll need to adjust the code copied to your application by the installation generator. Given frontend choices can vary wildly, we can't provide a one-size-fits-all solution, but we are providing this simple integration with `solidus_starter_frontend` as a reference implementation. The amount of code is intentionally kept to a minimum, so you can easily adapt it to your needs.
+
 ### Upgrading from v4
 
 This extension is a complete rewrite of the previous version, and it's not generally compatible with v4.
