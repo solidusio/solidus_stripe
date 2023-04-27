@@ -14,29 +14,38 @@ executors:
   sqlite:
     description: Run specs with an SQLite
     docker:
-      - image: cimg/ruby:2.7-browsers
+      - image: cimg/ruby:3.0-browsers
         environment:
           RAILS_ENV: test
           DB: sqlite
 
 jobs:
   run-specs-with-postgres:
-    executor: solidusio_extensions/postgres
+    executor:
+      name: solidusio_extensions/postgres
+      ruby_version: "3.0"
     steps:
+      - checkout
       - browser-tools/install-chrome
       - solidusio_extensions/run-tests
   run-specs-with-mysql:
-    executor: solidusio_extensions/mysql
+    executor:
+      name: solidusio_extensions/mysql
+      ruby_version: "3.0"
     steps:
+      - checkout
       - browser-tools/install-chrome
       - solidusio_extensions/run-tests
   run-specs-with-sqlite:
     executor: sqlite
     steps:
+      - checkout
       - browser-tools/install-chrome
       - solidusio_extensions/run-tests
   lint-code:
-    executor: solidusio_extensions/sqlite-memory
+    executor:
+      name: solidusio_extensions/sqlite-memory
+      ruby_version: "3.0"
     steps:
       - solidusio_extensions/lint-code
 
