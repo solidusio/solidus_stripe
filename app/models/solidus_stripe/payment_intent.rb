@@ -30,7 +30,7 @@ module SolidusStripe
 
     def usable?
       stripe_intent_id &&
-      stripe_intent.status == 'requires_payment_method'
+      stripe_intent.status == 'requires_payment_method' &&
       stripe_intent.amount == stripe_order_amount
     end
 
