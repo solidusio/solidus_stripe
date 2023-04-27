@@ -165,6 +165,16 @@ SolidusStripe.configure do |config|
 end
 ```
 
+### Customizing the list of available Stripe payment methods
+
+By default, the extension will show all the payment methods that are supported by Stripe in the current currency and for the merchant country.
+
+You can customize the list of available payment methods by overriding the `payment_method_types` option in the `app/views/checkouts/payment/_stripe.html.erb` partial. Please refer to the [Stripe documentation](https://stripe.com/docs/payments/payment-methods) for the full list of supported payment methods.
+
+### Non-card payment methods and "auto_capture"
+
+Solidus payment methods are configured with a `auto_capture` option, which is used to determine if the payment should be captured immediately or not. If you intend to use a non-card payment method, it's likely that you'll need to set `auto_capture` to `true` in the payment method configuration. Please refer to the [Stripe documentation](https://stripe.com/docs/payments/payment-methods/integration-options#additional-api-supportability) for more details.
+
 ## Implementation
 
 ### Payment state-machine vs. PaymentIntent statuses
@@ -178,7 +188,7 @@ In order to map these concepts SolidusStripe will match states in a slightly une
 | --------------------------- | --------------------- |
 | requires_payment_method     | checkout              |
 | requires_action             | checkout              |
-| processing                  | checkout              |
+| processing                  | processing            |
 | requires_confirmation       | checkout              |
 | requires_capture            | pending               |
 | succeeded                   | completed             |
