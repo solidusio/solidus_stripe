@@ -1,22 +1,57 @@
-<% payment_element_options = {
-  mode: 'payment',
-  amount: SolidusStripe::MoneyToStripeAmountConverter.to_stripe_amount(
-    current_order.display_order_total_after_store_credit.money.fractional,
-    current_order.currency,
-  ),
-  currency: current_order.currency.downcase,
-  paymentMethodCreation: 'manual',
-  captureMethod: payment_method.auto_capture? ? 'automatic' : 'manual',
-  # Fully customizable with appearance API.
-  # https://stripe.com/docs/elements/appearance-api
-  # appearance: {},
-} %>
+<%
+  bill_address = current_order.bill_address
+  options = {
+    elementsInitialization: {
+      mode: 'payment',
+      amount: SolidusStripe::MoneyToStripeAmountConverter.to_stripe_amount(
+        current_order.display_order_total_after_store_credit.money.fractional,
+        current_order.currency,
+      ),
+      currency: current_order.currency.downcase,
+      paymentMethodCreation: 'manual',
+      captureMethod: payment_method.auto_capture? ? 'automatic' : 'manual',
+
+      # If you want to allow the display/use of specific payment method types
+      # activated from the Stripe Dashboard, you can use this option.
+      #
+      # For a complete list of payment method types available on Stripe:
+      # https://stripe.com/docs/payments/payment-methods/overview
+      # https://stripe.com/docs/api/payment_methods/object#payment_method_object-type
+      #
+      # To activate/deactivate Stripe payment methods:
+      # https://dashboard.stripe.com/settings/payment_methods
+      # paymentMethodTypes: ['card', 'sepa_debit'],
+
+      # Fully customizable with appearance API.
+      # https://stripe.com/docs/elements/appearance-api
+      # appearance: {},
+    },
+    paymentElementCreation: {
+      layout: "tabs",
+      defaultValues: {
+        billingDetails: {
+          name: bill_address.name,
+          email: current_order.email,
+          phone: bill_address.phone,
+          address: {
+            line1: bill_address.address1,
+            line2: bill_address.address2,
+            city: bill_address.city,
+            state: bill_address.state.abbr,
+            country: bill_address.country.iso,
+            postal_code: bill_address.zipcode,
+          }
+        }
+      },
+    },
+  }
+ %>
 
 <div
   class="solidus-stripe-payment"
   data-controller="solidus-stripe-payment"
   data-solidus-stripe-payment-publishable-key-value="<%= payment_method.preferred_publishable_key %>"
-  data-solidus-stripe-payment-payment-element-options-value="<%= payment_element_options.to_json %>"
+  data-solidus-stripe-payment-options-value="<%= options.to_json %>"
   data-solidus-stripe-payment-radio-selector-value="#order_payments_attributes__payment_method_id_<%= payment_method.id %>"
   data-solidus-stripe-payment-submit-selector-value="#checkout_form_payment [type='submit']"
   data-action="submit@window->solidus-stripe-payment#handleSubmit"
