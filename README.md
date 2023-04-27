@@ -58,6 +58,13 @@ stripe listen --forward-to http://localhost:3000/solidus_stripe/test/webhooks
 
 If you need support for `solidus_frontend` please refer to the [README of solidus_stripe v4](https://github.com/solidusio/solidus_stripe/tree/v4#readme).
 
+### Upgrading from v4
+
+This extension is a complete rewrite of the previous version, and it's not generally compatible with v4.
+
+That being said, if you're upgrading from v4 you can check out this guide to help you with the transition
+from payment tokens to payment intents: https://stripe.com/docs/payments/payment-intents/migration.
+
 ## Usage
 
 ### Showing reusable sources in the checkout
