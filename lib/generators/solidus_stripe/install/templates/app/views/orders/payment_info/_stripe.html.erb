@@ -1,7 +1,19 @@
-<% stripe_payment_method = payment.source.stripe_payment_method %>
+<%
+  stripe_payment_method = payment.source.stripe_payment_method
+
+  # https://stripe.com/docs/api/payment_methods/object#payment_method_object-type
+  partial_base = "checkouts/existing_payment/stripe"
+  payment_type = stripe_payment_method.type
+
+  # Fallback on the default partial if a specialized partial is not available.
+  payment_type = 'default' if lookup_context.find_all("#{partial_base}/_#{payment_type}").none?
+%>
+
 <%= render(
-  "checkouts/existing_payment/stripe/#{stripe_payment_method.type}",
-  stripe_payment_method: stripe_payment_method
+  "#{partial_base}/#{payment_type}",
+  stripe_payment_method: stripe_payment_method,
+  partial_base: partial_base,
+  payment_type: payment_type
 ) %>
 
 <% if current_order&.confirm? %>

@@ -188,6 +188,28 @@ module SolidusStripe::CheckoutTestHelper
     choose(option: payment_method.id)
   end
 
+  def choose_stripe_payment_method(payment_method_type: 'card')
+    using_wait_time(10) do
+      within_frame(find_stripe_iframe) do
+        # Stripe doesn't display payment methods in the same order.
+        # The payment method order is based on the most used in that
+        # context (and other parameters).
+        # For this reason, if the payment method tab is not visible,
+        # it will be selected from the dedicated additional Stripe
+        # payment methods "select" rendered in the Stripe payment form.
+        #
+        # https://stripe.com/docs/payments/customize-payment-element#payment-method-order
+        if has_css?("##{payment_method_type}-tab")
+          find("##{payment_method_type}-tab").click
+        else
+          find(
+            ".p-AdditionalPaymentMethods-menu option[value='#{payment_method_type}']"
+          ).select_option
+        end
+      end
+    end
+  end
+
   def submit_payment
     click_button("Save and Continue")
   end
@@ -214,6 +236,10 @@ module SolidusStripe::CheckoutTestHelper
 
   def expects_payment_to_be_failed
     expect(last_stripe_payment.state).to eq('failed')
+  end
+
+  def expects_payment_to_be_processing
+    expect(last_stripe_payment.state).to eq('processing')
   end
 
   def expects_page_to_not_display_wallet_payment_sources

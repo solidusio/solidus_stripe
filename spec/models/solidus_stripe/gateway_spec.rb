@@ -5,7 +5,7 @@ require 'solidus_stripe_spec_helper'
 RSpec.describe SolidusStripe::Gateway do
   describe '#authorize' do
     it 'confirms the Stripe payment' do
-      stripe_payment_method = Stripe::PaymentMethod.construct_from(id: "pm_123")
+      stripe_payment_method = Stripe::PaymentMethod.construct_from(id: "pm_123", type: 'card')
       stripe_customer = Stripe::Customer.construct_from(id: 'cus_123')
       stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123")
 
@@ -18,23 +18,21 @@ RSpec.describe SolidusStripe::Gateway do
       payment = order.payments.last
 
       allow(Stripe::Customer).to receive(:create).and_return(stripe_customer)
-      [:create, :update, :retrieve].each do |method|
+      [:create, :retrieve].each do |method|
         allow(Stripe::PaymentIntent).to receive(method).and_return(stripe_payment_intent)
       end
+      allow(payment.source).to receive(:stripe_payment_method).and_return(stripe_payment_method)
       allow(Stripe::PaymentIntent).to receive(:confirm).with(stripe_payment_intent.id).and_return(stripe_payment_intent)
 
       result = gateway.authorize(123_45, payment.source, currency: 'USD', originator: order.payments.first)
-
-      expect(Stripe::PaymentIntent).to have_received(:update).with(
-        stripe_payment_intent.id,
-        { payment_method: stripe_payment_method.id }
-      )
 
       expect(Stripe::PaymentIntent).to have_received(:create).with(
         amount: 123_45,
         currency: 'USD',
         capture_method: 'manual',
         confirm: false,
+        payment_method: stripe_payment_method.id,
+        payment_method_types: [stripe_payment_method.type],
         metadata: { solidus_order_number: order.number },
         customer: "cus_123",
         setup_future_usage: nil
@@ -45,7 +43,7 @@ RSpec.describe SolidusStripe::Gateway do
     end
 
     it 'generates error response on failure' do
-      stripe_payment_method = Stripe::PaymentMethod.construct_from(id: "pm_123")
+      stripe_payment_method = Stripe::PaymentMethod.construct_from(id: "pm_123", type: 'card')
       stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123")
 
       payment_method = build(:solidus_stripe_payment_method)
@@ -56,9 +54,10 @@ RSpec.describe SolidusStripe::Gateway do
         stripe_payment_method_id: stripe_payment_method.id)
       payment = order.payments.last
 
-      [:create, :update, :retrieve].each do |method|
+      [:create, :retrieve].each do |method|
         allow(Stripe::PaymentIntent).to receive(method).and_return(stripe_payment_intent)
       end
+      allow(payment.source).to receive(:stripe_payment_method).and_return(stripe_payment_method)
       allow(Stripe::PaymentIntent).to receive(:confirm).with(
         stripe_payment_intent.id
       ).and_raise(Stripe::StripeError.new("auth error"))
@@ -164,7 +163,7 @@ RSpec.describe SolidusStripe::Gateway do
 
   describe '#purchase' do
     it 'authorizes and captures in a single operation' do
-      stripe_payment_method = Stripe::PaymentMethod.construct_from(id: "pm_123")
+      stripe_payment_method = Stripe::PaymentMethod.construct_from(id: "pm_123", type: 'card')
       stripe_customer = Stripe::Customer.construct_from(id: 'cus_123')
       stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123")
 
@@ -177,23 +176,21 @@ RSpec.describe SolidusStripe::Gateway do
       payment = order.payments.last
 
       allow(Stripe::Customer).to receive(:create).and_return(stripe_customer)
-      [:create, :update, :retrieve].each do |method|
+      [:create, :retrieve].each do |method|
         allow(Stripe::PaymentIntent).to receive(method).and_return(stripe_payment_intent)
       end
+      allow(payment.source).to receive(:stripe_payment_method).and_return(stripe_payment_method)
       allow(Stripe::PaymentIntent).to receive(:confirm).with(stripe_payment_intent.id).and_return(stripe_payment_intent)
 
       result = gateway.purchase(123_45, payment.source, currency: 'USD', originator: order.payments.first)
-
-      expect(Stripe::PaymentIntent).to have_received(:update).with(
-        stripe_payment_intent.id,
-        { payment_method: stripe_payment_method.id }
-      )
 
       expect(Stripe::PaymentIntent).to have_received(:create).with(
         amount: 123_45,
         currency: 'USD',
         capture_method: 'automatic',
         confirm: false,
+        payment_method: stripe_payment_method.id,
+        payment_method_types: [stripe_payment_method.type],
         metadata: { solidus_order_number: order.number },
         customer: "cus_123",
         setup_future_usage: nil
@@ -204,7 +201,7 @@ RSpec.describe SolidusStripe::Gateway do
     end
 
     it 'generates error response on failure' do
-      stripe_payment_method = Stripe::PaymentMethod.construct_from(id: "pm_123")
+      stripe_payment_method = Stripe::PaymentMethod.construct_from(id: "pm_123", type: 'card')
       stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123")
 
       payment_method = build(:solidus_stripe_payment_method)
@@ -215,9 +212,10 @@ RSpec.describe SolidusStripe::Gateway do
         stripe_payment_method_id: stripe_payment_method.id)
       payment = order.payments.last
 
-      [:create, :update, :retrieve].each do |method|
+      [:create, :retrieve].each do |method|
         allow(Stripe::PaymentIntent).to receive(method).and_return(stripe_payment_intent)
       end
+      allow(payment.source).to receive(:stripe_payment_method).and_return(stripe_payment_method)
       allow(Stripe::PaymentIntent).to receive(:confirm).with(
         stripe_payment_intent.id
       ).and_raise(Stripe::StripeError.new("auth error"))

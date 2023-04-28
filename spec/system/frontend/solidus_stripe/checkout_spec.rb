@@ -80,6 +80,25 @@ RSpec.describe 'SolidusStripe Checkout', :js do
     end
   end
 
+  context 'with non-card Stripe payment methods' do
+    before do
+      stub_spree_preferences(currency: 'EUR')
+      create_payment_method(setup_future_usage: 'off_session', auto_capture: true)
+    end
+
+    it 'creates a payment intent and successfully processes sepa_debit payment' do
+      visit_payment_step(user: create(:user))
+      choose_new_stripe_payment
+      choose_stripe_payment_method(payment_method_type: "sepa_debit")
+      fills_in_stripe_input 'iban', with: 'DE89370400440532013000'
+
+      submit_payment
+      complete_order
+
+      expects_payment_to_be_processing
+    end
+  end
+
   context 'with declined cards' do
     it 'reject transactions with cards declined at intent creation or invalid fields and return an appropriate response' do # rubocop:disable Layout/LineLength
       create_payment_method
