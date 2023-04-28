@@ -96,9 +96,6 @@ RSpec.describe 'SolidusStripe Orders Payments', :js do
 
       cancel_order
 
-      # https://github.com/solidusio/solidus/blob/ab59d6435239b50db79d73b9a974af057ad56b52/core/app/models/spree/payment_method.rb#L169-L181
-      pending "needs to implement try_void method to handle voiding payments on order cancellation"
-
       expect(page).to have_content('Order canceled')
       expect(payment.reload.state).to eq('completed')
       expects_payment_to_be_refunded_on_stripe(payment, payment.amount)
@@ -111,11 +108,6 @@ RSpec.describe 'SolidusStripe Orders Payments', :js do
       visit_payments_page
 
       cancel_order
-
-      # https://github.com/solidusio/solidus/blob/ab59d6435239b50db79d73b9a974af057ad56b52/core/app/models/spree/payment_method.rb#L169-L181
-      # Note that for this specific case, the test is pending also because there is an issue
-      # with locating the user who canceled the order.
-      pending "needs to implement try_void method to handle voiding payments on order cancellation"
 
       expect(page).to have_content('Order canceled')
       expect(payment.reload.state).to eq('void')
