@@ -1,19 +1,3 @@
-## 🚧 **WARNING** 🚧 Work In Progress
-
-You're looking at the source for `solidus_stripe` v5, which will only support the **starter frontend**
-but at the moment **it is not ready to be used**.
-
-Please use [`solidus_stripe` v4 on the corresponding branch](https://github.com/solidusio/solidus_stripe/tree/v4).
-
-## 🚧 **WARNING** 🚧 Supporting `solidus_frontend`
-
-If you need support for `solidus_frontend` please add `< 5` as a version requirement in your gemfile:
-`gem 'solidus_stripe', '< 5'`
-or if your tracking the github version please switch to the `v4` branch:
-`gem 'solidus_stripe', git: 'https://github.com/solidusio/solidus_stripe.git', branch: 'v4'`
-
----
-
 # Solidus Stripe
 
 [![CircleCI](https://circleci.com/gh/solidusio/solidus_stripe.svg?style=shield)](https://circleci.com/gh/solidusio/solidus_stripe)
@@ -24,49 +8,74 @@ or if your tracking the github version please switch to the `v4` branch:
 
 ## Installation
 
-Add solidus_stripe to your Gemfile:
-
-```ruby
-gem 'solidus_stripe'
-```
-
-Bundle your dependencies and run the installation generator:
+Add solidus_stripe to your bundle and run the installation generator:
 
 ```shell
+bundle add solidus_stripe
 bin/rails generate solidus_stripe:install
 ```
 
-### Webhooks
+Then set the following environment variables both locally and in production in order
+to setup the `solidus_stripe_env_credentials` static preference as defined in the initializer:
 
-This library makes use of some [Stripe webhooks](https://stripe.com/docs/webhooks).
-
-Every Solidus Stripe payment method you create will get a slug assigned. You
-need to append it to a generic webhook endpoint to get the URL for that payment
-method. For example:
-
-```ruby
-SolidusStripe::PaymentMethod.last.slug
-# "365a8435cd11300e87de864c149516e0"
+```shell
+SOLIDUS_STRIPE_API_KEY                # will prefill the `api_key` preference
+SOLIDUS_STRIPE_PUBLISHABLE_KEY        # will prefill the `publishable_key` preference
+SOLIDUS_STRIPE_WEBHOOK_SIGNING_SECRET # will prefill the `webhook_signing_secret` preference
 ```
 
-For the above example, and if you mounted the `SolidusStripe::Engine` routes on
-the default scope, the webhook endpoint would look like:
+Once those are available you can create a new Stripe payment method in the /admin interface
+and select the `solidus_stripe_env_credentials` static preference.
 
-```
-/solidus_stripe/webhooks/365a8435cd11300e87de864c149516e0
-```
+⚠️ Be sure to set the enviroment variables to the values for test mode in your development environment.
 
-Besides, you also need to configure the webhook signing secret for that payment
-method. You can do that through the `webhook_endpoint_signing_secret`
-preference on the payment method.
+### Webhooks setup
+
+The webhooks URLs are automatically generated based on the enviroment, 
+by default it will be scoped to `live` in production and `test` everywhere else.
+
+#### Production enviroment
 
 Before going to production, you'll need to [register the webhook endpoint with
 Stripe](https://stripe.com/docs/webhooks/go-live), and make sure to subscribe
 to the events listed in [the `SolidusStripe::Webhook::Event::CORE`
 constant](https://github.com/solidusio/solidus_stripe/blob/main/lib/solidus_stripe/webhook/event.rb).
 
-On development, you can
-[test webhooks by using Stripe CLI](https://stripe.com/docs/webhooks/test).
+So in your Stripe dashboard you'll need to set the webhook URL to:
+
+    https://store.example.com/solidus_stripe/live/webhooks
+
+#### Non-production enviroments
+
+While for development [you should use the stripe CLI to forward the webhooks to your local server](https://stripe.com/docs/webhooks/test#webhook-test-cli):
+
+```shell
+# Please refer to `stripe listen --help` for more options
+stripe listen --forward-to http://localhost:3000/solidus_stripe/test/webhooks
+```
+
+### Supporting `solidus_frontend`
+
+If you need support for `solidus_frontend` please refer to the [README of solidus_stripe v4](https://github.com/solidusio/solidus_stripe/tree/v4#readme).
+
+### Installing on a custom frontend
+
+If you're using a custom frontend you'll need to adjust the code copied to your application by the installation generator. Given frontend choices can vary wildly, we can't provide a one-size-fits-all solution, but we are providing this simple integration with `solidus_starter_frontend` as a reference implementation. The amount of code is intentionally kept to a minimum, so you can easily adapt it to your needs.
+
+## Caveats
+
+### Authorization and capture and checkout finalization
+
+Stripe supports two different flows for payments: [authorization and capture](https://stripe.com/docs/payments/capture-later) and immediate payment. 
+
+Both flows are supported by this extension, but you should be aware that they will happen before the order finalization, just before the final confirmation. At that moment if the payment method of choice will require additional authentication (e.g. 3D Secure) the extra authentication will be shown to the user.
+
+### Upgrading from v4
+
+This extension is a complete rewrite of the previous version, and it's not generally compatible with v4.
+
+That being said, if you're upgrading from v4 you can check out this guide to help you with the transition
+from payment tokens to payment intents: https://stripe.com/docs/payments/payment-intents/migration.
 
 ## Usage
 
@@ -100,13 +109,23 @@ Stripe Payment Method other than "card" on the admin interface, you must include
 
 `app/views/spree/admin/payments/source_forms/existing_payment/stripe/`
 
-### Custom webhooks
+### Customizing Webhooks
 
-You can also use [Stripe webhooks](https://stripe.com/docs/webhooks) to trigger
-custom actions in your application.
+Solidus Stripe comes with support for a few [webhook events](https://stripe.com/docs/webhooks), to which there's a default handler. You can customize the behavior of those handlers by or add to their behavior by replacing or adding subscribers in the internal Solidus event bus.
 
-First, you need to register the event you want to listen to, both [in
-Stripe](https://stripe.com/docs/webhooks/go-live) and in your application:
+Each event will have the original Stripe name, prefixed by `stripe.`. For example, the `payment_intent.succeeded` event will be published as `stripe.payment_intent.succeeded`.
+
+Here's the list of events that are supported by default:
+
+        payment_intent.succeeded
+        payment_intent.payment_failed
+        payment_intent.canceled
+        charge.refunded
+
+#### Adding a new event handler
+
+In order to add a new handler you need to register the event you want to listen to, 
+both [in Stripe](https://stripe.com/docs/webhooks/go-live) and in your application:
 
 ```ruby
 # config/initializers/solidus_stripe.rb
@@ -118,7 +137,7 @@ end
 That will register a new `:"stripe.charge.succeeded"` event in the [Solidus
 bus](https://guides.solidus.io/customization/subscribing-to-events). The
 Solidus event will be published whenever a matching incoming webhook event is
-received. You can subscribe to it as regular:
+received. You can subscribe to it [as usual](https://guides.solidus.io/customization/subscribing-to-events):
 
 ```ruby
 # app/subscribers/update_account_balance_subscriber.rb
@@ -128,7 +147,13 @@ class UpdateAccountBalanceSubscriber
   handle :"stripe.charge.succeeded", with: :call
 
   def call(event)
-    # ...
+    # Please refere to the Stripe gem and API documentation for more details on the
+    # structure of the event object. All methods called on `event` will be forwarded
+    # to the Stripe event object:
+    # - https://www.rubydoc.info/gems/stripe/Stripe/Event
+    # - https://stripe.com/docs/webhooks/stripe-events
+
+    Rails.logger.info "Charge succeeded: #{event.data.to_json}"
   end
 end
 
@@ -146,6 +171,8 @@ underlying stripe event object. It can also be used in async [
 adapters](https://github.com/nebulab/omnes#adapters), which is recommended as
 otherwise the response to Stripe will be delayed until subscribers are done.
 
+#### Configuring the webhook signature tolerance
+
 You can also configure the signature verification tolerance in seconds (it
 defaults to the [same value as Stripe
 default](https://stripe.com/docs/webhooks/signatures#replay-attacks)):
@@ -156,6 +183,16 @@ SolidusStripe.configure do |config|
   config.webhook_signature_tolerance = 150
 end
 ```
+
+### Customizing the list of available Stripe payment methods
+
+By default, the extension will show all the payment methods that are supported by Stripe in the current currency and for the merchant country.
+
+You can customize the list of available payment methods by overriding the `payment_method_types` option in the `app/views/checkouts/payment/_stripe.html.erb` partial. Please refer to the [Stripe documentation](https://stripe.com/docs/payments/payment-methods) for the full list of supported payment methods.
+
+### Non-card payment methods and "auto_capture"
+
+Solidus payment methods are configured with a `auto_capture` option, which is used to determine if the payment should be captured immediately or not. If you intend to use a non-card payment method, it's likely that you'll need to set `auto_capture` to `true` in the payment method configuration. Please refer to the [Stripe documentation](https://stripe.com/docs/payments/payment-methods/integration-options#additional-api-supportability) for more details.
 
 ## Implementation
 
@@ -170,7 +207,7 @@ In order to map these concepts SolidusStripe will match states in a slightly une
 | --------------------------- | --------------------- |
 | requires_payment_method     | checkout              |
 | requires_action             | checkout              |
-| processing                  | checkout              |
+| processing                  | processing            |
 | requires_confirmation       | checkout              |
 | requires_capture            | pending               |
 | succeeded                   | completed             |
@@ -179,6 +216,10 @@ Reference:
 
 - https://stripe.com/docs/payments/intents?intent=payment
 - https://github.com/solidusio/solidus/blob/master/core/lib/spree/core/state_machines/payment.rb
+
+### Deferred payment confirmation
+
+This extensions is using the [two-step payment confirmation](https://stripe.com/docs/payments/build-a-two-step-confirmation) flow. This means that at the payment step the payment form will just collect the basic payment information (e.g. credit card details) and any additional confirmation is deferred to the confirmation step.
 
 ## Development
 
