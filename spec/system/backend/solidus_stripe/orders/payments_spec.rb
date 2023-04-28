@@ -4,7 +4,10 @@ require 'solidus_stripe_spec_helper'
 
 RSpec.describe 'SolidusStripe Orders Payments', :js do
   include SolidusStripe::BackendTestHelper
+  include Devise::Test::IntegrationHelpers
   stub_authorization!
+
+  let(:user) { create(:admin_user) }
 
   context 'with successful payment operations' do
     it 'navigates to the payments page' do
@@ -87,6 +90,8 @@ RSpec.describe 'SolidusStripe Orders Payments', :js do
 
     it 'cancels an order with captured payment' do
       payment = create_captured_payment
+
+      sign_in user
       visit_payments_page
 
       cancel_order
@@ -101,6 +106,8 @@ RSpec.describe 'SolidusStripe Orders Payments', :js do
 
     it 'cancels an order with authorized payment' do
       payment = create_authorized_payment
+
+      sign_in user
       visit_payments_page
 
       cancel_order
