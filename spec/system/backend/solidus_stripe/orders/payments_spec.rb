@@ -100,8 +100,8 @@ RSpec.describe 'SolidusStripe Orders Payments', :js do
       pending "needs to implement try_void method to handle voiding payments on order cancellation"
 
       expect(page).to have_content('Order canceled')
-      expect(payment.reload.state).to eq('void')
-      expects_payment_to_be_voided_on_stripe(payment)
+      expect(payment.reload.state).to eq('completed')
+      expects_payment_to_be_refunded_on_stripe(payment, payment.amount)
     end
 
     it 'cancels an order with authorized payment' do
