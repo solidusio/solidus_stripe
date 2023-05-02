@@ -161,43 +161,6 @@ module SolidusStripe::BackendTestHelper
 
   # Helper methods for checking expected outcomes and states
 
-  def expects_page_to_display_successfully_captured_payment(payment)
-    expect(page).to have_content('Payment Updated')
-    expect(payment.reload.state).to eq('completed')
-    expect(payment.capture_events.first.amount).to eq(payment.amount)
-  end
-
-  def expects_page_to_display_successfully_refunded_payment(payment)
-    expect(page).to have_content('Refund has been successfully created!')
-    expect(payment).to be_fully_refunded
-  end
-
-  def expects_page_to_display_successfully_partially_refunded_payment(payment, amount)
-    expect(page).to have_content('Refund has been successfully created!')
-    expect(payment.reload.state).to eq('completed')
-    expect(payment.refunds.first.amount).to eq(amount)
-  end
-
-  def expects_page_to_display_successfully_voided_payment(payment)
-    expect(page).to have_content('Payment Updated')
-    expect(payment.reload.state).to eq('void')
-  end
-
-  def expects_page_to_display_successfully_canceled_order_payment(payment)
-    expect(page).to have_content('Order canceled')
-    expect(payment.reload.state).to eq('void')
-  end
-
-  def expects_page_to_display_capture_fail_message(payment, message)
-    expect(page).to have_content(message)
-    expect(payment.reload.state).to eq('failed')
-  end
-
-  def expects_page_to_display_payment(payment)
-    click_on 'Payments'
-    expect(page).to have_content(payment.number)
-  end
-
   def expects_page_to_display_log_messages(log_messages = [])
     expect(page).to have_content('Log Entries')
     log_messages.each do |log_message|
