@@ -102,7 +102,11 @@ RSpec.describe SolidusStripe::CreateIntentsPaymentService do
       end
 
       before do
-        response = double(success?: true, authorization: payment.response_code)
+        response = ActiveMerchant::Billing::Response.new(true, '', {}, {
+            authorization: payment.response_code,
+            avs_result: {"code": "avs-code"},
+            cvv_esult: {"code": "cvv-code", "message": "CVV result"}
+          })
         allow_any_instance_of(Spree::PaymentMethod::StripeCreditCard).to receive(:void) { response }
       end
 

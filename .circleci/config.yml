@@ -4,11 +4,9 @@ orbs:
   # Required for feature specs.
   browser-tools: circleci/browser-tools@1.1
 
-  # Always take the latest version of the orb, this allows us to
-  # run specs against Solidus supported versions only without the need
-  # to change this configuration every time a Solidus version is released
-  # or goes EOL.
-  solidusio_extensions: solidusio/extensions@volatile
+  # The orb version v0.7.3 until Solidus 3.4, which is the last version of
+  # Solidus that v4 of `solidus_stripe` can reasonably support.
+  solidusio_extensions: solidusio/extensions@0.7.3
 
 executors:
   sqlite:
@@ -27,7 +25,8 @@ jobs:
     steps:
       - checkout
       - browser-tools/install-chrome
-      - solidusio_extensions/run-tests
+      - solidusio_extensions/run-tests-solidus-older
+      - solidusio_extensions/run-tests-solidus-current
   run-specs-with-mysql:
     executor:
       name: solidusio_extensions/mysql
@@ -35,19 +34,15 @@ jobs:
     steps:
       - checkout
       - browser-tools/install-chrome
-      - solidusio_extensions/run-tests
+      - solidusio_extensions/run-tests-solidus-older
+      - solidusio_extensions/run-tests-solidus-current
   run-specs-with-sqlite:
     executor: sqlite
     steps:
       - checkout
       - browser-tools/install-chrome
-      - solidusio_extensions/run-tests
-  lint-code:
-    executor:
-      name: solidusio_extensions/sqlite-memory
-      ruby_version: "3.0"
-    steps:
-      - solidusio_extensions/lint-code
+      - solidusio_extensions/run-tests-solidus-older
+      - solidusio_extensions/run-tests-solidus-current
 
 workflows:
   "Run specs on supported Solidus versions":
@@ -55,16 +50,3 @@ workflows:
       - run-specs-with-postgres
       - run-specs-with-mysql
       - run-specs-with-sqlite
-      - lint-code
-
-  "Weekly run specs against master":
-    triggers:
-      - schedule:
-          cron: "0 0 * * 4" # every Thursday
-          filters:
-            branches:
-              only:
-                - master
-    jobs:
-      - run-specs-with-postgres
-      - run-specs-with-mysql

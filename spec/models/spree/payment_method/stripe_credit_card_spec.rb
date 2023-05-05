@@ -262,10 +262,11 @@ describe Spree::PaymentMethod::StripeCreditCard do
     end
 
     let!(:success_response) do
-      double('success_response', success?: true,
-                               authorization: '123',
-                               avs_result: { 'code' => 'avs-code' },
-                               cvv_result: { 'code' => 'cvv-code', 'message' => "CVV Result" })
+      ActiveMerchant::Billing::Response.new(true, '', {}, {
+        authorization: '123',
+        avs_result: {"code": "avs-code"},
+        cvv_esult: {"code": "cvv-code", "message": "CVV result"}
+      })
     end
 
     after do
