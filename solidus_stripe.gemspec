@@ -29,7 +29,7 @@ Gem::Specification.new do |spec|
   spec.executables = files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.add_dependency 'solidus_core', ['>= 3.2', '< 4']
+  spec.add_dependency 'solidus_core', ['>= 3.2', '< 5']
   spec.add_dependency 'solidus_support', '~> 0.8'
 
   spec.add_dependency 'stripe', '~> 8.0'
