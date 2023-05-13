@@ -39,7 +39,7 @@ else
 
   cd "$app_path"
   unbundled bundle add listen --group development
-  unbundled bundle add solidus --github solidusio/solidus --branch "${BRANCH:-master}" --version '> 0.a'
+  unbundled bundle add solidus --github solidusio/solidus --branch "${BRANCH:-main}" --version '> 0.a'
   unbundled bundle exec rake db:drop db:create
   unbundled bundle exec rails generate solidus:install --auto-accept --payment-method=none
   cd "${root_path}"

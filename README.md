@@ -215,7 +215,7 @@ In order to map these concepts SolidusStripe will match states in a slightly une
 Reference:
 
 - https://stripe.com/docs/payments/intents?intent=payment
-- https://github.com/solidusio/solidus/blob/master/core/lib/spree/core/state_machines/payment.rb
+- https://github.com/solidusio/solidus/blob/main/core/lib/spree/core/state_machines/payment.rb
 
 ### Deferred payment confirmation
 
