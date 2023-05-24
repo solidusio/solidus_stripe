@@ -17,6 +17,7 @@ jobs:
       ruby_version: "3.2"
     environment:
       FRONTEND: "/home/circleci/project/spec/solidus_frontend_app_template.rb"
+      AUTHENTICATION: "devise"
     steps:
       - browser-tools/install-chrome
       - checkout
