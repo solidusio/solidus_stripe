@@ -54,6 +54,7 @@
   data-solidus-stripe-payment-options-value="<%= options.to_json %>"
   data-solidus-stripe-payment-radio-selector-value="#order_payments_attributes__payment_method_id_<%= payment_method.id %>"
   data-solidus-stripe-payment-submit-selector-value="#checkout_form_payment [type='submit']"
+  data-solidus-stripe-payment-is-covered-by-store-credit-value="<%= current_order.covered_by_store_credit? %>"
   data-action="submit@window->solidus-stripe-payment#handleSubmit"
 >
   <input
