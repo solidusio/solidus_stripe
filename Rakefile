@@ -6,6 +6,8 @@ ENV['SKIP_SOLIDUS_BOLT'] = 'true'
 require 'solidus_dev_support/rake_tasks'
 SolidusDevSupport::RakeTasks.install
 
+require 'bundler/gem_tasks'
+
 # Override the default dummy app generation task to
 # make it compatible with all the supported Solidus versions.
 Rake::Task['extension:test_app'].clear
