@@ -23,7 +23,7 @@ RSpec.describe "Stripe checkout", type: :feature do
 
     FactoryBot.create(:product, name: "DL-44")
 
-    visit spree.root_path
+    visit '/'
     click_link "DL-44"
     click_button "Add To Cart"
 
@@ -85,7 +85,7 @@ RSpec.describe "Stripe checkout", type: :feature do
       click_button "Place Order"
       expect(page).to have_content("Your order has been processed successfully")
 
-      visit spree.root_path
+      visit '/'
       click_link "DL-44"
       click_button "Add To Cart"
 
@@ -207,7 +207,7 @@ RSpec.describe "Stripe checkout", type: :feature do
         click_button "Place Order"
         expect(page).to have_content("Your order has been processed successfully")
 
-        visit spree.root_path
+        visit '/'
         click_link "DL-44"
         click_button "Add To Cart"
 
@@ -329,7 +329,7 @@ RSpec.describe "Stripe checkout", type: :feature do
         click_button "Place Order"
         expect(page).to have_content("Your order has been processed successfully")
 
-        visit spree.root_path
+        visit '/'
         click_link "DL-44"
         click_button "Add To Cart"
 

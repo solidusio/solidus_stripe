@@ -10,33 +10,47 @@ orbs:
   # or goes EOL.
   solidusio_extensions: solidusio/extensions@volatile
 
-executors:
-  sqlite:
-    description: Run specs with an SQLite
-    docker:
-      - image: cimg/ruby:2.7-browsers
-        environment:
-          RAILS_ENV: test
-          DB: sqlite
-
 jobs:
   run-specs-with-postgres:
-    executor: solidusio_extensions/postgres
+    executor:
+      name: solidusio_extensions/postgres
+      ruby_version: "3.2"
+    environment:
+      FRONTEND: "/home/circleci/project/spec/solidus_frontend_app_template.rb"
+      AUTHENTICATION: "devise"
     steps:
       - browser-tools/install-chrome
-      - solidusio_extensions/run-tests
+      - checkout
+      - solidusio_extensions/dependencies
+      - solidusio_extensions/run-tests-solidus-main
+      - solidusio_extensions/store-test-results
+
   run-specs-with-mysql:
-    executor: solidusio_extensions/mysql
+    executor:
+      name: solidusio_extensions/mysql
+      ruby_version: "3.1"
+    environment:
+      FRONTEND: "/home/circleci/project/spec/solidus_frontend_app_template.rb"
     steps:
       - browser-tools/install-chrome
-      - solidusio_extensions/run-tests
+      - checkout
+      - solidusio_extensions/dependencies
+      - solidusio_extensions/run-tests-solidus-current
+      - solidusio_extensions/store-test-results
   run-specs-with-sqlite:
-    executor: sqlite
+    executor:
+      name: solidusio_extensions/sqlite
+      ruby_version: "3.0"
     steps:
       - browser-tools/install-chrome
-      - solidusio_extensions/run-tests
+      - checkout
+      - solidusio_extensions/dependencies
+      - solidusio_extensions/run-tests-solidus-older
+      - solidusio_extensions/store-test-results
   lint-code:
-    executor: solidusio_extensions/sqlite-memory
+    executor: 
+      name: solidusio_extensions/sqlite-memory
+      ruby_version: "3.0"
     steps:
       - solidusio_extensions/lint-code
 
