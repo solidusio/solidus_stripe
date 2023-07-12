@@ -50,16 +50,14 @@ module SolidusStripe
     end
 
     def create_payment_intent
+      intent_options = SolidusStripe::PrepareOptionsForIntentService.call(
+        current_order,
+        stripe
+      )
       stripe.create_intent(
         (current_order.total * 100).to_i,
         params[:stripe_payment_method_id],
-        description: "Solidus Order ID: #{current_order.number} (pending)",
-        currency: current_order.currency,
-        confirmation_method: 'automatic',
-        capture_method: 'manual',
-        confirm: true,
-        setup_future_usage: 'off_session',
-        metadata: { order_id: current_order.id }
+        intent_options
       )
     end
   end

@@ -8,6 +8,9 @@ module Spree
       preference :stripe_country, :string
       preference :v3_elements, :boolean
       preference :v3_intents, :boolean
+      preference :stripe_connect, :boolean
+      preference :connected_mode, :string, default: 'direct_charge'
+      preference :connected_account, :string
 
       CARD_TYPE_MAPPING = {
         'American Express' => 'american_express',
