@@ -117,6 +117,7 @@ module SolidusStripe::BackendTestHelper
   def complete_order_with_existing_payment_source
     visit_payments_page
     click_on "Continue"
+    page.current_window.resize_to(1200, 800)
     click_on "Confirm"
     click_on "Complete Order"
   end
