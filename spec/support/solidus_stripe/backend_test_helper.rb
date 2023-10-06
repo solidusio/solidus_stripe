@@ -70,7 +70,14 @@ module SolidusStripe::BackendTestHelper
 
   def visit_payment_page(payment)
     visit_payments_page
-    click_on payment.number
+    click_on_payment(payment)
+  end
+
+  def click_on_payment(payment)
+    payment_number_link = find_link(payment.number)
+    page.current_window.resize_to(1200, 800)
+    scroll_to payment_number_link
+    payment_number_link.click
   end
 
   # Action helper methods for performing operations on payments
