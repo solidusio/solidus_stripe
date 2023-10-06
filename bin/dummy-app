@@ -22,8 +22,5 @@ echo "gem 'simplecov', '~> 0.22', require: false" >> Gemfile
 echo "gem 'simplecov-cobertura', require: false" >> Gemfile
 unbundled bundle install
 
-unbundled bundle add solidus --github solidusio/solidus --branch "${SOLIDUS_BRANCH:-main}" --version '> 0.a'
-unbundled bundle exec rake db:drop db:create
-unbundled bundle exec rails generate solidus:install --auto-accept --payment-method=none --no-seed --no-sample "$@"
 unbundled bundle add $extension_name --path ..
 unbundled bundle exec rails generate $extension_name:install --migrate --load-seeds=false --specs=all
