@@ -11,6 +11,8 @@ rails_version=`bundle exec ruby -rrails/version -e'puts Rails.version'`
 solidus_version=`bundle exec ruby -rspree/core/version -e'puts Spree::VERSION'`
 cache_path="tmp/cache/rails-new/${app_name}-${rails_version}-${solidus_version}-${ruby_version}.zip"
 
+test $CI && cache_path="" # Disable caching on CI
+
 # Stay away from the bundler env of the containing extension.
 function unbundled {
   echo "~~> Running: $@"

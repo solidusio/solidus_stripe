@@ -13,8 +13,12 @@ RSpec.describe 'SolidusStripe Orders Payments', :js do
     it 'navigates to the payments page' do
       payment = create_authorized_payment
       visit_payments_page
-
-      click_on 'Payments'
+      within('[data-hook="admin_order_tabs"]') do
+        payments_link = find_link('Payments')
+        scroll_to payments_link
+        page.current_window.resize_to(1200, 800)
+        payments_link.click
+      end
       expect(page).to have_content(payment.number)
     end
 

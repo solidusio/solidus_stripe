@@ -8,3 +8,7 @@ task :default do
     sh 'bin/rspec'
   end
 end
+
+require 'rake/clean'
+CLOBBER.include('tmp/cache/rails-new')
+CLOBBER.include('dummy-app')
