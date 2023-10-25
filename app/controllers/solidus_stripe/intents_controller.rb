@@ -59,6 +59,7 @@ module SolidusStripe
         confirmation_method: 'automatic',
         capture_method: 'manual',
         confirm: true,
+        customer: params[:stripe_customer_id] || nil, 
         setup_future_usage: 'off_session',
         metadata: { order_id: current_order.id }
       )
