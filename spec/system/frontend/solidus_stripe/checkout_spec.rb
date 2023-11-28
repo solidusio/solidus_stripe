@@ -203,4 +203,23 @@ RSpec.describe 'SolidusStripe Checkout', :js do
       end
     end
   end
+
+  context 'when refreshing the confirmation page' do
+    it 'does not create a duplicate payment intent' do
+      create_payment_method
+      visit_payment_step(user: create(:user))
+      choose_new_stripe_payment
+      fill_in_stripe_country('United States')
+      fill_stripe_form(number: '4000000000003220')
+      submit_payment
+      expect(page).to have_content('Confirm')
+      check_terms_of_service # ensure we're on the confirm page before refreshing
+      page.driver.browser.navigate.refresh
+      check_terms_of_service
+      confirm_order
+      authorize_3d_secure_2_payment(authenticate: true)
+      expect(page).to have_content('Your order has been processed successfully')
+      payment_intent_is_created_with_required_capture
+    end
+  end
 end
