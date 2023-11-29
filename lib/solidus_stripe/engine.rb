@@ -18,11 +18,13 @@ module SolidusStripe
 
     initializer "solidus_stripe.pub_sub", after: "spree.core.pub_sub" do |app|
       require "solidus_stripe/webhook/event"
+
+      SolidusStripe::Webhook::Event.register(
+        user_events: SolidusStripe.configuration.webhook_events,
+        bus: Spree::Bus
+      )
+
       app.reloader.to_prepare do
-        SolidusStripe::Webhook::Event.register(
-          user_events: SolidusStripe.configuration.webhook_events,
-          bus: Spree::Bus
-        )
         SolidusStripe::Webhook::PaymentIntentSubscriber.new.subscribe_to(Spree::Bus)
         SolidusStripe::Webhook::ChargeSubscriber.new.subscribe_to(Spree::Bus)
       end
