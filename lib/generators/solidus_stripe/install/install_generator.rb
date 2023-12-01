@@ -32,7 +32,7 @@ module SolidusStripe
       def install_solidus_core_support
         support_code_for(:core) do
           directory 'config/initializers', 'config/initializers'
-          route "mount SolidusStripe::Engine, at: '/solidus_stripe'"
+          route "mount SolidusStripe::Engine, at: '#{solidus_mount_point}solidus_stripe'"
         end
       end
 
@@ -130,6 +130,12 @@ module SolidusStripe
         else
           say_status :skip, "[#{engine.engine_name}] solidus_#{component_name}", :blue
         end
+      end
+
+      def solidus_mount_point
+        mount_point = Spree::Core::Engine.routes.find_script_name({})
+        mount_point += "/" unless mount_point.end_with?("/")
+        mount_point
       end
 
       def engine
