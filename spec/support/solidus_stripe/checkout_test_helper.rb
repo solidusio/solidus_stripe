@@ -333,10 +333,8 @@ module SolidusStripe::CheckoutTestHelper
       ['4000000000000069', 'Your card has expired.'],                        # Expired card decline
       ['4000000000000127', "Your card's security code is incorrect."],       # Incorrect CVC decline
       ['4000000000000119', 'An error occurred while processing your card.'], # Processing error decline
+      ['4100000000000019', 'Your card has been declined.'],                  # Always blocked - Fraudulent cards: https://stripe.com/docs/testing#fraud-prevention
 
-      # Fraudulent cards
-      # https://stripe.com/docs/testing#fraud-prevention
-      ['4100000000000019', 'Your card has been declined.'],                  # Always blocked
     ].each do |number, text|
       fill_in_stripe_country('United States')
       fill_stripe_form(number: number)

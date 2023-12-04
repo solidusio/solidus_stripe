@@ -2,7 +2,7 @@
   bill_address = current_order.bill_address
   options = {
     elementsInitialization: {
-      mode: 'payment',
+      mode: 'payment', # 'payment' or 'setup'
       amount: SolidusStripe::MoneyToStripeAmountConverter.to_stripe_amount(
         current_order.display_order_total_after_store_credit.money.fractional,
         current_order.currency,
