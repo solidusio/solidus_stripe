@@ -21,9 +21,16 @@ module SolidusStripe
     end
 
     def self.retrieve_for_payment(payment)
+      # Create a new intent if the source itself is v4
+      return nil if payment.source.v4?
+
       intent = where(payment_method: payment.payment_method, order: payment.order).last
 
       return unless intent&.usable?
+
+      # Create a new intent instead of reusing the previous intent if it was created for a v4 payment method;
+      # v4 payment method has a different stripe customer so v5 source cannot reuse that intent
+      return if payment.order.payments.find_by(response_code: intent.stripe_intent_id).source.v4?
 
       # Update the intent with the previously acquired payment method.
       intent.payment_method.gateway.request {
@@ -102,10 +109,14 @@ module SolidusStripe
     end
 
     def create_stripe_intent(payment, **stripe_intent_options)
-      stripe_customer_id = SolidusStripe::Customer.retrieve_or_create_stripe_customer_id(
-        payment_method: payment_method,
-        order: order
-      )
+      stripe_customer_id = if payment.source.v4?
+                             payment.source.stripe_customer_id
+                           else
+                             SolidusStripe::Customer.retrieve_or_create_stripe_customer_id(
+                               payment_method: payment_method,
+                               order: order
+                             )
+                           end
 
       payment_method.gateway.request do
         Stripe::PaymentIntent.create({

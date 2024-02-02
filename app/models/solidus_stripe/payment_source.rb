@@ -27,5 +27,9 @@ module SolidusStripe
     def can_credit?(payment)
       payment.completed? && payment.credit_allowed > 0
     end
+
+    def v4?
+      false
+    end
   end
 end
