@@ -15,7 +15,15 @@ module SolidusStripe
     end
 
     def create_stripe_customer
-      payment_method.gateway.request { Stripe::Customer.create(email: source.email) }
+      payment_method.gateway.request { Stripe::Customer.create(email: source.email, name: customer_name) }
+    end
+
+    def customer_name
+      if source.first_name.present? && source.last_name.present?
+        "#{source.first_name} #{source.last_name}"
+      else
+        source.email
+      end
     end
   end
 end
