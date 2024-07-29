@@ -15,7 +15,21 @@ module SolidusStripe
     end
 
     def create_stripe_customer
-      payment_method.gateway.request { Stripe::Customer.create(email: source.email) }
+      payment_method.gateway.request { Stripe::Customer.create(email: source.email, name: customer_name) }
+    end
+
+    def customer_name
+      return full_name if full_name.present?
+
+      source.email
+    end
+
+    private
+
+    def full_name
+      return unless source.respond_to?(:first_name) && source.respond_to?(:last_name)
+
+      "#{source.first_name} #{source.last_name}".strip
     end
   end
 end

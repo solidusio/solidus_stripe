@@ -24,7 +24,8 @@ RSpec.describe SolidusStripe::Customer, type: :model do
         payment_method = create(:solidus_stripe_payment_method)
 
         stripe_customer = Stripe::Customer.construct_from(id: 'cus_123')
-        allow(Stripe::Customer).to receive(:create).with(email: 'registered@example.com').and_return(stripe_customer)
+        allow(Stripe::Customer).to receive(:create)
+          .with(email: 'registered@example.com', name: 'registered@example.com').and_return(stripe_customer)
 
         expect(
           described_class.retrieve_or_create_stripe_customer_id(order: order, payment_method: payment_method)
@@ -36,7 +37,8 @@ RSpec.describe SolidusStripe::Customer, type: :model do
         order = create(:order, user: nil, email: 'guest@example.com')
 
         stripe_customer = Stripe::Customer.construct_from(id: 'cus_123')
-        allow(Stripe::Customer).to receive(:create).with(email: 'guest@example.com').and_return(stripe_customer)
+        allow(Stripe::Customer).to receive(:create)
+          .with(email: 'guest@example.com', name: 'guest@example.com').and_return(stripe_customer)
 
         expect(
           described_class.retrieve_or_create_stripe_customer_id(order: order, payment_method: payment_method)
