@@ -62,6 +62,40 @@ If you need support for `solidus_frontend` please refer to the [README of solidu
 
 If you're using a custom frontend you'll need to adjust the code copied to your application by the installation generator. Given frontend choices can vary wildly, we can't provide a one-size-fits-all solution, but we are providing this simple integration with `solidus_starter_frontend` as a reference implementation. The amount of code is intentionally kept to a minimum, so you can easily adapt it to your needs.
 
+### API support
+
+The gem includes an API interface with two endpoints: `create_setup_intent` and `create_payment_intent`. 
+After configuring the gem, both endpoints will be accessible.
+
+#### Create Setup Intent
+
+This endpoint allows you to create an intent for configuring a saved payment method.
+It can be executed before making an actual payment to set up a card for future use.
+
+`POST /solidus_stripe/api/create_setup_intent`
+
+**Params**
+
+`payment_method_id`- ID of the `SolidusStripe::PaymentMethod` record
+
+#### Create Payment Intent
+
+This endpoint creates a payment intent for an order and returns a client secret that
+can be used to initialize Stripe's widget. Stripe later confirms the payment via a webhook call.
+
+`POST /solidus_stripe/api/create_payment_intent`
+
+This endpoint loads the last incomplete Spree order via the `last_incomplete_spree_order method`
+for a logged-in user, or it takes an optional `guest_token` parameter for a guest user.
+
+**Params**
+
+`payment_method_id` - ID of the `SolidusStripe::PaymentMethod` record
+
+`stripe_payment_method_id` - ID of the payment method, obtained by frontend from Stripe
+
+`guest_token` - optional
+
 ## Caveats
 
 ### Authorization and capture and checkout finalization
