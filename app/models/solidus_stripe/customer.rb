@@ -19,9 +19,7 @@ module SolidusStripe
     end
 
     def customer_name
-      return full_name if full_name.present?
-
-      source.email
+      full_name.presence || source.email
     end
 
     private
