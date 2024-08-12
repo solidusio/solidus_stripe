@@ -15,6 +15,7 @@ function unbundled {
 
 cd "./$app_name"
 unbundled bundle add $extension_name --path ..
+unbundled bundle add stripe-ruby-mock --group "test"
 unbundled bundle exec rails generate $extension_name:install --migrate --specs=all
 
 if [[ -n "$SOLIDUS_STRIPE_API_KEY" ]]; then
