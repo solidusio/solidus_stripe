@@ -34,7 +34,7 @@ module Spree
           @order = if current_api_user
                      current_api_user.last_incomplete_spree_order
                    else
-                     Spree::Order.find_by!(guest_token: params[:guest_token])
+                     Spree::Order.find_by(guest_token: params[:guest_token])
                    end
 
           render json: { error: "Order not found" }, status: :not_found unless @order
