@@ -20,6 +20,7 @@ echo "require_relative '../../coverage.rb' if ENV['COVERAGE']" >> config/boot.rb
 echo "gem 'rspec_junit_formatter', require: false" >> Gemfile
 echo "gem 'simplecov', '~> 0.22', require: false" >> Gemfile
 echo "gem 'simplecov-cobertura', require: false" >> Gemfile
+echo "gem 'stripe-ruby-mock', group: :test" >> Gemfile
 unbundled bundle install
 
 unbundled bundle add $extension_name --path ..
