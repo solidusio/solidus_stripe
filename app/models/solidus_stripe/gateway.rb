@@ -23,9 +23,7 @@ module SolidusStripe
 
     def initialize(options)
       # Cannot use kwargs because of how the Gateway is initialized by Solidus.
-      @client = Stripe::StripeClient.new(
-        api_key: options.fetch(:api_key, nil),
-      )
+      @client = Stripe::StripeClient.new(options.fetch(:api_key, nil))
       @options = options
     end
 
