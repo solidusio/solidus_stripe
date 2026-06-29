@@ -24,34 +24,41 @@ function unbundled {
 test "$DB" = "sqlite" && export DB="sqlite3"
 
 rm -rf "$app_path"
-mkdir -p tmp/cache/rails-new
 
-if [ -f "${cache_path}" ]; then
-  echo "~~> Using cached rails ${app_name}"
-  unzip -q "${cache_path}" -d ./
-  cd "${app_path}"
-  unbundled bundle install
-  cd "${root_path}"
-else
-  echo "~~> Creating rails ${app_name}"
-  rails _${rails_version}_ new ${app_name} \
-    --database=${DB:-sqlite3} \
-    --skip-git \
-    --skip-rc
-
-  cd "$app_path"
-  unbundled bundle add listen --group development
-  unbundled bundle add solidus --github solidusio/solidus --branch "${BRANCH:-main}" --version '> 0.a'
-  unbundled bundle exec rake db:drop db:create
-  unbundled bundle exec rails generate solidus:install --auto-accept --payment-method=none
-  cd "${root_path}"
-
-  echo "~~> Creating rails ${app_name} cache"
-  rm -rf ${app_name}/tmp/solidus_starter_frontend*
-  zip -q -r "${cache_path}" ${app_name}
-fi
+echo "~~> Creating rails ${app_name}"
+bundle exec rails _${rails_version}_ new ${app_name} \
+  --database=${DB:-sqlite3} \
+  --skip-git \
+  --skip-keeps \
+  --skip-rc \
+  --skip-bootsnap \
+  --skip-test
 
 if [ ! -d "${app_name}" ]; then
   echo '~~> Creation of the ${app_name} rails application failed'
   exit 1
 fi
+
+cd "$app_path"
+
+if [ -n "$DB_HOST" ]; then
+  echo "~~~> Configuring database.yml for DB_HOST=$DB_HOST"
+  ruby -i -pe '
+    if $_ =~ /^  (pool|max_connections):/
+      $_ += "  host: <%= ENV.fetch(\"DB_HOST\", \"localhost\") %>\n"
+      $_ += "  username: <%= ENV[\"DB_USERNAME\"] %>\n"
+    end
+  ' config/database.yml
+fi
+
+echo "Generating manifest file"
+mkdir -p app/assets/config
+cat <<MANIFESTJS > app/assets/config/manifest.js
+//= link_tree ../images
+//= link_directory ../javascripts .js
+//= link_directory ../stylesheets .css
+MANIFESTJS
+
+unbundled bundle add solidus --github solidusio/solidus --branch "${BRANCH:-main}" --version '> 0.a'
+unbundled bundle exec rake db:drop db:create
+unbundled bundle exec rails generate solidus:install --auto-accept --payment-method=none --no-seed --no-sample
