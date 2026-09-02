@@ -22,14 +22,18 @@ module SolidusStripe
     include SolidusStripe::LogEntries
 
     def initialize(options)
-      # Cannot use kwargs because of how the Gateway is initialized by Solidus.
-      @client = Stripe::StripeClient.new(
-        api_key: options.fetch(:api_key, nil),
-      )
       @options = options
     end
 
-    attr_reader :client
+    # The Stripe client scoped to this payment method's credentials.
+    #
+    # Built lazily because `Stripe::StripeClient.new` raises
+    # `Stripe::AuthenticationError` on a blank API key, and Solidus
+    # instantiates the gateway for payment methods that have no credentials
+    # configured yet (e.g. when rendering the admin payment methods list).
+    def client
+      @client ||= Stripe::StripeClient.new(@options.fetch(:api_key, nil))
+    end
 
     # Authorizes a certain amount on the provided payment source.
     #
