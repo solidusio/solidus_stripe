@@ -58,3 +58,12 @@ jobs:
           rails-version: ${{ matrix.rails_version }}
           ruby-version: ${{ matrix.ruby_version }}
           solidus-branch: ${{ matrix.solidus_branch }}
+      - name: Upload failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failures-solidus${{ matrix.solidus_branch }}-rails${{ matrix.rails_version }}-ruby${{ matrix.ruby_version }}-${{ matrix.database }}
+          path: |
+            dummy-app/tmp/capybara
+            dummy-app/log/test.log
+          if-no-files-found: ignore
