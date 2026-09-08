@@ -43,6 +43,7 @@ fi
 cd "$app_path"
 
 echo "~~> Installing gems"
+echo "gem 'json', '< 3'" >> Gemfile
 unbundled bundle install
 unbundled bundle exec rails importmap:install
 
