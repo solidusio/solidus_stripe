@@ -31,6 +31,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'solidus_core', ['>= 3.2', '< 5']
   spec.add_dependency 'solidus_support', '~> 0.8'
+  spec.add_dependency 'json', '< 3'
 
   spec.add_dependency 'stripe', '~> 8.0'
 

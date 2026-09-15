@@ -214,7 +214,15 @@ module SolidusStripe::CheckoutTestHelper
   def submit_payment
     expect(page).to have_content("Payment Information")
     click_button("Save and Continue")
-    expect(page).to have_content("Put your terms and conditions here")
+
+    expect(page).to have_content("Put your terms and conditions here"), -> {
+      order = current_order.reload
+
+      "expected the confirm step, got #{page.current_path}\n" \
+        "order.state=#{order.state}\n" \
+        "order.errors=#{order.errors.full_messages.inspect}\n" \
+        "payments=#{order.payments.map { |payment| [payment.id, payment.state, payment.amount] }.inspect}"
+    }
   end
 
   def check_terms_of_service

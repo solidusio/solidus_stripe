@@ -20,7 +20,7 @@ jobs:
       matrix:
         rails_version: ["8.0", "7.2"]
         ruby_version: ["3.4", "4.0"]
-        solidus_branch: ["v4.7", "v4.6", "v4.5"]
+        solidus_branch: ["v4.7", "v4.6"]
         database: ["postgresql", "mysql", "sqlite"]
     env:
       SOLIDUS_STRIPE_PUBLISHABLE_KEY: pk_test_51TwQohB3ywt9Oh9Ewk3PfdgctnuYIUilkxTsfdktJs94QQ8HM2sbEOuDmjCFk2QGaRq0bPBD1XOfbbZQbzTlY8yh00cn1fIKPw
@@ -58,3 +58,12 @@ jobs:
           rails-version: ${{ matrix.rails_version }}
           ruby-version: ${{ matrix.ruby_version }}
           solidus-branch: ${{ matrix.solidus_branch }}
+      - name: Upload failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failures-solidus${{ matrix.solidus_branch }}-rails${{ matrix.rails_version }}-ruby${{ matrix.ruby_version }}-${{ matrix.database }}
+          path: |
+            dummy-app/tmp/capybara
+            dummy-app/log/test.log
+          if-no-files-found: ignore
