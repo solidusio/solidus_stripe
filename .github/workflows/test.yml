@@ -20,7 +20,7 @@ jobs:
       matrix:
         rails_version: ["8.0", "7.2"]
         ruby_version: ["3.4", "4.0"]
-        solidus_branch: ["v4.7", "v4.6", "v4.5"]
+        solidus_branch: ["v4.7", "v4.6"]
         database: ["postgresql", "mysql", "sqlite"]
     env:
       SOLIDUS_STRIPE_PUBLISHABLE_KEY: pk_test_51TwQohB3ywt9Oh9Ewk3PfdgctnuYIUilkxTsfdktJs94QQ8HM2sbEOuDmjCFk2QGaRq0bPBD1XOfbbZQbzTlY8yh00cn1fIKPw
