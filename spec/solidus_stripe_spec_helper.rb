@@ -9,7 +9,7 @@ Dir["#{__dir__}/support/solidus_stripe/**/*.rb"].sort.each { |f| require f }
 RSpec.configure do |config|
   config.include SolidusStripe::Webhook::RequestHelper, type: :webhook_request
 
-  config.define_derived_metadata do |metadata|
+  config.define_derived_metadata(file_path: %r{/solidus_stripe/}) do |metadata|
     metadata[:solidus_stripe] = true
   end
 end
