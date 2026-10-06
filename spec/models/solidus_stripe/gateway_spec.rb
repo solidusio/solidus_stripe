@@ -3,6 +3,24 @@
 require 'solidus_stripe_spec_helper'
 
 RSpec.describe SolidusStripe::Gateway do
+  describe '#client' do
+    it 'is scoped to the payment method credentials' do
+      gateway = described_class.new(api_key: 'sk_test_123')
+
+      expect(gateway.client).to be_a(Stripe::StripeClient)
+    end
+
+    it 'can be built for a payment method without credentials' do
+      # Solidus instantiates the gateway for payment methods that have no
+      # credentials configured yet, and `Stripe::StripeClient.new` raises on a
+      # blank API key, so the client has to stay lazy.
+      gateway = described_class.new({})
+
+      expect { gateway }.not_to raise_error
+      expect { gateway.client }.to raise_error(Stripe::AuthenticationError)
+    end
+  end
+
   describe '#authorize' do
     it 'confirms the Stripe payment' do
       stripe_payment_method = Stripe::PaymentMethod.construct_from(id: "pm_123", type: 'card')
