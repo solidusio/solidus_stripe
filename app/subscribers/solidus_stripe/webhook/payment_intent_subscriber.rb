@@ -78,9 +78,24 @@ module SolidusStripe
 
       private
 
+      # We can have multiple payments for the same payment intent, so we need to
+      # find the one that matches the payment method used in the event not just
+      # the one that matches the response code.
+      #
+      # This may run into issues in the future with reusable payment methods,
+      # since we could theoretically have multiple payments with the same intent
+      # and source.
       def extract_payment_from_event(event)
         stripe_payment_intent_id = event.data.object.id
-        Spree::Payment.find_by!(response_code: stripe_payment_intent_id)
+        stripe_payment_method_id = event.data.object.payment_method
+
+        stripe_source_arel = SolidusStripe::PaymentSource.arel_table
+        payment_arel = Spree::Payment.arel_table
+        Spree::Payment.joins(
+          payment_arel.join(stripe_source_arel).on(
+            stripe_source_arel[:id].eq(payment_arel[:source_id]).and(payment_arel[:source_type].eq('SolidusStripe::PaymentSource'))
+          ).join_sources
+        ).find_by!(response_code: stripe_payment_intent_id, solidus_stripe_payment_sources: { stripe_payment_method_id: })
       end
 
       def complete_payment(payment)
