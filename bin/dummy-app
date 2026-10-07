@@ -25,3 +25,5 @@ unbundled bundle install
 
 unbundled bundle add $extension_name --path ..
 unbundled bundle exec rails generate $extension_name:install --migrate --load-seeds=false --specs=all
+
+echo "--tag solidus_stripe" >> .rspec

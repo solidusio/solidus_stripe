@@ -102,6 +102,11 @@ module SolidusStripe::CheckoutTestHelper
   end
 
   def fill_in_stripe_zip(zip)
+    within_frame(find_stripe_iframe) do
+      field = find(%{input[name="postalCode"]})
+      field.value.length.times { field.send_keys [:backspace] }
+    end
+
     fills_in_stripe_input 'postalCode', with: zip
   end
 
@@ -109,6 +114,7 @@ module SolidusStripe::CheckoutTestHelper
     using_wait_time(10) do
       within_frame(find_stripe_iframe) do
         with.to_s.chars.each { find(%{input[name="#{name}"]}).send_keys(_1) }
+        expect(page).to have_field(name, with: Regexp.new(with.to_s.chars.join(".*")))
       end
     end
   end
@@ -214,7 +220,16 @@ module SolidusStripe::CheckoutTestHelper
   def submit_payment
     expect(page).to have_content("Payment Information")
     click_button("Save and Continue")
-    expect(page).to have_content("Put your terms and conditions here")
+
+    expect(page).to have_current_path('/checkout/confirm')
+    expect(page).to have_content("Put your terms and conditions here"), -> {
+      order = current_order.reload
+
+      "expected the confirm step, got #{page.current_path}\n" \
+        "order.state=#{order.state}\n" \
+        "order.errors=#{order.errors.full_messages.inspect}\n" \
+        "payments=#{order.payments.map { |payment| [payment.id, payment.state, payment.amount] }.inspect}"
+    }
   end
 
   def check_terms_of_service
