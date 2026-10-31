@@ -153,6 +153,53 @@ RSpec.describe SolidusStripe::Webhook::PaymentIntentSubscriber do
       end
     end
 
+    context "when the order is still at the confirm step" do
+      it "completes the order" do
+        order = create(:order_ready_to_complete, payment_type: :solidus_stripe_payment)
+        payment = order.payments.first
+        payment.update!(state: "pending")
+        stripe_payment_intent = Stripe::PaymentIntent.construct_from(
+          id: payment.response_code,
+          amount: 1000,
+          amount_received: 1000,
+          currency: "usd"
+        )
+        event = SolidusStripe::Webhook::EventWithContextFactory.from_object(
+          payment_method: payment.payment_method,
+          object: stripe_payment_intent,
+          type: "payment_intent.succeeded"
+        ).solidus_stripe_object
+
+        described_class.new.capture_payment(event)
+
+        expect(payment.reload.state).to eq "completed"
+        expect(order.reload.state).to eq "complete"
+        expect(order.completed_at).to be_present
+      end
+
+      it "leaves the order at confirm when the payment does not cover it" do
+        order = create(:order_ready_to_complete, payment_type: :solidus_stripe_payment)
+        payment = order.payments.first
+        payment.update!(state: "pending", amount: order.total - 1)
+        stripe_payment_intent = Stripe::PaymentIntent.construct_from(
+          id: payment.response_code,
+          amount: 1000,
+          amount_received: 1000,
+          currency: "usd"
+        )
+        event = SolidusStripe::Webhook::EventWithContextFactory.from_object(
+          payment_method: payment.payment_method,
+          object: stripe_payment_intent,
+          type: "payment_intent.succeeded"
+        ).solidus_stripe_object
+
+        described_class.new.capture_payment(event)
+
+        expect(payment.reload.state).to eq "completed"
+        expect(order.reload.state).to eq "confirm"
+      end
+    end
+
     it "does nothing if the payment is already completed" do
       payment_method = create(:solidus_stripe_payment_method)
       stripe_payment_intent = Stripe::PaymentIntent.construct_from(id: "pi_123")

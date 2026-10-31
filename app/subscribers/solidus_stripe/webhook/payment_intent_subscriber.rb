@@ -24,11 +24,13 @@ module SolidusStripe
       # @see SolidusStripe::RefundsSynchronizer
       def capture_payment(event)
         payment = extract_payment_from_event(event)
-        payment.with_lock do
+        captured = payment.with_lock do
           break false if payment.completed?
 
           complete_payment(payment)
-        end && sync_refunds(event)
+        end
+        complete_order(payment.order)
+        captured && sync_refunds(event)
       end
 
       # Fails a payment.
@@ -90,6 +92,15 @@ module SolidusStripe
             success: true,
             message: "Capture was successful after payment_intent.succeeded webhook"
           )
+        end
+      end
+
+      def complete_order(order)
+        order.with_lock do
+          break unless order.confirm?
+          break if order.outstanding_balance.positive?
+
+          order.complete!
         end
       end
 
