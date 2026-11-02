@@ -64,6 +64,10 @@ cat <<MANIFESTJS > app/assets/config/manifest.js
 //= link_directory ../stylesheets .css
 MANIFESTJS
 
-unbundled bundle add solidus --github solidusio/solidus --branch "${BRANCH:-main}" --version '> 0.a'
+if [ -n "$SOLIDUS_PATH" ]; then
+  unbundled bundle add solidus --path "$SOLIDUS_PATH" --version '> 0.a'
+else
+  unbundled bundle add solidus --github solidusio/solidus --branch "${BRANCH:-main}" --version '> 0.a'
+fi
 unbundled bundle exec rake db:drop db:create
 unbundled bundle exec rails generate solidus:install --auto-accept --payment-method=none --no-seed --no-sample
