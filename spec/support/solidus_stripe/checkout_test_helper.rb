@@ -125,6 +125,10 @@ module SolidusStripe::CheckoutTestHelper
   end
 
   def find_stripe_iframe
+    if ENV['SOLIDUS_STRIPE_PUBLISHABLE_KEY'].to_s.empty?
+      raise "Missing ENV['SOLIDUS_STRIPE_PUBLISHABLE_KEY']. See development instructions in README to get the appropriate value."
+    end
+
     fieldset = find_payment_fieldset(payment_method.id)
     expect(fieldset).to have_css('iframe', wait: 15) # trigger waiting if the frame is not yet there
     fieldset.find("iframe")
