@@ -16,7 +16,10 @@ module SolidusStripe::LogEntries
     ActiveMerchant::Billing::Response.new(
       success,
       message,
-      { 'data' => data.to_json },
+      {
+        data: data.to_json,
+        asynchronous: true
+      },
       { authorization: response_code },
     )
   end
