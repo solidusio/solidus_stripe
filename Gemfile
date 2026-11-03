@@ -3,7 +3,11 @@
 source 'https://rubygems.org'
 
 branch = ENV.fetch("SOLIDUS_BRANCH", "main")
-gem "solidus", github: "solidusio/solidus", branch: branch
+if ENV["SOLIDUS_PATH"]
+  gem "solidus", path: ENV["SOLIDUS_PATH"]
+else
+  gem "solidus", github: "solidusio/solidus", branch: branch
+end
 
 rails_version = ENV.fetch("RAILS_VERSION", "8.0")
 gem "rails", "~> #{rails_version}"
