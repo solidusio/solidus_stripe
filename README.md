@@ -39,7 +39,7 @@ by default it will be scoped to `live` in production and `test` everywhere else.
 
 Before going to production, you'll need to [register the webhook endpoint with
 Stripe](https://stripe.com/docs/webhooks/go-live), and make sure to subscribe
-to the events listed in [the `SolidusStripe::Webhook::Event::CORE`
+to the events listed in [the `SolidusStripe::Webhook::Event::CORE_EVENTS`
 constant](https://github.com/solidusio/solidus_stripe/blob/main/lib/solidus_stripe/webhook/event.rb).
 
 So in your Stripe dashboard you'll need to set the webhook URL to:
