@@ -102,5 +102,6 @@ module SolidusStripe
         []
       end
     end
+    alias_method :reusable_sources, :previous_sources
   end
 end

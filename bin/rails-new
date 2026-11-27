@@ -62,6 +62,7 @@ cat <<MANIFESTJS > app/assets/config/manifest.js
 //= link_tree ../images
 //= link_directory ../javascripts .js
 //= link_directory ../stylesheets .css
+//= link_tree ../../../vendor/javascript .js
 MANIFESTJS
 
 unbundled bundle add solidus --github solidusio/solidus --branch "${BRANCH:-main}" --version '> 0.a'

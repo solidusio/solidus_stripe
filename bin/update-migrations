@@ -25,7 +25,7 @@ install_migration = ->(basename) do
   path = source_migrations[basename]
   base_time += 1
   puts "installing #{basename}..."
-  timestamp = Time.at(base_time).strftime("%F%T").delete('-:') # rubocop:disable Rails/TimeZone
+  timestamp = Time.at(base_time).utc.strftime("%F%T").delete('-:')
   contents = File.read(path)
 
   File.write("#{app}/db/migrate/#{timestamp}_#{basename}.#{extension_name}.rb", contents)
